@@ -44,8 +44,7 @@ class Rain {
         vulkanRenderer = VulkanRenderer(vk.logicalDevice, vk.queueFamilyIndices, vk.swapchain, vk.deviceQueue, resourceFactory, vk.renderpass, resourceFactory.quadVertexBuffer)
         vulkanRenderer.create()
 
-        val material = VulkanMaterial(vk.vertexShader, vk.fragmentShader, Texture2d(0, 0, 0, TextureFilter.LINEAR), Vector3f())
-        vulkanRenderer.resourceFactory.materials.add(material)
+        resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", Texture2d(0, 0, 0, TextureFilter.LINEAR), Vector3f())
     }
 
     fun run() {

@@ -49,6 +49,7 @@ fun readFileAsByteBuffer(filePath: String): ByteBuffer {
 
         buf.put(fileStream.readAllBytes())
         buf.flip()
+        fileStream.close()
         return buf
     }
 

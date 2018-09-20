@@ -2,7 +2,7 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.vkDestroySemaphore
+import org.lwjgl.vulkan.VK10.*
 import rain.api.Entity
 import rain.api.EntitySystem
 import rain.api.Renderer
@@ -42,6 +42,7 @@ internal class VulkanRenderer : Renderer {
     override fun create() {
         renderCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         postPresentBuffer = renderCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
+
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -54,7 +55,6 @@ internal class VulkanRenderer : Renderer {
         // But sufficient for now. Each material will spawn a separate pipeline
         if (pipelines.size < resourceFactory.materials.size) {
             val ln = resourceFactory.materials.size - pipelines.size
-
             for (i in 0 until ln) {
                 val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
                 val pipeline = Pipeline()

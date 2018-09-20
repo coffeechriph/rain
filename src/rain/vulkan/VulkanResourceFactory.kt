@@ -11,13 +11,11 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
     private var resourceId: Long = 0
     internal val logicalDevice: LogicalDevice
     internal val materials: MutableList<VulkanMaterial>
-    internal val shaderModules: MutableMap<Long, ShaderModule>
     internal val textures: MutableMap<Long, VulkanTexture2d>
     internal val quadVertexBuffer: VertexBuffer
 
     init {
         this.materials = ArrayList()
-        this.shaderModules = HashMap()
         this.textures = HashMap()
         this.logicalDevice = logicalDevice
 
@@ -39,14 +37,11 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
     override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
         val vertex = ShaderModule()
         val fragment = ShaderModule()
-        vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT)
-        fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
+        vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
+        fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
 
         val vid = uniqueId()
         val fid = uniqueId()
-
-        shaderModules.put(vid, vertex)
-        shaderModules.put(fid, fragment)
 
         val material = VulkanMaterial(vertex, fragment, texture2d, color)
         materials.add(material)

@@ -17,9 +17,6 @@ internal class Vk {
     lateinit var setupCommandBuffer: CommandPool.CommandBuffer
     lateinit var postPresentCommandBuffer: CommandPool.CommandBuffer
 
-    lateinit var vertexShader: ShaderModule
-    lateinit var fragmentShader: ShaderModule
-
     var swapchainIsDirty = true
 
     fun create(window: Long) {
@@ -49,12 +46,6 @@ internal class Vk {
 
         renderpass = Renderpass()
         renderpass.create(logicalDevice, surface.format)
-
-        vertexShader = ShaderModule()
-        vertexShader.loadShader(logicalDevice, "data/shaders/basic.vert.spv", VK10.VK_SHADER_STAGE_VERTEX_BIT)
-
-        fragmentShader = ShaderModule()
-        fragmentShader.loadShader(logicalDevice, "data/shaders/basic.frag.spv", VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
 
         swapchain = Swapchain()
     }
