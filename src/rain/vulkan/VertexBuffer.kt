@@ -51,7 +51,7 @@ internal class VertexBuffer {
         vkGetBufferMemoryRequirements(logicalDevice.device, buffer, memReqs)
         memAlloc.allocationSize(memReqs.size())
         val memoryTypeIndex = memAllocInt(1)
-        getMemoryType(memoryProperties, memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, memoryTypeIndex)
+        getMemoryType(memoryProperties, memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryTypeIndex)
         memAlloc.memoryTypeIndex(memoryTypeIndex.get(0))
         memFree(memoryTypeIndex)
         memReqs.free()

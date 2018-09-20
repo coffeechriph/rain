@@ -6,16 +6,24 @@ import org.lwjgl.vulkan.*
 
 internal class Vk {
     lateinit var instance: Instance
+        private set
     lateinit var logicalDevice: LogicalDevice
+        private set
     lateinit var physicalDevice: PhysicalDevice
+        private set
     lateinit var surface: Surface
+        private set
     lateinit var queueFamilyIndices: QueueFamilyIndices
+        private set
     lateinit var deviceQueue: Queue
+        private set
     lateinit var swapchain: Swapchain
+        private set
     lateinit var renderpass: Renderpass
-    lateinit var commandPool: CommandPool
-    lateinit var setupCommandBuffer: CommandPool.CommandBuffer
-    lateinit var postPresentCommandBuffer: CommandPool.CommandBuffer
+        private set
+
+    private lateinit var commandPool: CommandPool
+    private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
 
     var swapchainIsDirty = true
 
@@ -42,7 +50,6 @@ internal class Vk {
         commandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
 
         setupCommandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
-        postPresentCommandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
 
         renderpass = Renderpass()
         renderpass.create(logicalDevice, surface.format)
