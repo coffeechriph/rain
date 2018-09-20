@@ -47,7 +47,7 @@ internal class VulkanRenderer : Renderer {
 
     internal fun recreateRenderCommandBuffers() {
         VK10.vkResetCommandPool(logicalDevice.device, renderCommandPool.pool, 0);
-        renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.swapchainFramebuffers!!.size)
+        renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers!!.size)
     }
 
     override fun render() {
@@ -79,7 +79,7 @@ internal class VulkanRenderer : Renderer {
         VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 
         renderCommandBuffers[nextImage].begin()
-        renderpass.begin(swapchain.swapchainFramebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
+        renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
             pipeline.begin(renderCommandBuffers[nextImage])
@@ -129,7 +129,7 @@ internal class VulkanRenderer : Renderer {
         vkDestroySemaphore(logicalDevice.device, pRenderCompleteSemaphore.get(0), null)
     }
 
-    fun attachPrePresentBarrier(cmdBuffer: CommandPool.CommandBuffer, presentImage: Long) {
+    private fun attachPrePresentBarrier(cmdBuffer: CommandPool.CommandBuffer, presentImage: Long) {
         val imageMemoryBarrier = VkImageMemoryBarrier.calloc(1)
                 .sType(VK10.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
                 .pNext(MemoryUtil.NULL)
@@ -159,7 +159,7 @@ internal class VulkanRenderer : Renderer {
         imageMemoryBarrier.free();
     }
 
-    fun submitPostPresentBarrier(cmdBuffer: CommandPool.CommandBuffer, queue: Queue, presentImage: Long) {
+    private fun submitPostPresentBarrier(cmdBuffer: CommandPool.CommandBuffer, queue: Queue, presentImage: Long) {
         val cmdBufInfo = VkCommandBufferBeginInfo.calloc()
                 .sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
                 .pNext(MemoryUtil.NULL)

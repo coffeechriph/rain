@@ -6,6 +6,7 @@ import org.lwjgl.vulkan.VkQueue
 
 internal class Queue {
     lateinit var queue: VkQueue
+        private set
 
     fun create(logicalDevice: LogicalDevice, queueIndex: Int) {
         val handle = MemoryStack.stackPush().use {

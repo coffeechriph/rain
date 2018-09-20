@@ -8,6 +8,7 @@ import org.lwjgl.vulkan.VkSemaphoreCreateInfo
 
 internal class Semaphore {
     var semaphore: Long = 0
+        private set
 
     fun create(logicalDevice: LogicalDevice) {
         // TODO: We don't have to create this everytime

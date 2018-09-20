@@ -17,10 +17,19 @@ import org.lwjgl.vulkan.VK10.vkDestroyFramebuffer
 
 internal class Swapchain {
     var swapchain: Long = 0
+        private set
+
     lateinit var images: Array<Long>
+        private set
+
     lateinit var imageViews: Array<Long>
-    var swapchainFramebuffers: Array<Long>? = null
+        private set
+
+    var framebuffers: Array<Long>? = null
+        private set
+
     var extent: VkExtent2D = VkExtent2D.create()
+        private set
 
     fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, cmdbuffer: CommandPool.CommandBuffer, deviceQueue: Queue) {
         var err: Int
@@ -219,9 +228,9 @@ internal class Swapchain {
     }
 
     fun createFramebuffers(logicalDevice: LogicalDevice, renderpass: Renderpass, extent: VkExtent2D) {
-        if (swapchainFramebuffers != null) {
-            for (i in 0 until swapchainFramebuffers!!.size)
-                vkDestroyFramebuffer(logicalDevice.device, swapchainFramebuffers!![i], null)
+        if (framebuffers != null) {
+            for (i in 0 until framebuffers!!.size)
+                vkDestroyFramebuffer(logicalDevice.device, framebuffers!![i], null)
         }
 
         val attachments = memAllocLong(1)
@@ -250,7 +259,7 @@ internal class Swapchain {
         memFree(attachments)
         memFree(pFramebuffer)
         fci.free()
-        swapchainFramebuffers = framebuffers.toTypedArray()
+        this.framebuffers = framebuffers.toTypedArray()
     }
 
     // TODO: Accept Semaphore instead of long

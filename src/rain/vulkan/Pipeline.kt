@@ -23,7 +23,10 @@ import org.lwjgl.vulkan.VkCommandBufferBeginInfo
 
 internal class Pipeline {
     var pipeline: Long = 0
+        private set
+
     lateinit var vertexBuffer: VertexBuffer
+        private set
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule) {
         var err: Int

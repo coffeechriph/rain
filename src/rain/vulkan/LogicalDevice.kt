@@ -11,6 +11,7 @@ import org.lwjgl.vulkan.VkPhysicalDeviceFeatures
 
 internal class LogicalDevice {
     lateinit var device: VkDevice
+        private set
 
     fun create(physicalDevice: PhysicalDevice, indices: QueueFamilyIndices) {
         val queueCreateInfo = VkDeviceQueueCreateInfo.calloc(2)

@@ -22,8 +22,10 @@ import org.lwjgl.vulkan.VkApplicationInfo
 
 internal class Instance {
     lateinit var instance: VkInstance
-    val validationLayers = arrayOf("VK_LAYER_LUNARG_core_validation")
-    var enableValidationLayers = false
+        private set
+
+    private val validationLayers = arrayOf("VK_LAYER_LUNARG_core_validation")
+    private var enableValidationLayers = false
 
     fun create() {
         val appInfo = VkApplicationInfo.calloc()

@@ -9,7 +9,7 @@ import rain.api.TextureFilter
 
 internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice) : ResourceFactory {
     private var resourceId: Long = 0
-    internal val logicalDevice: LogicalDevice
+    private val logicalDevice: LogicalDevice
     internal val materials: MutableList<VulkanMaterial>
     internal val textures: MutableMap<Long, VulkanTexture2d>
     internal val quadVertexBuffer: VertexBuffer

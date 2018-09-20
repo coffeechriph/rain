@@ -9,8 +9,14 @@ import java.nio.ByteBuffer
 
 internal class PhysicalDevice {
     lateinit var device: VkPhysicalDevice
+        private set
+
     lateinit var memoryProperties: VkPhysicalDeviceMemoryProperties
+        private set
+
     var heapSize: Long = 0
+        private set
+
     val deviceExtensions = arrayOf(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME)
 
     fun create(instance: Instance, surface: Surface) {

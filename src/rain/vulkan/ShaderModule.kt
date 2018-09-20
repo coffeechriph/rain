@@ -8,6 +8,7 @@ import org.lwjgl.vulkan.VkShaderModuleCreateInfo
 
 internal class ShaderModule {
     lateinit var createInfo: VkPipelineShaderStageCreateInfo
+        private set
 
     private fun load(logicalDevice: LogicalDevice, path: String): Long {
         val shaderCode = readFileAsByteBuffer(path)
