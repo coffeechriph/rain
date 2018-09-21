@@ -22,8 +22,8 @@ internal class Vk {
     lateinit var renderpass: Renderpass
         private set
 
-    private lateinit var commandPool: CommandPool
-    private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
+    internal lateinit var commandPool: CommandPool
+    internal lateinit var setupCommandBuffer: CommandPool.CommandBuffer
 
     var swapchainIsDirty = true
 

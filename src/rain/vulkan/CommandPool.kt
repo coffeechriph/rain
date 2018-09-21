@@ -52,6 +52,7 @@ internal class CommandPool {
         fun begin() {
             val cmdBufInfo = VkCommandBufferBeginInfo.calloc()
                     .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
+                    .flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
                     .pNext(0)
             val err = vkBeginCommandBuffer(buffer, cmdBufInfo)
             cmdBufInfo.free()

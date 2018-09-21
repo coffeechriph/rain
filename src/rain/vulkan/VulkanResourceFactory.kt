@@ -7,7 +7,7 @@ import rain.api.ResourceFactory
 import rain.api.Texture2d
 import rain.api.TextureFilter
 
-internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice) : ResourceFactory {
+internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queue: Queue, commandPool: CommandPool) : ResourceFactory {
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
     internal val materials: MutableList<VulkanMaterial>
@@ -31,7 +31,7 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
         )
 
         quadVertexBuffer = VertexBuffer()
-        quadVertexBuffer.create(logicalDevice, physicalDevice.memoryProperties, vertices, attributes)
+        quadVertexBuffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes)
     }
 
     override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
