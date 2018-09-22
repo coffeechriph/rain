@@ -31,7 +31,7 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
         )
 
         quadVertexBuffer = VertexBuffer()
-        quadVertexBuffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes)
+        quadVertexBuffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, VertexBufferState.DYNAMIC)
     }
 
     override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {

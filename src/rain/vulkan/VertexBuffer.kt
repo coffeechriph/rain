@@ -6,7 +6,6 @@ import org.lwjgl.vulkan.VK10.*
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 import kotlin.IllegalArgumentException
-import kotlin.math.log
 import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
@@ -16,10 +15,6 @@ import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_TRANSFER_DST_BIT
 
 
 
-// TODO: Allow creation of two buffer types: STATIC & DYNAMIC
-// Static uses a staging buffer and stores the final data in a device visible only buffer
-// Dynamic uses host visible
-
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VertexBuffer {
     var buffer: Long = 0
@@ -27,59 +22,15 @@ internal class VertexBuffer {
     var vertexCount: Int = 0
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
 
-    class Buffer {
-        var buffer: Long = 0
-        var bufferSize: Long = 0
-        var bufferMemory: LongBuffer
-        var memoryProperties: VkPhysicalDeviceMemoryProperties
+    private class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long, var memoryProperties: VkPhysicalDeviceMemoryProperties)
 
-        constructor(buffer: Long, bufferMemory: LongBuffer, bufferSize: Long, memoryProperties: VkPhysicalDeviceMemoryProperties) {
-            this.buffer = buffer
-            this.bufferMemory = bufferMemory
-            this.bufferSize = bufferSize
-            this.memoryProperties = memoryProperties
+    fun create(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
+        if (state == VertexBufferState.STATIC) {
+            createVertexBufferWithStaging(logicalDevice, queue, commandPool, memoryProperties, vertices)
         }
-    }
-
-    // TODO: Clean up this mess
-    // TODO: Maybe a builder...
-    fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
-        if (buffer > 0) {
-            vkDestroyBuffer(logicalDevice.device, buffer, null);
-            buffer = 0
+        else {
+            createVertexBuffer(logicalDevice, queue, commandPool, memoryProperties, vertices)
         }
-
-        val vertexBuffer = memAlloc(vertices.size * 4)
-        val fb = vertexBuffer.asFloatBuffer()
-        fb.put(vertices)
-
-        var err: Int
-
-        // Generate vertex buffer
-        //  Setup
-        val bufInfo = VkBufferCreateInfo.calloc()
-                .sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
-                .pNext(0)
-                .size(vertexBuffer.remaining().toLong())
-                .usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                .flags(0)
-
-        val pBuffer = memAllocLong(1)
-        err = vkCreateBuffer(logicalDevice.device, bufInfo, null, pBuffer)
-
-        buffer = pBuffer.get(0)
-        memFree(pBuffer)
-        bufInfo.free()
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create vertex buffer: " + VulkanResult(err))
-        }
-
-        // this.memoryProperties = memoryProperties
-        buffer(logicalDevice, vertices)
-    }
-
-    fun create(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>) {
-        createVertexBuffer(logicalDevice, queue, commandPool, memoryProperties, vertices)
 
         // Assign to vertex buffer
         vertexPipelineVertexInputStateCreateInfo = VkPipelineVertexInputStateCreateInfo.calloc()
@@ -148,13 +99,36 @@ internal class VertexBuffer {
     }
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
+        val buffer = createBuffer(logicalDevice, (vertices.size * 4).toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
+        val vertexBuffer = memAlloc(vertices.size * 4)
+        val fb = vertexBuffer.asFloatBuffer()
+        fb.put(vertices)
+
+        val pData = memAllocPointer(1)
+        val err = vkMapMemory(logicalDevice.device, buffer.bufferMemory.get(0), 0, buffer.bufferSize, 0, pData)
+
+        val data = pData.get(0)
+        memFree(pData)
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to map vertex memory: " + VulkanResult(err))
+        }
+
+        memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())
+        memFree(vertexBuffer)
+        vkUnmapMemory(logicalDevice.device, buffer.bufferMemory.get(0))
+
+        this.buffer = buffer.buffer
+        this.bufferSize = buffer.bufferSize
+    }
+
+    private fun createVertexBufferWithStaging(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
         val stagingBuffer = createBuffer(logicalDevice, (vertices.size * 4).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
         val vertexBuffer = memAlloc(vertices.size * 4)
         val fb = vertexBuffer.asFloatBuffer()
         fb.put(vertices)
 
         val pData = memAllocPointer(1)
-        var err = vkMapMemory(logicalDevice.device, stagingBuffer.bufferMemory.get(0), 0, stagingBuffer.bufferSize, 0, pData)
+        val err = vkMapMemory(logicalDevice.device, stagingBuffer.bufferMemory.get(0), 0, stagingBuffer.bufferSize, 0, pData)
 
         val data = pData.get(0)
         memFree(pData)
@@ -191,73 +165,6 @@ internal class VertexBuffer {
         // TODO: Consider fences and a smarter way to build buffers
         vkQueueWaitIdle(queue.queue)
         vkFreeCommandBuffers(logicalDevice.device, commandPool.pool, commandBuffer.buffer)
-    }
-
-    private fun buffer(logicalDevice: LogicalDevice, vertices: FloatArray) {
-        val vertexBuffer = memAlloc(vertices.size * 4)
-        val fb = vertexBuffer.asFloatBuffer()
-        fb.put(vertices)
-
-        val memAlloc = VkMemoryAllocateInfo.calloc()
-                .sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
-                .pNext(0)
-                .allocationSize(0)
-                .memoryTypeIndex(0)
-
-        val memReqs = VkMemoryRequirements.calloc()
-
-        var err = 0
-        vkGetBufferMemoryRequirements(logicalDevice.device, buffer, memReqs)
-        memAlloc.allocationSize(memReqs.size())
-        val memoryTypeIndex = memAllocInt(1)
-        // getMemoryType(memoryProperties, memReqs.memoryTypeBits(), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryTypeIndex)
-        memAlloc.memoryTypeIndex(memoryTypeIndex.get(0))
-        memFree(memoryTypeIndex)
-        memReqs.free()
-
-        val pMemory = memAllocLong(1)
-        err = vkAllocateMemory(logicalDevice.device, memAlloc, null, pMemory)
-        val verticesMem = pMemory.get(0)
-        memFree(pMemory)
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to allocate vertex memory: " + VulkanResult(err))
-        }
-
-        val pData = memAllocPointer(1)
-        err = vkMapMemory(logicalDevice.device, verticesMem, 0, memAlloc.allocationSize(), 0, pData)
-        memAlloc.free()
-        val data = pData.get(0)
-        memFree(pData)
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to map vertex memory: " + VulkanResult(err))
-        }
-
-        memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())
-        memFree(vertexBuffer)
-        vkUnmapMemory(logicalDevice.device, verticesMem)
-        err = vkBindBufferMemory(logicalDevice.device, buffer, verticesMem, 0)
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to bind memory to vertex buffer: " + VulkanResult(err))
-        }
-
-        // Assign to vertex buffer
-        /*
-
-        vertexPipelineVertexInputStateCreateInfo = VkPipelineVertexInputStateCreateInfo.calloc()
-                .sType(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO)
-                .pNext(0)
-                .pVertexBindingDescriptions(createBindingDescription(attributes))
-                .pVertexAttributeDescriptions(createAttributeDescription(attributes))
-
-        // TODO: We now officially loop through attributes 3 times...
-        var vertexSize = 0
-        for (attribute in attributes) {
-            vertexSize += attribute.count
-        }
-
-
-        vertexCount = vertices.size / vertexSize
-        */
     }
 
     // TODO: Can only bind to one point at this point in time
