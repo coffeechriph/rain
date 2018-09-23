@@ -156,25 +156,6 @@ internal class Swapchain {
         images = LongArray(imageCount).toTypedArray()
         imageViews = LongArray(imageCount).toTypedArray()
         val pBufferView = memAllocLong(1)
-        val colorAttachmentView = VkImageViewCreateInfo.calloc()
-                .sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
-                .pNext(NULL)
-                .format(surface.format)
-                .viewType(VK_IMAGE_VIEW_TYPE_2D)
-                .flags(0)
-
-        colorAttachmentView.components()
-                .r(VK_COMPONENT_SWIZZLE_R)
-                .g(VK_COMPONENT_SWIZZLE_G)
-                .b(VK_COMPONENT_SWIZZLE_B)
-                .a(VK_COMPONENT_SWIZZLE_A)
-
-        colorAttachmentView.subresourceRange()
-                .aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
-                .baseMipLevel(0)
-                .levelCount(1)
-                .baseArrayLayer(0)
-                .layerCount(1)
 
         for (i in 0 until imageCount) {
             images[i] = pSwapchainImages.get(i)
@@ -182,9 +163,10 @@ internal class Swapchain {
             imageBarrier(cmdbuffer.buffer, images[i], VK_IMAGE_ASPECT_COLOR_BIT,
                     VK_IMAGE_LAYOUT_UNDEFINED, 0,
                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
-            colorAttachmentView.image(images[i])
-            err = vkCreateImageView(logicalDevice.device, colorAttachmentView, null, pBufferView)
-            imageViews[i] = pBufferView.get(0)
+
+            val imageView = ImageView()
+            imageView.create(logicalDevice, images[i], surface.format, VK_IMAGE_VIEW_TYPE_2D)
+            imageViews[i] = imageView.imageView
             if (err != VK_SUCCESS) {
                 throw AssertionError("Failed to create image view: " + VulkanResult(err))
             }
@@ -192,7 +174,6 @@ internal class Swapchain {
         cmdbuffer.end()
         cmdbuffer.submit(deviceQueue.queue)
 
-        colorAttachmentView.free()
         memFree(pBufferView)
         memFree(pSwapchainImages)
     }

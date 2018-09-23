@@ -22,7 +22,7 @@ internal class VertexBuffer {
     var vertexCount: Int = 0
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
 
-    private class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long, var memoryProperties: VkPhysicalDeviceMemoryProperties)
+    internal class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long, var memoryProperties: VkPhysicalDeviceMemoryProperties)
 
     fun create(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
         if (state == VertexBufferState.STATIC) {
@@ -48,7 +48,9 @@ internal class VertexBuffer {
         vertexCount = vertices.size / vertexSize
     }
 
-    private fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, properties: Int, memoryProperties: VkPhysicalDeviceMemoryProperties): Buffer {
+    // TODO: This method is used to create a buffer for image data, which makes
+    // TODO: 'VertexBuffer' an ill fit for this class
+    internal fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, properties: Int, memoryProperties: VkPhysicalDeviceMemoryProperties): Buffer {
         val bufInfo = VkBufferCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
                 .pNext(0)
@@ -206,18 +208,19 @@ internal class VertexBuffer {
 
         return desc
     }
+}
 
-    private fun getMemoryType(deviceMemoryProperties: VkPhysicalDeviceMemoryProperties, typeBits: Int, properties: Int, typeIndex: IntBuffer): Boolean {
-        var bits = typeBits
-        for (i in 0..31) {
-            if (bits and 1 == 1) {
-                if (deviceMemoryProperties.memoryTypes(i).propertyFlags() and properties == properties) {
-                    typeIndex.put(0, i)
-                    return true
-                }
+// TODO: Move this to another file as it's used by multiple
+internal fun getMemoryType(deviceMemoryProperties: VkPhysicalDeviceMemoryProperties, typeBits: Int, properties: Int, typeIndex: IntBuffer): Boolean {
+    var bits = typeBits
+    for (i in 0..31) {
+        if (bits and 1 == 1) {
+            if (deviceMemoryProperties.memoryTypes(i).propertyFlags() and properties == properties) {
+                typeIndex.put(0, i)
+                return true
             }
-            bits = bits shr 1
         }
-        return false
+        bits = bits shr 1
     }
+    return false
 }

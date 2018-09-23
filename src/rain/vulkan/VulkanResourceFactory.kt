@@ -10,6 +10,9 @@ import rain.api.TextureFilter
 internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queue: Queue, commandPool: CommandPool) : ResourceFactory {
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
+    private val physicalDevice: PhysicalDevice
+    private val queue: Queue
+    private val commandPool: CommandPool
     internal val materials: MutableList<VulkanMaterial>
     internal val textures: MutableMap<Long, VulkanTexture2d>
     internal val quadVertexBuffer: VertexBuffer
@@ -18,6 +21,9 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
         this.materials = ArrayList()
         this.textures = HashMap()
         this.logicalDevice = logicalDevice
+        this.physicalDevice = physicalDevice
+        this.queue = queue
+        this.commandPool = commandPool
 
         val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 3))
         val vertices = floatArrayOf(
@@ -50,7 +56,8 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
     }
 
     override fun createTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
-        // TODO: Implement
+        val texture2d = VulkanTexture2d()
+        texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile)
         return Texture2d(0, 0, 0, filter)
     }
 
