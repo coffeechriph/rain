@@ -3,32 +3,20 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VK10.VK_IMAGE_ASPECT_COLOR_BIT
-import org.lwjgl.vulkan.VK10.VK_QUEUE_FAMILY_IGNORED
-import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-import org.lwjgl.vulkan.VK10.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-import org.lwjgl.vulkan.VK10.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER
-import org.lwjgl.vulkan.VkImageMemoryBarrier
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.VK10.VK_SUCCESS
-import org.lwjgl.vulkan.VK10.vkEndCommandBuffer
-import org.lwjgl.vulkan.VK10.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-import org.lwjgl.vulkan.VK10.VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
-import org.lwjgl.vulkan.VK10.vkCmdPipelineBarrier
-import org.lwjgl.vulkan.VK10.vkBeginCommandBuffer
-import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
-import org.lwjgl.vulkan.VkCommandBufferBeginInfo
 
 
 internal class Pipeline {
     var pipeline: Long = 0
         private set
 
+    var pipelineLayout: Long = 0
+
     lateinit var vertexBuffer: VertexBuffer
         private set
 
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule) {
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorSet: DescriptorPool.DescriptorSet) {
         var err: Int
         // Vertex input state
         // Describes the topoloy used with this pipeline
@@ -102,12 +90,16 @@ internal class Pipeline {
         shaderStages.get(0).set(vertexShader.createInfo)
         shaderStages.get(1).set(fragmentShader.createInfo)
 
+        // TODO: Change this when we want to support more than 1 descriptor set
+        val descriptorSetLayouts = memAllocLong(1)
+        descriptorSetLayouts.put(0, descriptorSet.layout)
+
         // Create the pipeline layout that is used to generate the rendering pipelines that
         // are based on this descriptor set layout
         val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)
                 .pNext(0)
-                .pSetLayouts(null)
+                .pSetLayouts(descriptorSetLayouts)
 
         val pPipelineLayout = memAllocLong(1)
         err = vkCreatePipelineLayout(logicalDevice.device, pPipelineLayoutCreateInfo, null, pPipelineLayout)
@@ -137,6 +129,7 @@ internal class Pipeline {
         val pPipelines = memAllocLong(1)
         err = vkCreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, pipelineCreateInfo, null, pPipelines)
         pipeline = pPipelines.get(0)
+        pipelineLayout = layout
         this.vertexBuffer = vertexBuffer
 
         shaderStages.free()
@@ -154,9 +147,8 @@ internal class Pipeline {
         }
     }
 
-    fun begin(cmdBuffer: CommandPool.CommandBuffer) {
+    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorSet: DescriptorPool.DescriptorSet) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
-
         // TODO: Don't need to do this every time
         val offsets = memAllocLong(1)
         offsets.put(0, 0L)
@@ -165,6 +157,7 @@ internal class Pipeline {
         buffer.put(0, vertexBuffer.buffer)
 
         vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, buffer, offsets)
+        vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, descriptorSet.descriptorSet, null)
     }
 
     fun draw(cmdBuffer: CommandPool.CommandBuffer) {

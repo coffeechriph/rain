@@ -1,12 +1,12 @@
 package rain
 
 import org.joml.Vector3f
-import org.lwjgl.system.MemoryUtil.memAllocInt
-import org.lwjgl.system.MemoryUtil.memAllocLong
-import org.lwjgl.vulkan.KHRSwapchain.VK_STRUCTURE_TYPE_PRESENT_INFO_KHR
-import org.lwjgl.vulkan.KHRSwapchain.vkQueuePresentKHR
+import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.util.vma.Vma.vmaCreateAllocator
+import org.lwjgl.util.vma.Vma.vmaCreatePool
+import org.lwjgl.util.vma.VmaAllocatorCreateInfo
+import org.lwjgl.util.vma.VmaPoolCreateInfo
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkPresentInfoKHR
 import rain.api.Renderer
 import rain.api.ResourceFactory
 import rain.api.Texture2d
@@ -41,7 +41,7 @@ class Rain {
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
         resourceFactory = VulkanResourceFactory(vk.logicalDevice, vk.physicalDevice, vk.deviceQueue, vk.commandPool)
-        vulkanRenderer = VulkanRenderer(vk.logicalDevice, vk.queueFamilyIndices, vk.swapchain, vk.deviceQueue, resourceFactory, vk.renderpass, resourceFactory.quadVertexBuffer)
+        vulkanRenderer = VulkanRenderer(vk.logicalDevice, vk.physicalDevice, vk.queueFamilyIndices, vk.swapchain, vk.deviceQueue, resourceFactory, vk.renderpass, resourceFactory.quadVertexBuffer)
         vulkanRenderer.create()
 
         resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", Texture2d(0, 0, 0, TextureFilter.LINEAR), Vector3f())

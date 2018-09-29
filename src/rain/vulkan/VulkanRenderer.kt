@@ -1,6 +1,7 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Entity
@@ -12,10 +13,14 @@ internal class VulkanRenderer : Renderer {
     val resourceFactory: VulkanResourceFactory
     val quadVertexBuffer: VertexBuffer
     val logicalDevice: LogicalDevice
+    val physicalDevice: PhysicalDevice
     val renderpass: Renderpass
     val pipelines: MutableList<Pipeline> = ArrayList()
     val swapchain: Swapchain
     val queueFamilyIndices: QueueFamilyIndices
+    val descriptorPool = DescriptorPool()
+    lateinit var descriptorSetTest: DescriptorPool.DescriptorSet
+    val uniformBufferTest = UniformBuffer()
     var renderCommandPool: CommandPool = CommandPool()
     var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
     lateinit var postPresentBuffer: CommandPool.CommandBuffer
@@ -23,8 +28,9 @@ internal class VulkanRenderer : Renderer {
     lateinit var completeRenderSemaphore: Semaphore
     var queue: Queue
 
-    internal constructor(logicalDevice: LogicalDevice, queueFamilyIndices: QueueFamilyIndices, swapchain: Swapchain, queue: Queue, resourceFactory: VulkanResourceFactory, renderpass: Renderpass, quadVertexBuffer: VertexBuffer) {
+    internal constructor(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queueFamilyIndices: QueueFamilyIndices, swapchain: Swapchain, queue: Queue, resourceFactory: VulkanResourceFactory, renderpass: Renderpass, quadVertexBuffer: VertexBuffer) {
         this.logicalDevice = logicalDevice
+        this.physicalDevice = physicalDevice
         this.resourceFactory = resourceFactory
         this.renderpass = renderpass
         this.quadVertexBuffer = quadVertexBuffer
@@ -43,6 +49,16 @@ internal class VulkanRenderer : Renderer {
         renderCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         postPresentBuffer = renderCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
 
+        uniformBufferTest.create(logicalDevice, physicalDevice.memoryProperties, 2, 16)
+
+        val data = MemoryUtil.memAlloc(4 * 4)
+        data.asFloatBuffer().put(0.5f).put(0.0f).put(0.0f).put(1.0f).flip()
+        uniformBufferTest.update(logicalDevice, data, 0)
+        uniformBufferTest.update(logicalDevice, data, 1)
+        MemoryUtil.memFree(data)
+
+        descriptorPool.create(logicalDevice, 2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        descriptorSetTest = descriptorPool.createUniformBufferSet(logicalDevice, VK_SHADER_STAGE_FRAGMENT_BIT, null, 2, uniformBufferTest)
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -58,7 +74,7 @@ internal class VulkanRenderer : Renderer {
             for (i in 0 until ln) {
                 val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader)
+                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descriptorSetTest)
                 pipelines.add(pipeline)
             }
         }
@@ -82,7 +98,7 @@ internal class VulkanRenderer : Renderer {
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            pipeline.begin(renderCommandBuffers[nextImage])
+            pipeline.begin(renderCommandBuffers[nextImage], descriptorSetTest)
             pipeline.draw(renderCommandBuffers[nextImage])
         }
 
@@ -121,8 +137,7 @@ internal class VulkanRenderer : Renderer {
 
         // TODO: Prefer waiting on fences instead
         // Would allow us to control the waiting more precisely
-        VK10.vkQueueWaitIdle(queue.queue);
-
+        VK10.vkQueueWaitIdle(queue.queue)
         submitPostPresentBarrier(postPresentBuffer, queue, swapchain.images[nextImage])
 
         vkDestroySemaphore(logicalDevice.device, pImageAcquiredSemaphore.get(0), null)

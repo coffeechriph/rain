@@ -22,6 +22,7 @@ internal class VertexBuffer {
     var vertexCount: Int = 0
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
 
+    // TODO: Why are we storing bufferMemory as a LongBuffer
     internal class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long, var memoryProperties: VkPhysicalDeviceMemoryProperties)
 
     fun create(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
