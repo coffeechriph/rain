@@ -91,14 +91,14 @@ internal class VulkanRenderer : Renderer {
         completeRenderSemaphore.create(logicalDevice)
 
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore.semaphore)
-        VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
-        VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+        //VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+        //VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 
         renderCommandBuffers[nextImage].begin()
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            pipeline.begin(renderCommandBuffers[nextImage], descriptorSetTest)
+            pipeline.begin(renderCommandBuffers[nextImage], descriptorSetTest.descriptorSet[nextImage])
             pipeline.draw(renderCommandBuffers[nextImage])
         }
 
@@ -137,9 +137,9 @@ internal class VulkanRenderer : Renderer {
 
         // TODO: Prefer waiting on fences instead
         // Would allow us to control the waiting more precisely
+
         VK10.vkQueueWaitIdle(queue.queue)
         submitPostPresentBarrier(postPresentBuffer, queue, swapchain.images[nextImage])
-
         vkDestroySemaphore(logicalDevice.device, pImageAcquiredSemaphore.get(0), null)
         vkDestroySemaphore(logicalDevice.device, pRenderCompleteSemaphore.get(0), null)
     }

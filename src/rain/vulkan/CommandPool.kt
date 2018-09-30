@@ -102,7 +102,6 @@ internal class CommandPool {
 
             val pWaitSemaphore = memAllocLong(1)
             pWaitSemaphore.put(0, waitSemaphore.semaphore)
-            pWaitSemaphore.flip()
 
             val pSignalSemaphore = memAllocLong(1)
             pSignalSemaphore.put(0, signalSemaphore.semaphore)

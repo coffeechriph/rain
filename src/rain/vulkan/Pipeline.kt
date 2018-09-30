@@ -113,8 +113,8 @@ internal class Pipeline {
         // Assign states
         val pipelineCreateInfo = VkGraphicsPipelineCreateInfo.calloc(1)
                 .sType(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO)
-                .layout(layout) // <- the layout used for this pipeline (NEEDS TO BE SET! even though it is basically empty)
-                .renderPass(renderpass.renderpass) // <- renderpass this pipeline is attached to
+                .layout(layout)
+                .renderPass(renderpass.renderpass)
                 .pVertexInputState(vertexBuffer.vertexPipelineVertexInputStateCreateInfo)
                 .pInputAssemblyState(inputAssemblyState)
                 .pRasterizationState(rasterizationState)
@@ -147,7 +147,7 @@ internal class Pipeline {
         }
     }
 
-    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorSet: DescriptorPool.DescriptorSet) {
+    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorSet: Long) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
         // TODO: Don't need to do this every time
         val offsets = memAllocLong(1)
@@ -157,7 +157,10 @@ internal class Pipeline {
         buffer.put(0, vertexBuffer.buffer)
 
         vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, buffer, offsets)
-        vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, descriptorSet.descriptorSet, null)
+
+        val pDescriptorSet = memAllocLong(1)
+        pDescriptorSet.put(0, descriptorSet)
+        vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
     fun draw(cmdBuffer: CommandPool.CommandBuffer) {
