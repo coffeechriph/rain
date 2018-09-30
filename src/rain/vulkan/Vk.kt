@@ -17,8 +17,6 @@ internal class Vk {
         private set
     lateinit var deviceQueue: Queue
         private set
-    lateinit var renderpass: Renderpass
-        private set
 
     fun create(window: Long) {
         instance = Instance();
@@ -38,8 +36,5 @@ internal class Vk {
 
         deviceQueue = Queue()
         deviceQueue.create(logicalDevice, queueFamilyIndices.graphicsFamily)
-
-        renderpass = Renderpass()
-        renderpass.create(logicalDevice, surface.format)
     }
 }

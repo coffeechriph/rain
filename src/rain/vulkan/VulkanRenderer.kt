@@ -8,9 +8,8 @@ import rain.api.Entity
 import rain.api.EntitySystem
 import rain.api.Renderer
 
-internal class VulkanRenderer : Renderer {
+internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
     val systems: MutableList<EntitySystem<Entity>> = ArrayList()
-    val resourceFactory: VulkanResourceFactory
     val quadVertexBuffer: VertexBuffer
     val logicalDevice: LogicalDevice
     val physicalDevice: PhysicalDevice
@@ -19,28 +18,30 @@ internal class VulkanRenderer : Renderer {
     val swapchain: Swapchain
     val queueFamilyIndices: QueueFamilyIndices
     val descriptorPool = DescriptorPool()
-    lateinit var descriptorSetTest: DescriptorPool.DescriptorSet
     val uniformBufferTest = UniformBuffer()
     var renderCommandPool: CommandPool = CommandPool()
     var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
+    var queue: Queue
+    var surfaceColorFormat = 0
+
     lateinit var setupCommandPool: CommandPool
+    lateinit var descriptorSetTest: DescriptorPool.DescriptorSet
     lateinit var setupCommandBuffer: CommandPool.CommandBuffer
     lateinit var postPresentBuffer: CommandPool.CommandBuffer
     lateinit var imageAcquiredSemaphore: Semaphore
     lateinit var completeRenderSemaphore: Semaphore
-    var queue: Queue
 
     var swapchainIsDirty = true
 
-    internal constructor(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queueFamilyIndices: QueueFamilyIndices, queue: Queue, resourceFactory: VulkanResourceFactory, renderpass: Renderpass, quadVertexBuffer: VertexBuffer) {
-        this.logicalDevice = logicalDevice
-        this.physicalDevice = physicalDevice
-        this.resourceFactory = resourceFactory
-        this.renderpass = renderpass
-        this.quadVertexBuffer = quadVertexBuffer
-        this.queueFamilyIndices = queueFamilyIndices
+    init {
+        this.logicalDevice = vk.logicalDevice
+        this.physicalDevice = vk.physicalDevice
+        this.renderpass = Renderpass()
+        this.quadVertexBuffer = resourceFactory.quadVertexBuffer
+        this.queueFamilyIndices = vk.queueFamilyIndices
         this.swapchain = Swapchain()
-        this.queue = queue
+        this.queue = vk.deviceQueue
+        this.surfaceColorFormat = vk.surface.format
     }
 
     override fun newSystem(): EntitySystem<Entity> {
@@ -50,6 +51,7 @@ internal class VulkanRenderer : Renderer {
     }
 
     override fun create() {
+        renderpass.create(logicalDevice, surfaceColorFormat)
         renderCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         postPresentBuffer = renderCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
 

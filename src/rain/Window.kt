@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 
-internal class Context {
+internal class Window {
     var windowPointer: Long = -1
     var title: String = ""
         get() = this.toString()
