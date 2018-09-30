@@ -40,7 +40,7 @@ class Rain {
 
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
-        resourceFactory = VulkanResourceFactory(vk.logicalDevice, vk.physicalDevice, vk.deviceQueue, vk.commandPool)
+        resourceFactory = VulkanResourceFactory(vk.logicalDevice, vk.physicalDevice, vk.deviceQueue, vk.queueFamilyIndices)
         vulkanRenderer = VulkanRenderer(vk.logicalDevice, vk.physicalDevice, vk.queueFamilyIndices, vk.deviceQueue, resourceFactory, vk.renderpass, resourceFactory.quadVertexBuffer)
         vulkanRenderer.create()
 

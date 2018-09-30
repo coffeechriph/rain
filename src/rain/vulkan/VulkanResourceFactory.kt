@@ -7,7 +7,7 @@ import rain.api.ResourceFactory
 import rain.api.Texture2d
 import rain.api.TextureFilter
 
-internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queue: Queue, commandPool: CommandPool) : ResourceFactory {
+internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queue: Queue, queueFamilyIndices: QueueFamilyIndices) : ResourceFactory {
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
     private val physicalDevice: PhysicalDevice
@@ -23,7 +23,8 @@ internal class VulkanResourceFactory(logicalDevice: LogicalDevice, physicalDevic
         this.logicalDevice = logicalDevice
         this.physicalDevice = physicalDevice
         this.queue = queue
-        this.commandPool = commandPool
+        this.commandPool = CommandPool()
+        this.commandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
 
         val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 3))
         val vertices = floatArrayOf(
