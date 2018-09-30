@@ -17,15 +17,10 @@ internal class Vk {
         private set
     lateinit var deviceQueue: Queue
         private set
-    lateinit var swapchain: Swapchain
-        private set
     lateinit var renderpass: Renderpass
         private set
 
     internal lateinit var commandPool: CommandPool
-    internal lateinit var setupCommandBuffer: CommandPool.CommandBuffer
-
-    var swapchainIsDirty = true
 
     fun create(window: Long) {
         instance = Instance();
@@ -49,25 +44,7 @@ internal class Vk {
         commandPool = CommandPool()
         commandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
 
-        setupCommandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
-
         renderpass = Renderpass()
         renderpass.create(logicalDevice, surface.format)
-
-        swapchain = Swapchain()
-    }
-
-    fun recreateSwapchain(): Boolean {
-        if (swapchainIsDirty) {
-            val capabilities = VkSurfaceCapabilitiesKHR.calloc()
-            KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, surface.surface, capabilities)
-
-            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandBuffer, deviceQueue)
-            swapchain.createFramebuffers(logicalDevice, renderpass, capabilities.currentExtent())
-            swapchainIsDirty = false
-            return true
-        }
-
-        return false
     }
 }

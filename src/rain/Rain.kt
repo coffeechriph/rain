@@ -41,7 +41,7 @@ class Rain {
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
         resourceFactory = VulkanResourceFactory(vk.logicalDevice, vk.physicalDevice, vk.deviceQueue, vk.commandPool)
-        vulkanRenderer = VulkanRenderer(vk.logicalDevice, vk.physicalDevice, vk.queueFamilyIndices, vk.swapchain, vk.deviceQueue, resourceFactory, vk.renderpass, resourceFactory.quadVertexBuffer)
+        vulkanRenderer = VulkanRenderer(vk.logicalDevice, vk.physicalDevice, vk.queueFamilyIndices, vk.deviceQueue, resourceFactory, vk.renderpass, resourceFactory.quadVertexBuffer)
         vulkanRenderer.create()
 
         resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", Texture2d(0, 0, 0, TextureFilter.LINEAR), Vector3f())
@@ -50,10 +50,10 @@ class Rain {
 
     fun run() {
         while (context.pollEvents()) {
-            vk.swapchainIsDirty = vk.swapchainIsDirty || context.windowDirty
+            vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
             context.windowDirty = false
 
-            if(vk.recreateSwapchain()) {
+            if(vulkanRenderer.recreateSwapchain(vk.surface)) {
                 vulkanRenderer.recreateRenderCommandBuffers()
             }
 

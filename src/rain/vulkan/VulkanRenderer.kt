@@ -23,19 +23,23 @@ internal class VulkanRenderer : Renderer {
     val uniformBufferTest = UniformBuffer()
     var renderCommandPool: CommandPool = CommandPool()
     var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
+    lateinit var setupCommandPool: CommandPool
+    lateinit var setupCommandBuffer: CommandPool.CommandBuffer
     lateinit var postPresentBuffer: CommandPool.CommandBuffer
     lateinit var imageAcquiredSemaphore: Semaphore
     lateinit var completeRenderSemaphore: Semaphore
     var queue: Queue
 
-    internal constructor(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queueFamilyIndices: QueueFamilyIndices, swapchain: Swapchain, queue: Queue, resourceFactory: VulkanResourceFactory, renderpass: Renderpass, quadVertexBuffer: VertexBuffer) {
+    var swapchainIsDirty = true
+
+    internal constructor(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, queueFamilyIndices: QueueFamilyIndices, queue: Queue, resourceFactory: VulkanResourceFactory, renderpass: Renderpass, quadVertexBuffer: VertexBuffer) {
         this.logicalDevice = logicalDevice
         this.physicalDevice = physicalDevice
         this.resourceFactory = resourceFactory
         this.renderpass = renderpass
         this.quadVertexBuffer = quadVertexBuffer
         this.queueFamilyIndices = queueFamilyIndices
-        this.swapchain = swapchain
+        this.swapchain = Swapchain()
         this.queue = queue
     }
 
@@ -59,11 +63,29 @@ internal class VulkanRenderer : Renderer {
 
         descriptorPool.create(logicalDevice, 2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
         descriptorSetTest = descriptorPool.createUniformBufferSet(logicalDevice, VK_SHADER_STAGE_FRAGMENT_BIT, null, 2, uniformBufferTest)
+
+        setupCommandPool = CommandPool()
+        setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
+        setupCommandBuffer = setupCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
     }
 
     internal fun recreateRenderCommandBuffers() {
         VK10.vkResetCommandPool(logicalDevice.device, renderCommandPool.pool, 0);
         renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers!!.size)
+    }
+
+    fun recreateSwapchain(surface: Surface): Boolean {
+        if (swapchainIsDirty) {
+            val capabilities = VkSurfaceCapabilitiesKHR.calloc()
+            KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, surface.surface, capabilities)
+
+            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandBuffer, queue)
+            swapchain.createFramebuffers(logicalDevice, renderpass, capabilities.currentExtent())
+            swapchainIsDirty = false
+            return true
+        }
+
+        return false
     }
 
     override fun render() {
