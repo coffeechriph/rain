@@ -1,7 +1,6 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Entity
@@ -9,34 +8,31 @@ import rain.api.EntitySystem
 import rain.api.Renderer
 
 internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
-    val systems: MutableList<EntitySystem<Entity>> = ArrayList()
-    val quadVertexBuffer: VertexBuffer
-    val logicalDevice: LogicalDevice
-    val physicalDevice: PhysicalDevice
-    val renderpass: Renderpass
-    val pipelines: MutableList<Pipeline> = ArrayList()
-    val swapchain: Swapchain
-    val queueFamilyIndices: QueueFamilyIndices
-    val descriptorPool = DescriptorPool()
-    val uniformBufferTest = UniformBuffer()
-    var renderCommandPool: CommandPool = CommandPool()
-    var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
-    var queue: Queue
-    var surfaceColorFormat = 0
+    private val systems: MutableList<EntitySystem<Entity>> = ArrayList()
+    private val quadVertexBuffer: VertexBuffer
+    private val pipelines: MutableList<Pipeline> = ArrayList()
+    private val physicalDevice: PhysicalDevice = vk.physicalDevice
+    private val logicalDevice: LogicalDevice = vk.logicalDevice
+    private val renderpass: Renderpass = Renderpass()
+    private val swapchain: Swapchain
+    private val queueFamilyIndices: QueueFamilyIndices
+    private val descriptorPool = DescriptorPool()
+    private val uniformBufferTest = UniformBuffer()
+    private var renderCommandPool: CommandPool = CommandPool()
+    private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
+    private var queue: Queue
+    private var surfaceColorFormat = 0
 
-    lateinit var setupCommandPool: CommandPool
-    lateinit var descriptorSetTest: DescriptorPool.DescriptorSet
-    lateinit var setupCommandBuffer: CommandPool.CommandBuffer
-    lateinit var postPresentBuffer: CommandPool.CommandBuffer
-    lateinit var imageAcquiredSemaphore: Semaphore
-    lateinit var completeRenderSemaphore: Semaphore
+    private lateinit var setupCommandPool: CommandPool
+    private lateinit var descriptorSetTest: DescriptorPool.DescriptorSet
+    private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
+    private lateinit var postPresentBuffer: CommandPool.CommandBuffer
+    private lateinit var imageAcquiredSemaphore: Semaphore
+    private lateinit var completeRenderSemaphore: Semaphore
 
     var swapchainIsDirty = true
 
     init {
-        this.logicalDevice = vk.logicalDevice
-        this.physicalDevice = vk.physicalDevice
-        this.renderpass = Renderpass()
         this.quadVertexBuffer = resourceFactory.quadVertexBuffer
         this.queueFamilyIndices = vk.queueFamilyIndices
         this.swapchain = Swapchain()
@@ -132,17 +128,17 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderCommandBuffers[nextImage].submit(queue.queue, imageAcquiredSemaphore, completeRenderSemaphore, VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
 
         presentImage(nextImage)
+        vkDestroySemaphore(logicalDevice.device, imageAcquiredSemaphore.semaphore, null)
+        vkDestroySemaphore(logicalDevice.device, completeRenderSemaphore.semaphore, null)
     }
 
     private fun presentImage(nextImage: Int) {
         val pSwapchains = MemoryUtil.memAllocLong(1)
-        val pImageAcquiredSemaphore = MemoryUtil.memAllocLong(1)
         val pRenderCompleteSemaphore = MemoryUtil.memAllocLong(1)
         val pImageIndex = MemoryUtil.memAllocInt(1)
 
         pImageIndex.put(0, nextImage)
         pSwapchains.put(0, swapchain.swapchain)
-        pImageAcquiredSemaphore.put(0, imageAcquiredSemaphore.semaphore)
         pRenderCompleteSemaphore.put(0, completeRenderSemaphore.semaphore)
 
         val presentInfo = VkPresentInfoKHR.calloc()
@@ -164,8 +160,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         VK10.vkQueueWaitIdle(queue.queue)
         submitPostPresentBarrier(postPresentBuffer, queue, swapchain.images[nextImage])
-        vkDestroySemaphore(logicalDevice.device, pImageAcquiredSemaphore.get(0), null)
-        vkDestroySemaphore(logicalDevice.device, pRenderCompleteSemaphore.get(0), null)
     }
 
     private fun attachPrePresentBarrier(cmdBuffer: CommandPool.CommandBuffer, presentImage: Long) {

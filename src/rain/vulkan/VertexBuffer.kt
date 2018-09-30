@@ -5,25 +5,21 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import java.nio.IntBuffer
 import java.nio.LongBuffer
-import kotlin.IllegalArgumentException
-import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-import org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_TRANSFER_DST_BIT
-
-
-
-
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VertexBuffer {
     var buffer: Long = 0
+        private set
     var bufferSize: Long = 0
+        private set
     var vertexCount: Int = 0
+        private set
+
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
+        private set
 
     // TODO: Why are we storing bufferMemory as a LongBuffer
-    internal class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long, var memoryProperties: VkPhysicalDeviceMemoryProperties)
+    internal class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long)
 
     fun create(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
         if (state == VertexBufferState.STATIC) {
@@ -98,7 +94,7 @@ internal class VertexBuffer {
             throw AssertionError("Failed to bind memory to vertex buffer: " + VulkanResult(err))
         }
 
-        return Buffer(buffer, bufferMemory, bufferSize, memoryProperties)
+        return Buffer(buffer, bufferMemory, bufferSize)
     }
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {

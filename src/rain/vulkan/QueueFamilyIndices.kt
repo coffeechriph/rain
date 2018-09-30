@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkPhysicalDevice
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 
-data class QueueFamilyIndices(var graphicsFamily: Int = -1, var presentFamily: Int = -1) {
+internal data class QueueFamilyIndices(var graphicsFamily: Int = -1, var presentFamily: Int = -1) {
     val isComplete get()= graphicsFamily >= 0 && presentFamily >= 0
 }
 

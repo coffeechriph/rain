@@ -1,19 +1,10 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkCommandBuffer
-import org.lwjgl.vulkan.VkExtent2D
-import org.lwjgl.vulkan.VkFramebufferCreateInfo
-import org.lwjgl.vulkan.VkImageMemoryBarrier
-import org.lwjgl.vulkan.VkImageViewCreateInfo
-import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR
-import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
-import org.lwjgl.vulkan.VK10.vkDestroyFramebuffer
-
-
 
 internal class Swapchain {
     var swapchain: Long = 0

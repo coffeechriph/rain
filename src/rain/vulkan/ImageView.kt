@@ -1,11 +1,10 @@
 package rain.vulkan
 
-import org.lwjgl.BufferUtils
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkImageViewCreateInfo
 
-class ImageView {
+internal class ImageView {
     internal var imageView: Long = 0
 
     // TODO: Previously when creating the swapchain we did not recreate the VkImageViewCreateInfo

@@ -1,6 +1,5 @@
 package rain.vulkan
 
-import org.lwjgl.stb.STBImage.stbi_image_free
 import org.lwjgl.stb.STBImage.stbi_load
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
@@ -10,13 +9,11 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import java.io.File
 import java.io.FileNotFoundException
-import java.lang.RuntimeException
-
 
 internal class VulkanTexture2d {
-    var texture: Long = 0
-    var textureView: Long = 0
-    var textureSampler: Long = 0
+    private var texture: Long = 0
+    private var textureView: Long = 0
+    private var textureSampler: Long = 0
 
     fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String) {
         if (!File(filePath).exists()) {

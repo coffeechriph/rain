@@ -5,19 +5,14 @@ import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
-import java.nio.ByteBuffer
-import org.lwjgl.vulkan.VkInstance
-import org.lwjgl.vulkan.VK10.VK_SUCCESS
-import org.lwjgl.vulkan.VK10.vkCreateInstance
-import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO
-import org.lwjgl.vulkan.VkInstanceCreateInfo
-import org.lwjgl.vulkan.VK10.VK_MAKE_VERSION
-import org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_APPLICATION_INFO
 import org.lwjgl.vulkan.VkApplicationInfo
-
+import org.lwjgl.vulkan.VkExtensionProperties
+import org.lwjgl.vulkan.VkInstance
+import org.lwjgl.vulkan.VkInstanceCreateInfo
+import org.lwjgl.vulkan.VkLayerProperties
+import java.nio.ByteBuffer
 
 
 internal class Instance {

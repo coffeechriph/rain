@@ -7,7 +7,7 @@ import java.nio.LongBuffer
 
 internal class DescriptorPool {
     var pool: Long = 0
-    internal var descriptorType: Int = 0
+    private var descriptorType: Int = 0
 
     fun create(logicalDevice: LogicalDevice, descriptorCount: Int, descriptorType: Int) {
         val descriptorPoolSize = VkDescriptorPoolSize.calloc(1)
@@ -69,7 +69,7 @@ internal class DescriptorPool {
         return DescriptorSet(descriptorSets, layout[0], uniformBuffer)
     }
 
-    internal fun createLayout(logicalDevice: LogicalDevice, stageFlags: Int, immutableSampler: LongBuffer?): LongBuffer {
+    private fun createLayout(logicalDevice: LogicalDevice, stageFlags: Int, immutableSampler: LongBuffer?): LongBuffer {
         // TODO: Change descriptorCount whenever we want to support more than 1 descriptor set / pipeline
         val descriptorLayout = VkDescriptorSetLayoutBinding.calloc(1)
                 .descriptorCount(1)
@@ -91,6 +91,5 @@ internal class DescriptorPool {
         return descriptorSetLayout
     }
 
-    class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val uniformBuffer: UniformBuffer) {
-    }
+    class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val uniformBuffer: UniformBuffer)
 }

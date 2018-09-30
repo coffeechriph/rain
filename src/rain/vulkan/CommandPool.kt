@@ -4,7 +4,6 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
-
 internal class CommandPool {
     var pool: Long = 0
         private set

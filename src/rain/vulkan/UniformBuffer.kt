@@ -7,8 +7,11 @@ import java.nio.ByteBuffer
 
 internal class UniformBuffer {
     lateinit var buffer: LongArray
+        private set
     lateinit var bufferMemory: LongArray
+        private set
     var bufferSize: Long = 0
+        private set
 
     internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, count: Int, bufferSize: Long) {
         this.buffer = LongArray(count)

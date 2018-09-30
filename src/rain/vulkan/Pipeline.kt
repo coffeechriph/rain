@@ -3,15 +3,13 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.system.MemoryUtil.memAllocLong
-import org.lwjgl.vulkan.VK10.VK_SUCCESS
-
 
 internal class Pipeline {
     var pipeline: Long = 0
         private set
 
     var pipelineLayout: Long = 0
+        private set
 
     lateinit var vertexBuffer: VertexBuffer
         private set

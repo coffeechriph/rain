@@ -1,9 +1,5 @@
 package rain.vulkan
 
-import org.lwjgl.vulkan.VK10.vkResetCommandPool
-import org.lwjgl.vulkan.*
-
-
 internal class Vk {
     lateinit var instance: Instance
         private set

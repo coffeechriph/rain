@@ -14,7 +14,7 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
     private val queue: Queue
     private val commandPool: CommandPool
     internal val materials: MutableList<VulkanMaterial>
-    internal val textures: MutableMap<Long, VulkanTexture2d>
+    private val textures: MutableMap<Long, VulkanTexture2d>
     internal val quadVertexBuffer: VertexBuffer
 
     init {

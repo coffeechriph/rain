@@ -14,7 +14,7 @@ internal class PhysicalDevice {
     lateinit var memoryProperties: VkPhysicalDeviceMemoryProperties
         private set
 
-    var heapSize: Long = 0
+    private var heapSize: Long = 0
         private set
 
     val deviceExtensions = arrayOf(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME)

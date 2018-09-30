@@ -5,18 +5,10 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memFree
 import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR
-import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkSurfaceFormatKHR
-import org.lwjgl.vulkan.VK10.VK_FORMAT_B8G8R8A8_UNORM
-import org.lwjgl.vulkan.VK10.VK_FORMAT_UNDEFINED
-import org.lwjgl.vulkan.VK10.VK_SUCCESS
 import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR
-import org.lwjgl.vulkan.VK10.VK_TRUE
-import org.lwjgl.vulkan.VK10.VK_QUEUE_GRAPHICS_BIT
+import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkQueueFamilyProperties
-
-
-
+import org.lwjgl.vulkan.VkSurfaceFormatKHR
 
 internal class Surface {
     var surface: Long = 0

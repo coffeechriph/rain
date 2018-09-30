@@ -4,8 +4,6 @@ import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkSemaphoreCreateInfo
 
-
-
 internal class Semaphore {
     var semaphore: Long = 0
         private set

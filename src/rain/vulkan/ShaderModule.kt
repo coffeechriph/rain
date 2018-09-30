@@ -1,10 +1,10 @@
 package rain.vulkan
 
-import rain.readFileAsByteBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo
+import rain.readFileAsByteBuffer
 
 internal class ShaderModule {
     lateinit var createInfo: VkPipelineShaderStageCreateInfo
