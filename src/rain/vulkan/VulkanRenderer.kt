@@ -16,15 +16,15 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private val renderpass: Renderpass = Renderpass()
     private val swapchain: Swapchain
     private val queueFamilyIndices: QueueFamilyIndices
-    private val descriptorPool = DescriptorPool()
     private val uniformBufferTest = UniformBuffer()
+    private val uniformBufferTest2 = UniformBuffer()
     private var renderCommandPool: CommandPool = CommandPool()
     private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
     private var queue: Queue
     private var surfaceColorFormat = 0
+    private lateinit var descriptorPoolTest: UniformDescriptorPoolBuilder.DescriptorPool
 
     private lateinit var setupCommandPool: CommandPool
-    private lateinit var descriptorSetTest: DescriptorPool.DescriptorSet
     private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
     private lateinit var postPresentBuffer: CommandPool.CommandBuffer
     private lateinit var imageAcquiredSemaphore: Semaphore
@@ -59,8 +59,18 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         uniformBufferTest.update(logicalDevice, data, 1)
         MemoryUtil.memFree(data)
 
-        descriptorPool.create(logicalDevice, 2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-        descriptorSetTest = descriptorPool.createUniformBufferSet(logicalDevice, VK_SHADER_STAGE_FRAGMENT_BIT, null, 2, uniformBufferTest)
+        uniformBufferTest2.create(logicalDevice, physicalDevice.memoryProperties, 2, 16)
+
+        val data2 = MemoryUtil.memAlloc(4 * 4)
+        data2.asFloatBuffer().put(0.0f).put(0.5f).put(0.0f).put(1.0f).flip()
+        uniformBufferTest2.update(logicalDevice, data2, 0)
+        uniformBufferTest2.update(logicalDevice, data2, 1)
+        MemoryUtil.memFree(data2)
+
+        descriptorPoolTest = UniformDescriptorPoolBuilder.create(logicalDevice)
+                .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+                .withUniformBuffer(uniformBufferTest2, VK_SHADER_STAGE_FRAGMENT_BIT)
+                .build()
 
         setupCommandPool = CommandPool()
         setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
@@ -94,7 +104,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             for (i in 0 until ln) {
                 val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descriptorSetTest)
+                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descriptorPoolTest)
                 pipelines.add(pipeline)
             }
         }
@@ -118,7 +128,11 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            pipeline.begin(renderCommandBuffers[nextImage], descriptorSetTest.descriptorSet[nextImage])
+            val descriptorSets = LongArray(2)
+            descriptorSets[0] = descriptorPoolTest.descriptorSets[0].descriptorSet[nextImage]
+            descriptorSets[1] = descriptorPoolTest.descriptorSets[1].descriptorSet[nextImage]
+
+            pipeline.begin(renderCommandBuffers[nextImage], descriptorSets)
             pipeline.draw(renderCommandBuffers[nextImage])
         }
 

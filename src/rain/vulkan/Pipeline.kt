@@ -14,7 +14,7 @@ internal class Pipeline {
     lateinit var vertexBuffer: VertexBuffer
         private set
 
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorSet: DescriptorPool.DescriptorSet) {
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: UniformDescriptorPoolBuilder.DescriptorPool) {
         var err: Int
         // Vertex input state
         // Describes the topoloy used with this pipeline
@@ -89,8 +89,12 @@ internal class Pipeline {
         shaderStages.get(1).set(fragmentShader.createInfo)
 
         // TODO: Change this when we want to support more than 1 descriptor set
-        val descriptorSetLayouts = memAllocLong(1)
-        descriptorSetLayouts.put(0, descriptorSet.layout)
+        val descriptorSetLayouts = memAllocLong(descriptorPool.descriptorSets.size)
+        var i = 0
+        for (set in descriptorPool.descriptorSets) {
+            descriptorSetLayouts.put(i, set.layout)
+            i += 1
+        }
 
         // Create the pipeline layout that is used to generate the rendering pipelines that
         // are based on this descriptor set layout
@@ -145,7 +149,7 @@ internal class Pipeline {
         }
     }
 
-    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorSet: Long) {
+    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorSet: LongArray) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
         // TODO: Don't need to do this every time
         val offsets = memAllocLong(1)
@@ -156,8 +160,10 @@ internal class Pipeline {
 
         vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, buffer, offsets)
 
-        val pDescriptorSet = memAllocLong(1)
-        pDescriptorSet.put(0, descriptorSet)
+        val pDescriptorSet = memAllocLong(descriptorSet.size)
+        for (i in 0 until descriptorSet.size) {
+            pDescriptorSet.put(i, descriptorSet[i])
+        }
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
