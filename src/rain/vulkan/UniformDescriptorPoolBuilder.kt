@@ -4,6 +4,7 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
 import java.nio.LongBuffer
 
+// TODO: Make it so that each DescriptorPools descriptors are bound to a separate binding
 internal class UniformDescriptorPoolBuilder private constructor(val logicalDevice: LogicalDevice) {
     private var pool: Long = 0
     private val uniformBuffers = ArrayList<UniformBufferDescriptor>()
@@ -31,12 +32,15 @@ internal class UniformDescriptorPoolBuilder private constructor(val logicalDevic
         }
 
         create(logicalDevice, descriptorCount)
+
+        // TODO: UBOs over multiple bindings causes the SPV->MSL conversion to fail due to
+        // duplicate buffer indices
+        // Right now we span them across multiple sets instead..
         var bindingIndex = 0
 
         val descriptorSets = ArrayList<DescriptorSet>()
         for (u in uniformBuffers) {
             val descriptorSet = createUniformBufferSet(logicalDevice, u.stageFlags, bindingIndex, null, u.buffer)
-            bindingIndex += 1
 
             descriptorSets.add(descriptorSet)
         }
