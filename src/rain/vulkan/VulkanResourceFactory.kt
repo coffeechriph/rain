@@ -26,15 +26,15 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         this.commandPool = CommandPool()
         this.commandPool.create(logicalDevice, vk.queueFamilyIndices.graphicsFamily)
 
-        val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 3))
+        val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2))
         val vertices = floatArrayOf(
-                -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
-                -0.5f, 0.5f, 1.0f, 1.0f, 1.0f,
-                0.5f, 0.5f, 1.0f, 1.0f, 1.0f,
+                -0.5f, -0.5f, 0.0f, 0.0f,
+                -0.5f, 0.5f, 0.0f, 1.0f,
+                0.5f, 0.5f, 1.0f, 1.0f,
 
-                0.5f, 0.5f, 1.0f, 1.0f, 1.0f,
-                0.5f, -0.5f, 1.0f, 1.0f, 1.0f,
-                -0.5f, -0.5f, 1.0f, 1.0f, 1.0f
+                0.5f, 0.5f, 1.0f, 1.0f,
+                0.5f, -0.5f, 1.0f, 0.0f,
+                -0.5f, -0.5f, 0.0f, 0.0f
         )
 
         quadVertexBuffer = VertexBuffer()

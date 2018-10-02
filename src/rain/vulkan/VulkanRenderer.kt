@@ -22,7 +22,9 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
     private var queue: Queue
     private var surfaceColorFormat = 0
-    private lateinit var descriptorPoolTest: UniformDescriptorPoolBuilder.DescriptorPool
+    private var textureTest = VulkanTexture2d()
+    private lateinit var descriptorPoolTest: DescriptorPool
+    private lateinit var descriptorPoolTest2: DescriptorPool
 
     private lateinit var setupCommandPool: CommandPool
     private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
@@ -54,7 +56,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         uniformBufferTest.create(logicalDevice, physicalDevice.memoryProperties, 2, 16)
 
         val data = MemoryUtil.memAlloc(4 * 4)
-        data.asFloatBuffer().put(0.5f).put(0.0f).put(0.0f).put(1.0f).flip()
+        data.asFloatBuffer().put(0.5f).put(0.0f).put(0.5f).put(1.0f).flip()
         uniformBufferTest.update(logicalDevice, data, 0)
         uniformBufferTest.update(logicalDevice, data, 1)
         MemoryUtil.memFree(data)
@@ -70,11 +72,15 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         descriptorPoolTest = UniformDescriptorPoolBuilder.create(logicalDevice)
                 .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
                 .withUniformBuffer(uniformBufferTest2, VK_SHADER_STAGE_FRAGMENT_BIT)
-                .build()
+                .build(0)
 
         setupCommandPool = CommandPool()
         setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         setupCommandBuffer = setupCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
+        textureTest.load(logicalDevice, physicalDevice.memoryProperties, setupCommandPool, queue.queue, "./data/textures/town.png")
+        descriptorPoolTest2 = TextureDescriptorPoolBuilder.create(logicalDevice)
+                .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+                .build(1)
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -103,8 +109,12 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             val ln = resourceFactory.materials.size - pipelines.size
             for (i in 0 until ln) {
                 val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
+                // TODO: Streamline the way we assign descriptor pools to pipelines
+                val descriptorPoolList = ArrayList<DescriptorPool>()
+                descriptorPoolList.add(descriptorPoolTest)
+                descriptorPoolList.add(descriptorPoolTest2)
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descriptorPoolTest)
+                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descriptorPoolList)
                 pipelines.add(pipeline)
             }
         }
@@ -121,16 +131,18 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         completeRenderSemaphore.create(logicalDevice)
 
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore.semaphore)
-        //VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
-        //VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+        VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+        VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 
         renderCommandBuffers[nextImage].begin()
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            val descriptorSets = LongArray(2)
+            // TODO: Streamline the way we assign descriptorSets to pipelines
+            val descriptorSets = LongArray(3)
             descriptorSets[0] = descriptorPoolTest.descriptorSets[0].descriptorSet[nextImage]
             descriptorSets[1] = descriptorPoolTest.descriptorSets[1].descriptorSet[nextImage]
+            descriptorSets[2] = descriptorPoolTest2.descriptorSets[0].descriptorSet[0]
 
             pipeline.begin(renderCommandBuffers[nextImage], descriptorSets)
             pipeline.draw(renderCommandBuffers[nextImage])

@@ -11,9 +11,9 @@ import java.io.File
 import java.io.FileNotFoundException
 
 internal class VulkanTexture2d {
-    private var texture: Long = 0
-    private var textureView: Long = 0
-    private var textureSampler: Long = 0
+    var texture: Long = 0
+    var textureView: Long = 0
+    var textureSampler: Long = 0
 
     fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String) {
         if (!File(filePath).exists()) {

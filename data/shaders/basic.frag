@@ -9,7 +9,9 @@ layout(set = 1, binding = 0) uniform UniformColorBuffer2 {
     vec4 my_color;
 } ubo2;
 
-layout(location = 0) in vec3 Color;
+layout(binding = 1) uniform sampler2D texSampler;
+
+layout(location = 0) in vec2 Uv;
 void main() {
-    color = vec4(ubo.my_color.r, ubo2.my_color.g, 0.0, 1.0);
+    color = texture(texSampler, Uv);
 }
