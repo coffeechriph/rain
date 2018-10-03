@@ -5,6 +5,7 @@ import org.lwjgl.vulkan.*
 import java.nio.LongBuffer
 
 // TODO: Currently we're unable to bind multiple UniformBuffers to separate bindings
+// TODO: Only each descriptor in a set of decriptors needs to be assigned a unique binding point
 internal class UniformDescriptorPoolBuilder private constructor(val logicalDevice: LogicalDevice) {
     private var pool: Long = 0
     private val uniformBuffers = ArrayList<UniformBufferDescriptor>()
@@ -61,7 +62,7 @@ internal class UniformDescriptorPoolBuilder private constructor(val logicalDevic
     }
 
     private fun createLayout(logicalDevice: LogicalDevice, stageFlags: Int, bindingIndex: Int, immutableSampler: LongBuffer?): LongBuffer {
-        // TODO: Change descriptorCount whenever we want to support more than 1 descriptor set / pipeline
+
         val descriptorLayout = VkDescriptorSetLayoutBinding.calloc(1)
                 .descriptorCount(1)
                 .descriptorType(VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)

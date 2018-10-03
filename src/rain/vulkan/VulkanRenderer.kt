@@ -17,7 +17,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private val swapchain: Swapchain
     private val queueFamilyIndices: QueueFamilyIndices
     private val uniformBufferTest = UniformBuffer()
-    private val uniformBufferTest2 = UniformBuffer()
     private var renderCommandPool: CommandPool = CommandPool()
     private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
     private var queue: Queue
@@ -32,6 +31,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private lateinit var imageAcquiredSemaphore: Semaphore
     private lateinit var completeRenderSemaphore: Semaphore
 
+    private var descPool = DescriptorPool()
     var swapchainIsDirty = true
 
     init {
@@ -61,26 +61,23 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         uniformBufferTest.update(logicalDevice, data, 1)
         MemoryUtil.memFree(data)
 
-        uniformBufferTest2.create(logicalDevice, physicalDevice.memoryProperties, 2, 16)
-
-        val data2 = MemoryUtil.memAlloc(4 * 4)
-        data2.asFloatBuffer().put(0.0f).put(0.5f).put(0.0f).put(1.0f).flip()
-        uniformBufferTest2.update(logicalDevice, data2, 0)
-        uniformBufferTest2.update(logicalDevice, data2, 1)
-        MemoryUtil.memFree(data2)
-
         descriptorPoolTest = UniformDescriptorPoolBuilder.create(logicalDevice)
                 .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-                .withUniformBuffer(uniformBufferTest2, VK_SHADER_STAGE_FRAGMENT_BIT)
                 .build(0)
 
         setupCommandPool = CommandPool()
         setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         setupCommandBuffer = setupCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
         textureTest.load(logicalDevice, physicalDevice.memoryProperties, setupCommandPool, queue.queue, "./data/textures/town.png")
+
+        descPool = DescriptorPool()
+        descPool.withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+        descPool.withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+        descPool.build(logicalDevice)
+
         descriptorPoolTest2 = TextureDescriptorPoolBuilder.create(logicalDevice)
                 .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-                .build(1)
+                .build(0)
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -110,11 +107,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             for (i in 0 until ln) {
                 val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
                 // TODO: Streamline the way we assign descriptor pools to pipelines
-                val descriptorPoolList = ArrayList<DescriptorPool>()
-                descriptorPoolList.add(descriptorPoolTest)
-                descriptorPoolList.add(descriptorPoolTest2)
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descriptorPoolList)
+                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descPool)
                 pipelines.add(pipeline)
             }
         }
@@ -139,10 +133,9 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         for (pipeline in pipelines) {
             // TODO: Streamline the way we assign descriptorSets to pipelines
-            val descriptorSets = LongArray(3)
-            descriptorSets[0] = descriptorPoolTest.descriptorSets[0].descriptorSet[nextImage]
-            descriptorSets[1] = descriptorPoolTest.descriptorSets[1].descriptorSet[nextImage]
-            descriptorSets[2] = descriptorPoolTest2.descriptorSets[0].descriptorSet[0]
+            val descriptorSets = LongArray(2)
+            descriptorSets[0] = descPool.descriptorSets[0].descriptorSet[nextImage]
+            descriptorSets[1] = descPool.descriptorSets[1].descriptorSet[0]
 
             pipeline.begin(renderCommandBuffers[nextImage], descriptorSets)
             pipeline.draw(renderCommandBuffers[nextImage])

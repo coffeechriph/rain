@@ -42,7 +42,7 @@ internal class VulkanTexture2d {
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to map vertex memory: " + VulkanResult(err))
+            throw AssertionError("Failed to map image memory: " + VulkanResult(err))
         }
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(imageDataBuffer), data, imageDataBuffer.remaining().toLong())

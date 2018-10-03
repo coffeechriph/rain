@@ -14,7 +14,7 @@ internal class Pipeline {
     lateinit var vertexBuffer: VertexBuffer
         private set
 
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPools: List<DescriptorPool>) {
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
         var err: Int
         // Vertex input state
         // Describes the topoloy used with this pipeline
@@ -89,18 +89,13 @@ internal class Pipeline {
         shaderStages.get(1).set(fragmentShader.createInfo)
 
         // TODO: Change this when we want to support more than 1 descriptor set
-        var numDescriptorLayouts = 0
-        for (pool in descriptorPools) {
-            numDescriptorLayouts += pool.descriptorSets.size
-        }
+        var numDescriptorLayouts = descriptorPool.descriptorSets.size
 
         val descriptorSetLayouts = memAllocLong(numDescriptorLayouts)
         var i = 0
-        for (pool in descriptorPools) {
-            for (set in pool.descriptorSets) {
-                descriptorSetLayouts.put(i, set.layout)
-                i += 1
-            }
+        for (set in descriptorPool.descriptorSets) {
+            descriptorSetLayouts.put(i, set.layout)
+            i += 1
         }
 
         // Create the pipeline layout that is used to generate the rendering pipelines that
