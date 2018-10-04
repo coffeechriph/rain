@@ -75,6 +75,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         descPool = DescriptorPool()
             .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_FRAGMENT_BIT)
             .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_VERTEX_BIT)
             .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build(logicalDevice)
@@ -118,7 +119,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             val ln = resourceFactory.materials.size - pipelines.size
             for (i in 0 until ln) {
                 val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
-                // TODO: Streamline the way we assign descriptor pools to pipelines
                 val pipeline = Pipeline()
                 pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descPool)
                 pipelines.add(pipeline)
@@ -145,10 +145,11 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         for (pipeline in pipelines) {
             // TODO: Streamline the way we assign descriptorSets to pipelines
-            val descriptorSets = LongArray(3)
+            val descriptorSets = LongArray(4)
             descriptorSets[0] = descPool.descriptorSets[0].descriptorSet[nextImage]
             descriptorSets[1] = descPool.descriptorSets[1].descriptorSet[0]
             descriptorSets[2] = descPool.descriptorSets[2].descriptorSet[0]
+            descriptorSets[3] = descPool.descriptorSets[3].descriptorSet[0]
 
             pipeline.begin(renderCommandBuffers[nextImage], descriptorSets)
             pipeline.draw(renderCommandBuffers[nextImage])

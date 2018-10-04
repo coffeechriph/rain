@@ -68,7 +68,7 @@ internal class DescriptorPool {
         // TODO: Binding index doesn't seem to do anything?
         var bindingIndex = 0
         for (u in uniformBuffers) {
-            val layout = createLayout(logicalDevice, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, u.stageFlags, bindingIndex, null)
+            val layout = createLayout(logicalDevice, u.buffer.size, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, u.stageFlags, bindingIndex, null)
             for (k in u.buffer) {
                 val descriptorSet = createUniformBufferSet(logicalDevice, layout[0], bindingIndex, k)
                 descriptorSets.add(descriptorSet)
@@ -78,9 +78,8 @@ internal class DescriptorPool {
         }
 
         for (u in textureDescriptors) {
-            val layout = createLayout(logicalDevice, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, u.stageFlags, bindingIndex, null)
+            val layout = createLayout(logicalDevice, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, u.stageFlags, bindingIndex, null)
             for (k in u.buffer) {
-                println("Adding texture with binding $bindingIndex")
                 val descriptorSet = createTextureDescriptorSet(logicalDevice, layout[0], bindingIndex, k)
                 descriptorSets.add(descriptorSet)
             }
@@ -112,7 +111,6 @@ internal class DescriptorPool {
                     .descriptorCount(textureDescriptors[i].buffer.size)
         }
 
-        println("Creating pool with maxSets $descriptorCount")
         val descriptorPoolCreateInfo = VkDescriptorPoolCreateInfo.calloc()
                 .sType(VK10.VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO)
                 .pPoolSizes(descriptorPoolSize)
@@ -127,10 +125,9 @@ internal class DescriptorPool {
         pool = descriptorPool.get(0)
     }
 
-    private fun createLayout(logicalDevice: LogicalDevice, descriptorType: Int, stageFlags: Int, bindingIndex: Int, immutableSampler: LongBuffer?): LongBuffer {
-        // TODO: Change descriptorCount whenever we want to support more than 1 descriptor set / pipeline
+    private fun createLayout(logicalDevice: LogicalDevice, descriptorCount: Int, descriptorType: Int, stageFlags: Int, bindingIndex: Int, immutableSampler: LongBuffer?): LongBuffer {
         val descriptorLayout = VkDescriptorSetLayoutBinding.calloc(1)
-                .descriptorCount(1)
+                .descriptorCount(descriptorCount)
                 .descriptorType(descriptorType)
                 .binding(bindingIndex)
                 .stageFlags(stageFlags)
