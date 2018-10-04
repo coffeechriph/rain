@@ -49,13 +49,15 @@ internal class Swapchain {
         }
 
         // Try to use mailbox mode. Low latency and non-tearing
+        var preferredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         var swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR
         for (i in 0 until presentModeCount) {
-            if (pPresentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
-                swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR
+            if (pPresentModes.get(i) == preferredPresentMode) {
+                swapchainPresentMode = preferredPresentMode
                 break
             }
-            if (swapchainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR && pPresentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            if (swapchainPresentMode != preferredPresentMode && pPresentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+                println("Preferred present mode not available. Using VK_PRESENT_MODE_IMMEDIATE_KHR")
                 swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR
             }
         }

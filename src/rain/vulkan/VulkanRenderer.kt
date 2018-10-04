@@ -17,12 +17,13 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private val swapchain: Swapchain
     private val queueFamilyIndices: QueueFamilyIndices
     private val uniformBufferTest = UniformBuffer()
+    private val uniformBufferPosTest = UniformBuffer()
+    private var uniformBufferPosTick = 0.0f
     private var renderCommandPool: CommandPool = CommandPool()
     private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
     private var queue: Queue
     private var surfaceColorFormat = 0
     private var textureTest = VulkanTexture2d()
-    private lateinit var descriptorPoolTest: DescriptorPool
     private lateinit var descriptorPoolTest2: DescriptorPool
 
     private lateinit var setupCommandPool: CommandPool
@@ -61,9 +62,11 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         uniformBufferTest.update(logicalDevice, data, 1)
         MemoryUtil.memFree(data)
 
-        descriptorPoolTest = UniformDescriptorPoolBuilder.create(logicalDevice)
-                .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-                .build(0)
+        uniformBufferPosTest.create(logicalDevice, physicalDevice.memoryProperties, 1, 8)
+        val data2 = MemoryUtil.memAlloc(2 * 4)
+        data2.asFloatBuffer().put(0.25f).put(-0.25f).flip()
+        uniformBufferPosTest.update(logicalDevice, data2, 0)
+        MemoryUtil.memFree(data2)
 
         setupCommandPool = CommandPool()
         setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
@@ -71,9 +74,10 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         textureTest.load(logicalDevice, physicalDevice.memoryProperties, setupCommandPool, queue.queue, "./data/textures/town.png")
 
         descPool = DescriptorPool()
-        descPool.withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-        descPool.withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-        descPool.build(logicalDevice)
+            .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_VERTEX_BIT)
+            .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .build(logicalDevice)
 
         descriptorPoolTest2 = TextureDescriptorPoolBuilder.create(logicalDevice)
                 .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -100,6 +104,14 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     }
 
     override fun render() {
+        uniformBufferPosTick += 0.005f
+
+        // TODO: Remove me!
+        val data2 = MemoryUtil.memAlloc(2 * 4)
+        data2.asFloatBuffer().put(Math.sin(uniformBufferPosTick.toDouble()).toFloat() * 0.75f).put(Math.cos(uniformBufferPosTick.toDouble()).toFloat() * 0.75f).flip()
+        uniformBufferPosTest.update(logicalDevice, data2, 0)
+        MemoryUtil.memFree(data2)
+
         // TODO: Stupid way of doing this
         // But sufficient for now. Each material will spawn a separate pipeline
         if (pipelines.size < resourceFactory.materials.size) {
@@ -133,9 +145,10 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         for (pipeline in pipelines) {
             // TODO: Streamline the way we assign descriptorSets to pipelines
-            val descriptorSets = LongArray(2)
+            val descriptorSets = LongArray(3)
             descriptorSets[0] = descPool.descriptorSets[0].descriptorSet[nextImage]
             descriptorSets[1] = descPool.descriptorSets[1].descriptorSet[0]
+            descriptorSets[2] = descPool.descriptorSets[2].descriptorSet[0]
 
             pipeline.begin(renderCommandBuffers[nextImage], descriptorSets)
             pipeline.draw(renderCommandBuffers[nextImage])

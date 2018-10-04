@@ -50,7 +50,7 @@ internal class DescriptorPool {
         return this
     }
 
-    fun build(logicalDevice: LogicalDevice) {
+    fun build(logicalDevice: LogicalDevice): DescriptorPool {
         // We need to allocate enough space for every uniform buffer
         var descriptorCount = 0
         for (u in uniformBuffers) {
@@ -87,6 +87,8 @@ internal class DescriptorPool {
 
             //bindingIndex += 1
         }
+
+        return this
     }
 
     private fun create(logicalDevice: LogicalDevice, descriptorCount: Int) {
@@ -148,7 +150,6 @@ internal class DescriptorPool {
     }
 
     private fun createTextureDescriptorSet(logicalDevice: LogicalDevice, layout: Long, bindingIndex: Int, texture: VulkanTexture2d): DescriptorSet {
-        // We reuse the same layout, but are expecting an array of 1 layout per UBO
         val pLayouts = MemoryUtil.memAllocLong(1)
         pLayouts.put(0, layout)
 

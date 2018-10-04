@@ -14,6 +14,7 @@ class Rain {
         private set
     private lateinit var vulkanRenderer: VulkanRenderer
         private set
+    private val timer = Timer()
 
     fun create(width: Int, height: Int, title: String, api: Api) {
         context.create(width, height, title)
@@ -44,6 +45,8 @@ class Rain {
 
     fun run() {
         while (context.pollEvents()) {
+            timer.update()
+            context.title = "FPS: " + timer.framesPerSecond
             vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
             context.windowDirty = false
 
