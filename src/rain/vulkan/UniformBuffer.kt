@@ -12,8 +12,13 @@ internal class UniformBuffer {
         private set
     var bufferSize: Long = 0
         private set
+    var mode = BufferMode.SINGLE_BUFFER
+        private set
 
-    internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, count: Int, bufferSize: Long) {
+    internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, mode: BufferMode, bufferSize: Long) {
+        val count = if (mode == BufferMode.SINGLE_BUFFER) {1} else {Swapchain.SWAPCHAIN_MODE.mode}
+        this.mode = mode
+
         this.buffer = LongArray(count)
         this.bufferMemory = LongArray(count)
         this.bufferSize = bufferSize

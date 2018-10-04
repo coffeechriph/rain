@@ -24,7 +24,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private var queue: Queue
     private var surfaceColorFormat = 0
     private var textureTest = VulkanTexture2d()
-    private lateinit var descriptorPoolTest2: DescriptorPool
 
     private lateinit var setupCommandPool: CommandPool
     private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
@@ -54,7 +53,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         postPresentBuffer = renderCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
 
-        uniformBufferTest.create(logicalDevice, physicalDevice.memoryProperties, 2, 16)
+        uniformBufferTest.create(logicalDevice, physicalDevice.memoryProperties, BufferMode.ONE_PER_SWAPCHAIN, 16)
 
         val data = MemoryUtil.memAlloc(4 * 4)
         data.asFloatBuffer().put(0.5f).put(0.0f).put(0.5f).put(1.0f).flip()
@@ -62,7 +61,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         uniformBufferTest.update(logicalDevice, data, 1)
         MemoryUtil.memFree(data)
 
-        uniformBufferPosTest.create(logicalDevice, physicalDevice.memoryProperties, 1, 8)
+        uniformBufferPosTest.create(logicalDevice, physicalDevice.memoryProperties, BufferMode.SINGLE_BUFFER, 8)
         val data2 = MemoryUtil.memAlloc(2 * 4)
         data2.asFloatBuffer().put(0.25f).put(-0.25f).flip()
         uniformBufferPosTest.update(logicalDevice, data2, 0)
@@ -79,10 +78,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_VERTEX_BIT)
             .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build(logicalDevice)
-
-        descriptorPoolTest2 = TextureDescriptorPoolBuilder.create(logicalDevice)
-                .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-                .build(0)
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -144,14 +139,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            // TODO: Streamline the way we assign descriptorSets to pipelines
-            val descriptorSets = LongArray(4)
-            descriptorSets[0] = descPool.descriptorSets[0].descriptorSet[nextImage]
-            descriptorSets[1] = descPool.descriptorSets[1].descriptorSet[0]
-            descriptorSets[2] = descPool.descriptorSets[2].descriptorSet[0]
-            descriptorSets[3] = descPool.descriptorSets[3].descriptorSet[0]
-
-            pipeline.begin(renderCommandBuffers[nextImage], descriptorSets)
+            pipeline.begin(renderCommandBuffers[nextImage], descPool, nextImage)
             pipeline.draw(renderCommandBuffers[nextImage])
         }
 

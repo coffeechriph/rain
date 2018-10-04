@@ -6,7 +6,7 @@ import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 import java.nio.LongBuffer
 
-internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long)
+internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val bufferMode: BufferMode)
 internal class DescriptorPool {
     var pool: Long = 0
     var descriptorSets = ArrayList<DescriptorSet>()
@@ -176,7 +176,7 @@ internal class DescriptorPool {
 
         VK10.vkUpdateDescriptorSets(logicalDevice.device, descriptorWrite, null)
 
-        return DescriptorSet(descriptorSets, layout)
+        return DescriptorSet(descriptorSets, layout, BufferMode.SINGLE_BUFFER)
     }
 
     private fun createUniformBufferSet(logicalDevice: LogicalDevice, layout: Long, bindingIndex: Int, uniformBuffer: UniformBuffer): DescriptorSet {
@@ -214,6 +214,6 @@ internal class DescriptorPool {
             VK10.vkUpdateDescriptorSets(logicalDevice.device, descriptorWrite, null)
         }
 
-        return DescriptorSet(descriptorSets, layout)
+        return DescriptorSet(descriptorSets, layout, uniformBuffer.mode)
     }
 }

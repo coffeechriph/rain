@@ -151,7 +151,7 @@ internal class Pipeline {
         }
     }
 
-    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorSet: LongArray) {
+    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorPool: DescriptorPool, nextFrame: Int) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
         // TODO: Don't need to do this every time
         val offsets = memAllocLong(1)
@@ -162,9 +162,14 @@ internal class Pipeline {
 
         vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, buffer, offsets)
 
-        val pDescriptorSet = memAllocLong(descriptorSet.size)
-        for (i in 0 until descriptorSet.size) {
-            pDescriptorSet.put(i, descriptorSet[i])
+        val pDescriptorSet = memAllocLong(descriptorPool.descriptorSets.size)
+        for (i in 0 until descriptorPool.descriptorSets.size) {
+            if (descriptorPool.descriptorSets[i].bufferMode == BufferMode.SINGLE_BUFFER) {
+                pDescriptorSet.put(i, descriptorPool.descriptorSets[i].descriptorSet[0])
+            }
+            else {
+                pDescriptorSet.put(i, descriptorPool.descriptorSets[i].descriptorSet[nextFrame])
+            }
         }
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }

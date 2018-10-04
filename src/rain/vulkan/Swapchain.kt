@@ -7,6 +7,15 @@ import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 
 internal class Swapchain {
+    enum class SwapchainMode(internal val mode: Int) {
+        SINGLE_BUFFERED(1),
+        DOUBLE_BUFFERED(2);
+    }
+
+    companion object {
+        internal var SWAPCHAIN_MODE = SwapchainMode.DOUBLE_BUFFERED
+    }
+
     var swapchain: Long = 0
         private set
 
@@ -49,7 +58,7 @@ internal class Swapchain {
         }
 
         // Try to use mailbox mode. Low latency and non-tearing
-        var preferredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+        var preferredPresentMode = VK_PRESENT_MODE_FIFO_KHR
         var swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR
         for (i in 0 until presentModeCount) {
             if (pPresentModes.get(i) == preferredPresentMode) {
@@ -64,7 +73,7 @@ internal class Swapchain {
         memFree(pPresentModes)
 
         // Determine the number of images
-        var desiredNumberOfSwapchainImages = surfCaps.minImageCount() + 1
+        var desiredNumberOfSwapchainImages = SWAPCHAIN_MODE.mode
         if (surfCaps.maxImageCount() > 0 && desiredNumberOfSwapchainImages > surfCaps.maxImageCount()) {
             desiredNumberOfSwapchainImages = surfCaps.maxImageCount()
         }

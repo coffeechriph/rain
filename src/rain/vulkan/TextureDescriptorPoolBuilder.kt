@@ -113,6 +113,6 @@ internal class TextureDescriptorPoolBuilder private constructor(val logicalDevic
 
         VK10.vkUpdateDescriptorSets(logicalDevice.device, descriptorWrite, null)
 
-        return DescriptorSet(descriptorSets, layout[0])
+        return DescriptorSet(descriptorSets, layout[0], BufferMode.SINGLE_BUFFER)
     }
 }
