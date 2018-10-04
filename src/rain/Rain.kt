@@ -7,7 +7,7 @@ import rain.api.Texture2d
 import rain.api.TextureFilter
 import rain.vulkan.*
 
-class Rain {
+open class Rain {
     private val context = Window()
     private val vk = Vk()
     private lateinit var resourceFactory: VulkanResourceFactory
@@ -43,7 +43,11 @@ class Rain {
         resourceFactory.createTexture2d("./data/textures/town.png", TextureFilter.NEAREST)
     }
 
+    open fun init() {}
+    open fun update() {}
+
     fun run() {
+        init()
         while (context.pollEvents()) {
             timer.update()
             context.title = "FPS: " + timer.framesPerSecond
@@ -54,6 +58,7 @@ class Rain {
                 vulkanRenderer.recreateRenderCommandBuffers()
             }
 
+            update()
             vulkanRenderer.render()
         }
 
