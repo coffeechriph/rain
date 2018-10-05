@@ -15,52 +15,50 @@ import kotlin.IllegalStateException
                            For example if there's no Transform attached but Sprite has been
                            attached.
  */
-class EntitySystem<T: Entity> {
+class EntitySystem {
     private var entityId: Long = 0
-    private lateinit var entities: MutableList<T>
-    private lateinit var transformComponents: MutableList<TransformComponent>
-    private lateinit var updateComponents: MutableList<UpdateComponent>
-    private lateinit var spriteComponents: MutableList<SpriteComponent>
+    private var entities = ArrayList<Long>()
+    private var transformComponents = ArrayList<TransformComponent>()
+    private var updateComponents = ArrayList<UpdateComponent>()
+    private var spriteComponents = ArrayList<SpriteComponent>()
 
-    fun newInstance(factory: (id: Long) -> T): EntitySystem<T> {
-        val e: T = factory(uniqueId())
-        entities.add(e)
-        return this
+    fun newEntity(): Builder {
+        entities.add(uniqueId())
+        return Builder(this)
     }
 
-    fun attachTransformComponent(): EntitySystem<T> {
-        val c = TransformComponent(entities[entities.size-1].entityId)
-        transformComponents.add(c)
-        return this
-    }
+    class Builder internal constructor(private var system: EntitySystem) {
+        fun attachTransformComponent(): Builder {
+            val c = TransformComponent(system.entities[system.entities.size - 1])
+            system.transformComponents.add(c)
+            return this
+        }
 
-    fun attachUpdateComponent(): EntitySystem<T> {
-        val c = UpdateComponent(entities[entities.size-1].entityId)
-        updateComponents.add(c)
-        return this
-    }
+        fun attachUpdateComponent(update: (scene: Scene) -> Unit): Builder {
+            val c = UpdateComponent(system.entities[system.entities.size - 1])
+            c.update = update
+            system.updateComponents.add(c)
+            return this
+        }
 
-    fun attachSpriteComponent(material: Material): EntitySystem<T> {
-        val entityId = entities[entities.size - 1].entityId
-        val tr = findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
-        val c = SpriteComponent(entityId, material, tr)
-        spriteComponents.add(c)
-        return this
+        fun attachSpriteComponent(material: Material): Builder {
+            val entityId = system.entities[system.entities.size - 1]
+            val tr = system.findTransformComponent(entityId)
+                    ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
+            val c = SpriteComponent(entityId, material, tr)
+            system.spriteComponents.add(c)
+            return this
+        }
+
+        fun build(scene: Scene, init: (scene: Scene) -> Unit): Long {
+            init(scene)
+            return system.entities[system.entities.size-1]
+        }
     }
 
     fun findTransformComponent(entityId: Long): TransformComponent? {
         for (e in transformComponents) {
             if (e.entity == entityId) {
-                return e
-            }
-        }
-
-        return null
-    }
-
-    fun findEntity(entityId: Long): Entity? {
-        for (e in entities) {
-            if (e.entityId == entityId) {
                 return e
             }
         }

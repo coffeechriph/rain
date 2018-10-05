@@ -1,19 +1,18 @@
 package rain
 
 import org.joml.Vector3f
-import rain.api.Renderer
-import rain.api.ResourceFactory
-import rain.api.Texture2d
-import rain.api.TextureFilter
+import rain.api.*
 import rain.vulkan.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 open class Rain {
     private val context = Window()
     private val vk = Vk()
-    private lateinit var resourceFactory: VulkanResourceFactory
+    lateinit var resourceFactory: ResourceFactory
         private set
     private lateinit var vulkanRenderer: VulkanRenderer
         private set
+    val scene = Scene()
     private val timer = Timer()
 
     fun create(width: Int, height: Int, title: String, api: Api) {
@@ -25,18 +24,10 @@ open class Rain {
         }
     }
 
-    fun getResourceFactory(): ResourceFactory {
-        return resourceFactory
-    }
-
-    fun getRenderer(): Renderer {
-        return vulkanRenderer
-    }
-
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
         resourceFactory = VulkanResourceFactory(vk)
-        vulkanRenderer = VulkanRenderer(vk, resourceFactory)
+        vulkanRenderer = VulkanRenderer(vk, resourceFactory as VulkanResourceFactory)
         vulkanRenderer.create()
 
         resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", Texture2d(0, 0, 0, TextureFilter.LINEAR), Vector3f())
@@ -58,8 +49,9 @@ open class Rain {
                 vulkanRenderer.recreateRenderCommandBuffers()
             }
 
+            scene.update()
             update()
-            vulkanRenderer.render()
+            vulkanRenderer.render(scene.entitySystems[0].spriteIterator().asSequence().toList())
         }
 
         vulkanRenderer.destroy()

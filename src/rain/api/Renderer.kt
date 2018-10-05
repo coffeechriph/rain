@@ -5,7 +5,6 @@ package rain.api
     API is chosen.
  */
 interface Renderer {
-    fun newSystem(): EntitySystem<Entity>
     fun create()
-    fun render()
+    fun render(spriteComponents: List<SpriteComponent>)
 }

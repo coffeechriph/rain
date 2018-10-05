@@ -1,15 +1,12 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.Entity
-import rain.api.EntitySystem
 import rain.api.Renderer
+import rain.api.SpriteComponent
 
 internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
-    private val systems: MutableList<EntitySystem<Entity>> = ArrayList()
     private val quadVertexBuffer: VertexBuffer
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
@@ -49,12 +46,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         setupQueue = Queue()
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
-    }
-
-    override fun newSystem(): EntitySystem<Entity> {
-        val sys = EntitySystem<Entity>()
-        systems.add(sys)
-        return sys
     }
 
     override fun create() {
@@ -122,7 +113,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         return false
     }
 
-    override fun render() {
+    override fun render(spriteComponents: List<SpriteComponent>) {
         uniformBufferPosTick += 0.005f
 
         // TODO: Remove me!
@@ -143,12 +134,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             }
         }
 
-        for (system in systems) {
-            for (update in system.updateIterator()) {
-                update.update(system.findEntity(update.entity)!!)
-            }
-        }
-
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore.semaphore)
         VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
         VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
@@ -157,8 +142,15 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
+            // TODO: This is a joke, we need a way to submit drawing commands for a particular pipeline
+            // instead of working with the whole sprite list
+            // We could have a submitDrawQuad(transform, vertexId, fragmentId)
+            // TODO: Create a method in the pipeline - matchesShaders(vertexId, fragmentId) to determind if the
+            // pipeline is compatible with whatever sprite we wanna render
             pipeline.begin(renderCommandBuffers[nextImage], descPool, nextImage)
-            pipeline.draw(renderCommandBuffers[nextImage])
+            for (sprite in spriteComponents) {
+                pipeline.draw(renderCommandBuffers[nextImage])
+            }
         }
 
         attachPrePresentBarrier(renderCommandBuffers[nextImage], swapchain.images[nextImage])
