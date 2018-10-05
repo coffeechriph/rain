@@ -31,6 +31,8 @@ internal class Swapchain {
     var extent: VkExtent2D = VkExtent2D.create()
         private set
 
+    private val pImageIndex = memAllocInt(1)
+
     fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, cmdbuffer: CommandPool.CommandBuffer, deviceQueue: Queue) {
         var err: Int
 
@@ -58,7 +60,7 @@ internal class Swapchain {
         }
 
         // Try to use mailbox mode. Low latency and non-tearing
-        var preferredPresentMode = VK_PRESENT_MODE_FIFO_KHR
+        var preferredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR
         var swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR
         for (i in 0 until presentModeCount) {
             if (pPresentModes.get(i) == preferredPresentMode) {
@@ -99,7 +101,8 @@ internal class Swapchain {
         val preTransform: Int
         if (surfCaps.supportedTransforms() and VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR != 0) {
             preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
-        } else {
+        }
+        else {
             preTransform = surfCaps.currentTransform()
         }
         surfCaps.free()
@@ -247,7 +250,6 @@ internal class Swapchain {
 
     // TODO: Accept Semaphore instead of long
     fun aquireNextImage(logicalDevice: LogicalDevice, semaphore: Long): Int {
-        val pImageIndex = memAllocInt(1)
         val err = vkAcquireNextImageKHR(logicalDevice.device, swapchain, -1L, semaphore, 0, pImageIndex)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to acquire next image from swapchain " + VulkanResult(err))

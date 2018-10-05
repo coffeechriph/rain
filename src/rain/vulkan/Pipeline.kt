@@ -3,6 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import java.nio.LongBuffer
 
 internal class Pipeline {
     var pipeline: Long = 0
@@ -13,6 +14,9 @@ internal class Pipeline {
 
     lateinit var vertexBuffer: VertexBuffer
         private set
+
+    private lateinit var pOffset: LongBuffer // Used to temporarily store return values from vulkan
+    private lateinit var pBuffer: LongBuffer
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
         var err: Int
@@ -135,6 +139,8 @@ internal class Pipeline {
         pipeline = pPipelines.get(0)
         pipelineLayout = layout
         this.vertexBuffer = vertexBuffer
+        pBuffer = memAllocLong(1)
+        pOffset = memAllocLong(1)
 
         shaderStages.free()
         multisampleState.free()
@@ -151,16 +157,16 @@ internal class Pipeline {
         }
     }
 
+    fun destroy() {
+        memFree(pBuffer)
+        memFree(pOffset)
+    }
+
     fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorPool: DescriptorPool, nextFrame: Int) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
-        // TODO: Don't need to do this every time
-        val offsets = memAllocLong(1)
-        offsets.put(0, 0L)
-
-        val buffer = memAllocLong(1)
-        buffer.put(0, vertexBuffer.buffer)
-
-        vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, buffer, offsets)
+        pOffset.put(0, 0L)
+        pBuffer.put(0, vertexBuffer.buffer)
+        vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
 
         val pDescriptorSet = memAllocLong(descriptorPool.descriptorSets.size)
         for (i in 0 until descriptorPool.descriptorSets.size) {
@@ -175,7 +181,6 @@ internal class Pipeline {
     }
 
     fun draw(cmdBuffer: CommandPool.CommandBuffer) {
-        // TODO: Adjust to the actual vertex buffer
         vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
     }
 }

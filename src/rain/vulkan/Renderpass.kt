@@ -14,6 +14,11 @@ internal class Renderpass {
     var renderpass: Long = 0
         private set
 
+    private var clearValues = VkClearValue.calloc(1)
+    private var renderPassBeginInfo = VkRenderPassBeginInfo.calloc()
+    private var viewport = VkViewport.calloc(1)
+    private var scissor = VkRect2D.calloc(1)
+
     fun create(logicalDevice: LogicalDevice, colorFormat: Int) {
         val colorAttachment = VkAttachmentDescription.calloc(1)
             .format(colorFormat)
@@ -56,45 +61,48 @@ internal class Renderpass {
         }
     }
 
-    fun begin(framebuffer: Long, cmdBuffer: CommandPool.CommandBuffer, viewportSize: VkExtent2D) {
-        val clearValues = VkClearValue.calloc(1)
+    fun setClearColor(red: Float, green: Float, blue: Float) {
         clearValues.color()
-                .float32(0, 0.2f)
-                .float32(1, 0.5f)
-                .float32(2, 0.7f)
+                .float32(0, red)
+                .float32(1, green)
+                .float32(2, blue)
                 .float32(3, 1.0f)
+    }
 
-        val beginInfo = VkRenderPassBeginInfo.calloc()
+    fun begin(framebuffer: Long, cmdBuffer: CommandPool.CommandBuffer, viewportSize: VkExtent2D) {
+        renderPassBeginInfo
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .pNext(0)
                 .renderPass(renderpass)
                 .pClearValues(clearValues)
                 .framebuffer(framebuffer)
 
-        beginInfo.renderArea()
+        renderPassBeginInfo.renderArea()
                 .extent(viewportSize)
                 .offset(VkOffset2D.create().set(0,0))
 
-        vkCmdBeginRenderPass(cmdBuffer.buffer, beginInfo, VK_SUBPASS_CONTENTS_INLINE)
+        vkCmdBeginRenderPass(cmdBuffer.buffer, renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE)
 
-        val viewport = VkViewport.calloc(1)
-                .height(viewportSize.height().toFloat())
+        viewport.height(viewportSize.height().toFloat())
                 .width(viewportSize.width().toFloat())
                 .minDepth(0.0f)
                 .maxDepth(1.0f)
 
         vkCmdSetViewport(cmdBuffer.buffer, 0, viewport)
-        viewport.free()
 
-        // Update dynamic scissor state
-        val scissor = VkRect2D.calloc(1)
         scissor.extent().set(viewportSize.width(), viewportSize.height())
         scissor.offset().set(0, 0)
         vkCmdSetScissor(cmdBuffer.buffer, 0, scissor)
-        scissor.free()
     }
 
     fun end(cmdBuffer: CommandPool.CommandBuffer) {
         vkCmdEndRenderPass(cmdBuffer.buffer)
+    }
+
+    fun destroy() {
+        clearValues.free()
+        renderPassBeginInfo.free()
+        viewport.free()
+        scissor.free()
     }
 }

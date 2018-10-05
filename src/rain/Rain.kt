@@ -62,6 +62,7 @@ open class Rain {
             vulkanRenderer.render()
         }
 
+        vulkanRenderer.destroy()
         context.destroy();
     }
 }

@@ -1,6 +1,7 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Entity
@@ -21,7 +22,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private var uniformBufferPosTick = 0.0f
     private var renderCommandPool: CommandPool = CommandPool()
     private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
-    private var queue: Queue
+    private var graphicsQueue = Array(2){Queue()}
+    private var setupQueue = Queue()
     private var surfaceColorFormat = 0
     private var textureTest = VulkanTexture2d()
 
@@ -38,8 +40,15 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         this.quadVertexBuffer = resourceFactory.quadVertexBuffer
         this.queueFamilyIndices = vk.queueFamilyIndices
         this.swapchain = Swapchain()
-        this.queue = vk.deviceQueue
         this.surfaceColorFormat = vk.surface.format
+
+        for(i in 0 until this.graphicsQueue.size) {
+            this.graphicsQueue[i] = Queue()
+            this.graphicsQueue[i].create(logicalDevice, queueFamilyIndices.graphicsFamily)
+        }
+
+        setupQueue = Queue()
+        setupQueue.create(logicalDevice, vk.transferFamilyIndex)
     }
 
     override fun newSystem(): EntitySystem<Entity> {
@@ -70,7 +79,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         setupCommandPool = CommandPool()
         setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         setupCommandBuffer = setupCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
-        textureTest.load(logicalDevice, physicalDevice.memoryProperties, setupCommandPool, queue.queue, "./data/textures/town.png")
+        textureTest.load(logicalDevice, physicalDevice.memoryProperties, setupCommandPool, graphicsQueue[0].queue, "./data/textures/town.png")
 
         descPool = DescriptorPool()
             .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -78,6 +87,20 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_VERTEX_BIT)
             .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build(logicalDevice)
+
+        imageAcquiredSemaphore = Semaphore()
+        imageAcquiredSemaphore.create(logicalDevice)
+        completeRenderSemaphore = Semaphore()
+        completeRenderSemaphore.create(logicalDevice)
+    }
+
+    fun destroy() {
+        for (pipeline in pipelines) {
+            pipeline.destroy()
+        }
+        renderpass.destroy()
+        vkDestroySemaphore(logicalDevice.device, imageAcquiredSemaphore.semaphore, null)
+        vkDestroySemaphore(logicalDevice.device, completeRenderSemaphore.semaphore, null)
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -90,7 +113,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             val capabilities = VkSurfaceCapabilitiesKHR.calloc()
             KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, surface.surface, capabilities)
 
-            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandBuffer, queue)
+            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandBuffer, setupQueue)
             swapchain.createFramebuffers(logicalDevice, renderpass, capabilities.currentExtent())
             swapchainIsDirty = false
             return true
@@ -126,11 +149,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             }
         }
 
-        imageAcquiredSemaphore = Semaphore()
-        imageAcquiredSemaphore.create(logicalDevice)
-        completeRenderSemaphore = Semaphore()
-        completeRenderSemaphore.create(logicalDevice)
-
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore.semaphore)
         VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
         VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
@@ -146,11 +164,9 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         attachPrePresentBarrier(renderCommandBuffers[nextImage], swapchain.images[nextImage])
         renderpass.end(renderCommandBuffers[nextImage])
         renderCommandBuffers[nextImage].end()
-        renderCommandBuffers[nextImage].submit(queue.queue, imageAcquiredSemaphore, completeRenderSemaphore, VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+        renderCommandBuffers[nextImage].submit(graphicsQueue[nextImage].queue, imageAcquiredSemaphore, completeRenderSemaphore, VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
 
         presentImage(nextImage)
-        vkDestroySemaphore(logicalDevice.device, imageAcquiredSemaphore.semaphore, null)
-        vkDestroySemaphore(logicalDevice.device, completeRenderSemaphore.semaphore, null)
     }
 
     private fun presentImage(nextImage: Int) {
@@ -171,16 +187,16 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
                 .pImageIndices(pImageIndex)
                 .pResults(null)
 
-        val err = KHRSwapchain.vkQueuePresentKHR(queue.queue, presentInfo);
+        val err = KHRSwapchain.vkQueuePresentKHR(graphicsQueue[nextImage].queue, presentInfo);
         if (err != VK10.VK_SUCCESS) {
             throw AssertionError("Failed to present the swapchain image: " + VulkanResult(err));
         }
 
         // TODO: Prefer waiting on fences instead
         // Would allow us to control the waiting more precisely
+        VK10.vkQueueWaitIdle(graphicsQueue[nextImage].queue)
 
-        VK10.vkQueueWaitIdle(queue.queue)
-        submitPostPresentBarrier(postPresentBuffer, queue, swapchain.images[nextImage])
+        submitPostPresentBarrier(postPresentBuffer, graphicsQueue[nextImage], swapchain.images[nextImage])
     }
 
     private fun attachPrePresentBarrier(cmdBuffer: CommandPool.CommandBuffer, presentImage: Long) {
@@ -214,14 +230,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     }
 
     private fun submitPostPresentBarrier(cmdBuffer: CommandPool.CommandBuffer, queue: Queue, presentImage: Long) {
-        val cmdBufInfo = VkCommandBufferBeginInfo.calloc()
-                .sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
-                .pNext(MemoryUtil.NULL)
-        var err = VK10.vkBeginCommandBuffer(cmdBuffer.buffer, cmdBufInfo)
-        cmdBufInfo.free()
-        if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to begin command buffer: " + VulkanResult(err))
-        }
+        cmdBuffer.begin()
 
         val imageMemoryBarrier = VkImageMemoryBarrier.calloc(1)
                 .sType(VK10.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
@@ -251,12 +260,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
                 imageMemoryBarrier) // one image barrier
         imageMemoryBarrier.free()
 
-        err = VK10.vkEndCommandBuffer(cmdBuffer.buffer)
-        if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to wait for idle queue: " + VulkanResult(err))
-        }
-
-        // Submit the command buffer
+        cmdBuffer.end()
         cmdBuffer.submit(queue.queue)
     }
 }

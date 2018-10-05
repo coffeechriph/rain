@@ -56,7 +56,7 @@ internal class PhysicalDevice {
     }
 
     private fun isDeviceSuitable(device: VkPhysicalDevice, surface: Surface): Boolean {
-        val indices = findQueueFamilies(device, surface)
+        val indices = findGraphicsAndPresentFamily(device, surface)
         if(!indices.isComplete) {
             return false
         }

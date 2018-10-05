@@ -12,7 +12,7 @@ internal data class QueueFamilyIndices(var graphicsFamily: Int = -1, var present
 }
 
 // TODO: Class mismatch - Should take a physicalDevice
-internal fun findQueueFamilies(device: VkPhysicalDevice, surface: Surface): QueueFamilyIndices {
+internal fun findGraphicsAndPresentFamily(device: VkPhysicalDevice, surface: Surface): QueueFamilyIndices {
     val indices = QueueFamilyIndices()
     val count = MemoryUtil.memAllocInt(1)
     VK10.vkGetPhysicalDeviceQueueFamilyProperties(device, count, null)
@@ -41,4 +41,27 @@ internal fun findQueueFamilies(device: VkPhysicalDevice, surface: Surface): Queu
     }
 
     return indices
+}
+
+internal fun findTransferFamily(device: VkPhysicalDevice): Int {
+    var index = -1
+    val count = MemoryUtil.memAllocInt(1)
+    VK10.vkGetPhysicalDeviceQueueFamilyProperties(device, count, null)
+    val families = VkQueueFamilyProperties.calloc(count[0])
+    VK10.vkGetPhysicalDeviceQueueFamilyProperties(device, count, families)
+
+    var i = 0
+    families.forEach {  queueFamily ->
+        if(queueFamily.queueCount() > 0 && queueFamily.queueFlags() and VK10.VK_QUEUE_TRANSFER_BIT != 0) {
+            index = i
+            return@forEach
+        }
+        i++
+    }
+
+    if (index == -1) {
+        throw AssertionError("Unable to find a queue family that only support transfers!")
+    }
+
+    return index
 }

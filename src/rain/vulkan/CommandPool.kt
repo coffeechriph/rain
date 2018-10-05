@@ -48,13 +48,14 @@ internal class CommandPool {
     }
 
     class CommandBuffer internal constructor(var buffer: VkCommandBuffer) {
+        val commandBufferBeginInfo = VkCommandBufferBeginInfo.calloc()
+
         fun begin() {
-            val cmdBufInfo = VkCommandBufferBeginInfo.calloc()
+            commandBufferBeginInfo
                     .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
                     .flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
                     .pNext(0)
-            val err = vkBeginCommandBuffer(buffer, cmdBufInfo)
-            cmdBufInfo.free()
+            val err = vkBeginCommandBuffer(buffer, commandBufferBeginInfo)
             if (err != VK_SUCCESS) {
                 throw AssertionError("Failed to begin command buffer: " + VulkanResult(err))
             }

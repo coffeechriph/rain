@@ -11,6 +11,8 @@ internal class Vk {
         private set
     lateinit var queueFamilyIndices: QueueFamilyIndices
         private set
+    var transferFamilyIndex: Int = -1
+        private set
     lateinit var deviceQueue: Queue
         private set
 
@@ -25,7 +27,8 @@ internal class Vk {
         physicalDevice.create(instance, surface)
         surface.findColorFormatAndSpace(physicalDevice)
 
-        queueFamilyIndices = findQueueFamilies(physicalDevice.device, surface)
+        queueFamilyIndices = findGraphicsAndPresentFamily(physicalDevice.device, surface)
+        transferFamilyIndex = findTransferFamily(physicalDevice.device)
 
         logicalDevice = LogicalDevice()
         logicalDevice.create(physicalDevice, queueFamilyIndices)
