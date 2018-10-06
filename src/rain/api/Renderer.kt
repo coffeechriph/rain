@@ -6,5 +6,6 @@ package rain.api
  */
 interface Renderer {
     fun create()
-    fun render(spriteComponents: List<SpriteComponent>)
+    fun render()
+    fun submitDrawSprite(transform: TransformComponent, vertexShader: Long, fragmentShader: Long)
 }

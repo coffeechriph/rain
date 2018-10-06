@@ -14,6 +14,7 @@ class Player {
         println("Updating player");
     }
 }
+
 class HelloRain: Rain() {
     lateinit var basicMaterial: Material
     lateinit var playerEntitySystem: EntitySystem

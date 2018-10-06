@@ -6,7 +6,7 @@ import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo
 import rain.readFileAsByteBuffer
 
-internal class ShaderModule {
+internal class ShaderModule(val id: Long) {
     lateinit var createInfo: VkPipelineShaderStageCreateInfo
         private set
 

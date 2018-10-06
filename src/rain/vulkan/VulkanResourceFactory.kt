@@ -15,11 +15,13 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
     private val commandPool: CommandPool
     internal val materials: MutableList<VulkanMaterial>
     private val textures: MutableMap<Long, VulkanTexture2d>
+    private val shaders: MutableMap<Long, ShaderModule>
     internal val quadVertexBuffer: VertexBuffer
 
     init {
         this.materials = ArrayList()
         this.textures = HashMap()
+        this.shaders = HashMap()
         this.logicalDevice = vk.logicalDevice
         this.physicalDevice = vk.physicalDevice
         this.queue = vk.deviceQueue
@@ -41,21 +43,30 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         quadVertexBuffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, VertexBufferState.DYNAMIC)
     }
 
+    fun getShader(id: Long): ShaderModule? {
+        return shaders.get(id)
+    }
+
     override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
-        val vertex = ShaderModule()
-        val fragment = ShaderModule()
+        val vertex = ShaderModule(uniqueId())
+        val fragment = ShaderModule(uniqueId())
+
+        // TODO: We should be able to actually load the shaders at a later time on the main thread
+        // In order to make this method thread-safe
         vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
         fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
 
-        val vid = uniqueId()
-        val fid = uniqueId()
+        shaders.put(vertex.id, vertex)
+        shaders.put(fragment.id, fragment)
 
         val material = VulkanMaterial(vertex, fragment, texture2d, color)
         materials.add(material)
 
-        return Material(vid, fid, texture2d, color)
+        return Material(vertex.id, fragment.id, texture2d, color)
     }
 
+    // TODO: We should be able to actually load the texture at a later time on the main thread
+    // In order to make this method thread-safe
     override fun createTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
         texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile)

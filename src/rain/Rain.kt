@@ -49,9 +49,9 @@ open class Rain {
                 vulkanRenderer.recreateRenderCommandBuffers()
             }
 
-            scene.update()
+            scene.update(vulkanRenderer)
             update()
-            vulkanRenderer.render(scene.entitySystems[0].spriteIterator().asSequence().toList())
+            vulkanRenderer.render()
         }
 
         vulkanRenderer.destroy()

@@ -5,6 +5,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Renderer
 import rain.api.SpriteComponent
+import rain.api.TransformComponent
 
 internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
     private val quadVertexBuffer: VertexBuffer
@@ -46,6 +47,24 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         setupQueue = Queue()
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
+    }
+
+    // TODO: This one should be thread-safe but isn't really atm
+    override fun submitDrawSprite(transform: TransformComponent, vertexShader: Long, fragmentShader: Long) {
+        for (pipeline in pipelines) {
+            if (pipeline.matchesShaderPair(vertexShader,fragmentShader)) {
+                pipeline.addSpriteToDraw(transform)
+                return
+            }
+        }
+
+        val vertex = resourceFactory.getShader(vertexShader) ?: throw IllegalStateException("Vertex shader with id $vertexShader does not exist!")
+        val fragment = resourceFactory.getShader(fragmentShader) ?: throw IllegalStateException("Fragment shader with id $vertexShader does not exist!")
+
+        val pipeline = Pipeline()
+        pipeline.create(logicalDevice, renderpass, quadVertexBuffer, vertex, fragment, descPool)
+        pipeline.addSpriteToDraw(transform)
+        pipelines.add(pipeline)
     }
 
     override fun create() {
@@ -113,7 +132,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         return false
     }
 
-    override fun render(spriteComponents: List<SpriteComponent>) {
+    override fun render() {
         uniformBufferPosTick += 0.005f
 
         // TODO: Remove me!
@@ -121,18 +140,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         data2.asFloatBuffer().put(Math.sin(uniformBufferPosTick.toDouble()).toFloat() * 0.75f).put(Math.cos(uniformBufferPosTick.toDouble()).toFloat() * 0.75f).flip()
         uniformBufferPosTest.update(logicalDevice, data2, 0)
         MemoryUtil.memFree(data2)
-
-        // TODO: Stupid way of doing this
-        // But sufficient for now. Each material will spawn a separate pipeline
-        if (pipelines.size < resourceFactory.materials.size) {
-            val ln = resourceFactory.materials.size - pipelines.size
-            for (i in 0 until ln) {
-                val mat = resourceFactory.materials[resourceFactory.materials.size - ln + i]
-                val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat.vertexShader, mat.fragmentShader, descPool)
-                pipelines.add(pipeline)
-            }
-        }
 
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore.semaphore)
         VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
@@ -142,15 +149,11 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            // TODO: This is a joke, we need a way to submit drawing commands for a particular pipeline
-            // instead of working with the whole sprite list
-            // We could have a submitDrawQuad(transform, vertexId, fragmentId)
-            // TODO: Create a method in the pipeline - matchesShaders(vertexId, fragmentId) to determind if the
-            // pipeline is compatible with whatever sprite we wanna render
             pipeline.begin(renderCommandBuffers[nextImage], descPool, nextImage)
-            for (sprite in spriteComponents) {
+            for (transform in pipeline.spriteList) {
                 pipeline.draw(renderCommandBuffers[nextImage])
             }
+            pipeline.spriteList.clear()
         }
 
         attachPrePresentBarrier(renderCommandBuffers[nextImage], swapchain.images[nextImage])

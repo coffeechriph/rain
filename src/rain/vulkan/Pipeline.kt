@@ -3,7 +3,9 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.api.TransformComponent
 import java.nio.LongBuffer
+import java.util.concurrent.CopyOnWriteArrayList
 
 internal class Pipeline {
     var pipeline: Long = 0
@@ -17,6 +19,20 @@ internal class Pipeline {
 
     private lateinit var pOffset: LongBuffer // Used to temporarily store return values from vulkan
     private lateinit var pBuffer: LongBuffer
+    private var vertesShaderId = 0L
+    private var fragmentShaderId = 0L
+
+    // TODO: For now we only render sprites
+    // This will have to be expanded into a more generic thing
+    internal val spriteList = CopyOnWriteArrayList<TransformComponent>()
+
+    fun matchesShaderPair(vertexId: Long, fragmentId: Long): Boolean {
+        return vertesShaderId == vertexId && fragmentShaderId == fragmentId
+    }
+
+    fun addSpriteToDraw(transformComponent: TransformComponent) {
+        spriteList.add(transformComponent.copy())
+    }
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
         var err: Int
@@ -138,9 +154,11 @@ internal class Pipeline {
         err = vkCreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, pipelineCreateInfo, null, pPipelines)
         pipeline = pPipelines.get(0)
         pipelineLayout = layout
-        this.vertexBuffer = vertexBuffer
         pBuffer = memAllocLong(1)
         pOffset = memAllocLong(1)
+        this.vertexBuffer = vertexBuffer
+        this.vertesShaderId = vertexShader.id
+        this.fragmentShaderId = fragmentShader.id
 
         shaderStages.free()
         multisampleState.free()
