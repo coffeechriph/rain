@@ -3,6 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.api.Material
 import rain.api.Renderer
 import rain.api.SpriteComponent
 import rain.api.TransformComponent
@@ -15,15 +16,11 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private val renderpass: Renderpass = Renderpass()
     private val swapchain: Swapchain
     private val queueFamilyIndices: QueueFamilyIndices
-    private val uniformBufferTest = UniformBuffer()
-    private val uniformBufferPosTest = UniformBuffer()
-    private var uniformBufferPosTick = 0.0f
     private var renderCommandPool: CommandPool = CommandPool()
     private var renderCommandBuffers: Array<CommandPool.CommandBuffer> = emptyArray()
     private var graphicsQueue = Array(2){Queue()}
     private var setupQueue = Queue()
     private var surfaceColorFormat = 0
-    private var textureTest = VulkanTexture2d()
 
     private lateinit var setupCommandPool: CommandPool
     private lateinit var setupCommandBuffer: CommandPool.CommandBuffer
@@ -50,19 +47,21 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     }
 
     // TODO: This one should be thread-safe but isn't really atm
-    override fun submitDrawSprite(transform: TransformComponent, vertexShader: Long, fragmentShader: Long) {
+    override fun submitDrawSprite(transform: TransformComponent, material: Material) {
+        val mat = material as VulkanMaterial
+
         for (pipeline in pipelines) {
-            if (pipeline.matchesShaderPair(vertexShader,fragmentShader)) {
+            if (pipeline.matchesShaderPair(mat.vertexShader.id,mat.fragmentShader.id)) {
                 pipeline.addSpriteToDraw(transform)
                 return
             }
         }
 
-        val vertex = resourceFactory.getShader(vertexShader) ?: throw IllegalStateException("Vertex shader with id $vertexShader does not exist!")
-        val fragment = resourceFactory.getShader(fragmentShader) ?: throw IllegalStateException("Fragment shader with id $vertexShader does not exist!")
+        val vertex = resourceFactory.getShader(mat.vertexShader.id) ?: throw IllegalStateException("Vertex shader with id ${mat.vertexShader.id} does not exist!")
+        val fragment = resourceFactory.getShader(mat.fragmentShader.id) ?: throw IllegalStateException("Fragment shader with id ${mat.fragmentShader.id} does not exist!")
 
         val pipeline = Pipeline()
-        pipeline.create(logicalDevice, renderpass, quadVertexBuffer, vertex, fragment, descPool)
+        pipeline.create(logicalDevice, renderpass, quadVertexBuffer, vertex, fragment, mat.descriptorPool)
         pipeline.addSpriteToDraw(transform)
         pipelines.add(pipeline)
     }
@@ -72,31 +71,9 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         postPresentBuffer = renderCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
 
-        uniformBufferTest.create(logicalDevice, physicalDevice.memoryProperties, BufferMode.ONE_PER_SWAPCHAIN, 16)
-
-        val data = MemoryUtil.memAlloc(4 * 4)
-        data.asFloatBuffer().put(0.5f).put(0.0f).put(0.5f).put(1.0f).flip()
-        uniformBufferTest.update(logicalDevice, data, 0)
-        uniformBufferTest.update(logicalDevice, data, 1)
-        MemoryUtil.memFree(data)
-
-        uniformBufferPosTest.create(logicalDevice, physicalDevice.memoryProperties, BufferMode.SINGLE_BUFFER, 8)
-        val data2 = MemoryUtil.memAlloc(2 * 4)
-        data2.asFloatBuffer().put(0.25f).put(-0.25f).flip()
-        uniformBufferPosTest.update(logicalDevice, data2, 0)
-        MemoryUtil.memFree(data2)
-
         setupCommandPool = CommandPool()
         setupCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         setupCommandBuffer = setupCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
-        textureTest.load(logicalDevice, physicalDevice.memoryProperties, setupCommandPool, graphicsQueue[0].queue, "./data/textures/town.png")
-
-        descPool = DescriptorPool()
-            .withUniformBuffer(uniformBufferTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-            .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-            .withUniformBuffer(uniformBufferPosTest, VK_SHADER_STAGE_VERTEX_BIT)
-            .withTexture(textureTest, VK_SHADER_STAGE_FRAGMENT_BIT)
-            .build(logicalDevice)
 
         imageAcquiredSemaphore = Semaphore()
         imageAcquiredSemaphore.create(logicalDevice)
@@ -133,14 +110,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     }
 
     override fun render() {
-        uniformBufferPosTick += 0.005f
-
-        // TODO: Remove me!
-        val data2 = MemoryUtil.memAlloc(2 * 4)
-        data2.asFloatBuffer().put(Math.sin(uniformBufferPosTick.toDouble()).toFloat() * 0.75f).put(Math.cos(uniformBufferPosTick.toDouble()).toFloat() * 0.75f).flip()
-        uniformBufferPosTest.update(logicalDevice, data2, 0)
-        MemoryUtil.memFree(data2)
-
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore.semaphore)
         VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
         VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
@@ -149,9 +118,9 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[nextImage], swapchain.extent)
 
         for (pipeline in pipelines) {
-            pipeline.begin(renderCommandBuffers[nextImage], descPool, nextImage)
+            pipeline.begin(renderCommandBuffers[nextImage], pipeline.descriptorPool, nextImage)
             for (transform in pipeline.spriteList) {
-                pipeline.draw(renderCommandBuffers[nextImage])
+                pipeline.draw(renderCommandBuffers[nextImage], transform)
             }
             pipeline.spriteList.clear()
         }

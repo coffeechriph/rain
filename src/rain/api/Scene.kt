@@ -10,7 +10,7 @@ class Scene {
     internal fun update(renderer: Renderer) {
         for (system in entitySystems) {
             for (update in system.updateIterator()) {
-                update.update(this)
+                update.update(update.entity, system, this)
             }
 
             for (sprite in system.spriteIterator()) {
@@ -18,7 +18,7 @@ class Scene {
                 sprite.transform.position = transform.position
                 sprite.transform.scale = transform.scale
                 sprite.transform.rotation = transform.rotation
-                renderer.submitDrawSprite(sprite.transform, sprite.material.vertexShader, sprite.material.fragmentShader)
+                renderer.submitDrawSprite(sprite.transform, sprite.material)
             }
         }
     }

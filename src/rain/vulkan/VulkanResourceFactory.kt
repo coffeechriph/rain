@@ -47,6 +47,7 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         return shaders.get(id)
     }
 
+    // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
     override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
@@ -59,10 +60,10 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         shaders.put(vertex.id, vertex)
         shaders.put(fragment.id, fragment)
 
-        val material = VulkanMaterial(vertex, fragment, texture2d, color)
+        val material = VulkanMaterial(logicalDevice, vertex, fragment, texture2d as VulkanTexture2d, color)
         materials.add(material)
 
-        return Material(vertex.id, fragment.id, texture2d, color)
+        return material
     }
 
     // TODO: We should be able to actually load the texture at a later time on the main thread
@@ -70,7 +71,7 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
     override fun createTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
         texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile)
-        return Texture2d(0, 0, 0, filter)
+        return texture2d
     }
 
     private fun uniqueId(): Long {

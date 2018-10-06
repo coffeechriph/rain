@@ -7,10 +7,11 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.api.Texture2d
 import java.io.File
 import java.io.FileNotFoundException
 
-internal class VulkanTexture2d {
+internal class VulkanTexture2d: Texture2d {
     var texture: Long = 0
     var textureView: Long = 0
     var textureSampler: Long = 0

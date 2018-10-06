@@ -23,18 +23,19 @@ class EntitySystem {
     private var spriteComponents = ArrayList<SpriteComponent>()
 
     fun newEntity(): Builder {
-        entities.add(uniqueId())
-        return Builder(this)
+        val id = uniqueId()
+        entities.add(id)
+        return Builder(id,this)
     }
 
-    class Builder internal constructor(private var system: EntitySystem) {
+    class Builder internal constructor(private var entityId: Long, private var system: EntitySystem) {
         fun attachTransformComponent(): Builder {
             val c = TransformComponent(system.entities[system.entities.size - 1])
             system.transformComponents.add(c)
             return this
         }
 
-        fun attachUpdateComponent(update: (scene: Scene) -> Unit): Builder {
+        fun attachUpdateComponent(update: (id: Long, system: EntitySystem, scene: Scene) -> Unit): Builder {
             val c = UpdateComponent(system.entities[system.entities.size - 1])
             c.update = update
             system.updateComponents.add(c)
@@ -50,8 +51,8 @@ class EntitySystem {
             return this
         }
 
-        fun build(scene: Scene, init: (scene: Scene) -> Unit): Long {
-            init(scene)
+        fun build(scene: Scene, init: (entityId: Long, system: EntitySystem, scene: Scene) -> Unit): Long {
+            init(entityId, system, scene)
             return system.entities[system.entities.size-1]
         }
     }

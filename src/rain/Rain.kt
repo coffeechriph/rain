@@ -29,9 +29,6 @@ open class Rain {
         resourceFactory = VulkanResourceFactory(vk)
         vulkanRenderer = VulkanRenderer(vk, resourceFactory as VulkanResourceFactory)
         vulkanRenderer.create()
-
-        resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", Texture2d(0, 0, 0, TextureFilter.LINEAR), Vector3f())
-        resourceFactory.createTexture2d("./data/textures/town.png", TextureFilter.NEAREST)
     }
 
     open fun init() {}

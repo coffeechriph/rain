@@ -1,5 +1,7 @@
 package rain.vulkan
 
+import org.joml.Matrix4f
+import org.lwjgl.BufferUtils
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
@@ -21,17 +23,18 @@ internal class Pipeline {
     private lateinit var pBuffer: LongBuffer
     private var vertesShaderId = 0L
     private var fragmentShaderId = 0L
+    internal lateinit var descriptorPool: DescriptorPool
 
     // TODO: For now we only render sprites
     // This will have to be expanded into a more generic thing
-    internal val spriteList = CopyOnWriteArrayList<TransformComponent>()
+    internal val spriteList = ArrayList<TransformComponent>()
 
     fun matchesShaderPair(vertexId: Long, fragmentId: Long): Boolean {
         return vertesShaderId == vertexId && fragmentShaderId == fragmentId
     }
 
     fun addSpriteToDraw(transformComponent: TransformComponent) {
-        spriteList.add(transformComponent.copy())
+        spriteList.add(transformComponent)
     }
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
@@ -118,12 +121,18 @@ internal class Pipeline {
             i += 1
         }
 
+        val pushConstantRange = VkPushConstantRange.calloc(1)
+                .stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+                .size(16 * 4)
+                .offset(0)
+
         // Create the pipeline layout that is used to generate the rendering pipelines that
         // are based on this descriptor set layout
         val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)
                 .pNext(0)
                 .pSetLayouts(descriptorSetLayouts)
+                .pPushConstantRanges(pushConstantRange)
 
         val pPipelineLayout = memAllocLong(1)
         err = vkCreatePipelineLayout(logicalDevice.device, pPipelineLayoutCreateInfo, null, pPipelineLayout)
@@ -159,6 +168,7 @@ internal class Pipeline {
         this.vertexBuffer = vertexBuffer
         this.vertesShaderId = vertexShader.id
         this.fragmentShaderId = fragmentShader.id
+        this.descriptorPool = descriptorPool
 
         shaderStages.free()
         multisampleState.free()
@@ -198,7 +208,17 @@ internal class Pipeline {
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
-    fun draw(cmdBuffer: CommandPool.CommandBuffer) {
+    fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: TransformComponent) {
+        val modelMatrix = Matrix4f()
+        modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
+        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
+        modelMatrix.translate(transform.position.x, transform.position.y, 0.0f)
+        modelMatrix.transpose()
+
+        val byteBuffer = memAlloc(16 * 4)
+        val buffer = modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+
+        vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, buffer)
         vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
     }
 }

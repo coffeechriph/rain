@@ -6,28 +6,33 @@ import rain.Rain
 import rain.api.*
 
 class Player {
-    fun init(scene: Scene) {
+    var x = 0.0f
+    fun init(id: Long, system: EntitySystem, scene: Scene) {
         println("Initializing the player")
     }
 
-    fun update(scene: Scene) {
-        println("Updating player");
+    fun update(id: Long, system: EntitySystem, scene: Scene) {
+        val transform = system.findTransformComponent(id)!!
+        transform.position.set(x, 0.0f)
+        x -= 0.01f
     }
 }
 
 class HelloRain: Rain() {
     lateinit var basicMaterial: Material
+    lateinit var basicTexture: Texture2d
     lateinit var playerEntitySystem: EntitySystem
     lateinit var player: Player
     override fun init() {
-        basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", Texture2d(0, 0, 0, TextureFilter.NEAREST), Vector3f(1.0f,1.0f,1.0f))
+        basicTexture = resourceFactory.createTexture2d("./data/textures/town.png", TextureFilter.NEAREST)
+        basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", basicTexture, Vector3f(1.0f,1.0f,1.0f))
         playerEntitySystem = EntitySystem()
         player = Player()
         playerEntitySystem.newEntity()
-                .attachUpdateComponent {player.update(scene)}
+                .attachUpdateComponent(player::update)
                 .attachTransformComponent()
                 .attachSpriteComponent(basicMaterial)
-                .build(scene)  {player.init(scene)}
+                .build(scene, player::init)
         scene.registerSystem(playerEntitySystem)
     }
 

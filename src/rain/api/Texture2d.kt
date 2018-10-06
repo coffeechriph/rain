@@ -8,4 +8,6 @@ package rain.api
     The handler is simply an ID for the backend to keep track of
     TODO: Support more formats than 2d textures
  */
-class Texture2d internal constructor(val handler: Int, val width: Int, val height: Int, val filter: TextureFilter)
+interface Texture2d {
+
+}
