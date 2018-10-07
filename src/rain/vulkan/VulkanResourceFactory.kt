@@ -60,7 +60,7 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         shaders.put(vertex.id, vertex)
         shaders.put(fragment.id, fragment)
 
-        val material = VulkanMaterial(logicalDevice, vertex, fragment, texture2d as VulkanTexture2d, color)
+        val material = VulkanMaterial(logicalDevice, physicalDevice.memoryProperties, vertex, fragment, texture2d as VulkanTexture2d, color)
         materials.add(material)
 
         return material

@@ -13,17 +13,15 @@ class Player {
         println("Initializing the player")
     }
 
-    fun update(id: Long, system: EntitySystem, scene: Scene) {
-        val transform = system.findTransformComponent(id)!!
-        transform.position.set(x, 0.0f)
+    fun update(scene: Scene, input: Input, transformComponent: TransformComponent, spriteComponent: SpriteComponent) {
+        transformComponent.position.set(x, 0.0f)
 
-        if (x <= -0.75f) {
-            dir = 1
+        if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
+            println("Left was pressed!")
         }
-        else if(x >= 0.75f) {
-            dir = -1
+        else if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.RELEASED) {
+            println("Left was released!")
         }
-        x += dir * 0.0001f
     }
 }
 
@@ -34,6 +32,7 @@ class HelloRain: Rain() {
     lateinit var player: Player
     override fun init() {
         basicTexture = resourceFactory.createTexture2d("./data/textures/town.png", TextureFilter.NEAREST)
+        basicTexture.setTiledTexture(256, 256)
         basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", basicTexture, Vector3f(1.0f,1.0f,1.0f))
         playerEntitySystem = EntitySystem()
         player = Player()

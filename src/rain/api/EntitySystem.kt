@@ -35,7 +35,7 @@ class EntitySystem {
             return this
         }
 
-        fun attachUpdateComponent(update: (id: Long, system: EntitySystem, scene: Scene) -> Unit): Builder {
+        fun attachUpdateComponent(update: (scene: Scene, input: Input, transform: TransformComponent, sprite: SpriteComponent) -> Unit): Builder {
             val c = UpdateComponent(system.entities[system.entities.size - 1])
             c.update = update
             system.updateComponents.add(c)

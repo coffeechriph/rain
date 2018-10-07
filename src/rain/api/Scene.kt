@@ -7,10 +7,10 @@ class Scene {
         entitySystems.add(system)
     }
 
-    internal fun update(renderer: Renderer) {
+    internal fun update(renderer: Renderer, input: Input) {
         for (system in entitySystems) {
             for (update in system.updateIterator()) {
-                update.update(update.entity, system, this)
+                update.update(this, input, system.findTransformComponent(update.entity)!!, system.findSpriteComponent(update.entity)!!)
             }
 
             for (sprite in system.spriteIterator()) {

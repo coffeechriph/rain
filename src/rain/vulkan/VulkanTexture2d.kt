@@ -16,6 +16,26 @@ internal class VulkanTexture2d: Texture2d {
     var textureView: Long = 0
     var textureSampler: Long = 0
 
+    private var width = 0
+    private var height = 0
+    internal var texCoordWidth = 1.0f
+        private set
+    internal var texCoordHeight = 1.0f
+        private set
+
+    override fun getWidth(): Int {
+        return width
+    }
+
+    override fun getHeight(): Int {
+        return height
+    }
+
+    override fun setTiledTexture(tileWidth: Int, tileHeight: Int) {
+        texCoordWidth = (width.toFloat() / tileWidth.toFloat())
+        texCoordHeight = (height.toFloat() / tileHeight.toFloat())
+    }
+
     fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String) {
         if (!File(filePath).exists()) {
             throw FileNotFoundException("File $filePath was not found!")
@@ -95,11 +115,13 @@ internal class VulkanTexture2d: Texture2d {
             copyBufferToImage(logicalDevice, commandPool, queue, buffer.buffer, textureImage.get(0), width.get(0), height.get(0))
             transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 
-            this.texture = textureImage.get(0)
+            texture = textureImage.get(0)
 
             val textureImageView = ImageView()
             textureImageView.create(logicalDevice, texture, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_VIEW_TYPE_2D)
-            this.textureView = textureImageView.imageView
+            textureView = textureImageView.imageView
+            this.width = width[0]
+            this.height = height[0]
 
             // Create the texture sampler
             val samplerCreateInfo = VkSamplerCreateInfo.calloc()

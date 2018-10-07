@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class Rain {
     private val context = Window()
     private val vk = Vk()
+    private val input = Input()
     lateinit var resourceFactory: ResourceFactory
         private set
     private lateinit var vulkanRenderer: VulkanRenderer
@@ -16,7 +17,7 @@ open class Rain {
     private val timer = Timer()
 
     fun create(width: Int, height: Int, title: String, api: Api) {
-        context.create(width, height, title)
+        context.create(width, height, title, input)
 
         when(api) {
             Api.VULKAN -> createVulkanApi()
@@ -46,9 +47,11 @@ open class Rain {
                 vulkanRenderer.recreateRenderCommandBuffers()
             }
 
-            scene.update(vulkanRenderer)
+            scene.update(vulkanRenderer, input)
             update()
             vulkanRenderer.render()
+
+            input.updateKeyState()
         }
 
         vulkanRenderer.destroy()

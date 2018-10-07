@@ -9,7 +9,11 @@ layout(push_constant) uniform ModelMatrix {
     mat4 matrix;
 } modelMatrix;
 
+layout(set = 0, binding = 0) uniform TextureData {
+    vec2 uvScale;
+} textureData;
+
 void main() {
     gl_Position = vec4(pos.x, pos.y, 0, 1.0) * modelMatrix.matrix;
-    Uv = uv;
+    Uv = uv * textureData.uvScale;
 }
