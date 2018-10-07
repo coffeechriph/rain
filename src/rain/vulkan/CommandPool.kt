@@ -3,6 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import java.nio.LongBuffer
 
 internal class CommandPool {
     var pool: Long = 0
@@ -91,7 +92,7 @@ internal class CommandPool {
         }
 
         // TODO: Accept a Queue instead of VkQueue
-        fun submit(queue: VkQueue, waitSemaphore: Semaphore, signalSemaphore: Semaphore, waitDstStageMask: Int) {
+        fun submit(queue: VkQueue, waitSemaphore: Semaphore, signalSemaphore: Semaphore, waitDstStageMask: Int, pFence: LongBuffer) {
             if (buffer.address() == 0L)
                 return
 
@@ -117,7 +118,7 @@ internal class CommandPool {
                     .pSignalSemaphores(pSignalSemaphore)
                     .pWaitDstStageMask(pWaitDstStageMask)
 
-            val err = vkQueueSubmit(queue, submitInfo, VK_NULL_HANDLE)
+            val err = vkQueueSubmit(queue, submitInfo, pFence.get(0))
             memFree(pCommandBuffers)
             submitInfo.free()
 

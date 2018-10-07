@@ -1,7 +1,7 @@
 package rain.api
 
 class Scene {
-    val entitySystems = ArrayList<EntitySystem>()
+    private val entitySystems = ArrayList<EntitySystem>()
 
     fun registerSystem(system: EntitySystem) {
         entitySystems.add(system)

@@ -59,7 +59,6 @@ internal class Swapchain {
             throw AssertionError("Failed to get physical device surface presentation modes: " + VulkanResult(err))
         }
 
-        // Try to use mailbox mode. Low latency and non-tearing
         var preferredPresentMode = VK_PRESENT_MODE_FIFO_KHR
         var swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR
         for (i in 0 until presentModeCount) {
@@ -253,6 +252,9 @@ internal class Swapchain {
         val err = vkAcquireNextImageKHR(logicalDevice.device, swapchain, -1L, semaphore, 0, pImageIndex)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to acquire next image from swapchain " + VulkanResult(err))
+        }
+        else if (err == VK_ERROR_OUT_OF_DATE_KHR) {
+            return -1
         }
         return pImageIndex.get(0)
     }

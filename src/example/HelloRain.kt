@@ -7,6 +7,8 @@ import rain.api.*
 
 class Player {
     var x = 0.0f
+    var dir = -1
+
     fun init(id: Long, system: EntitySystem, scene: Scene) {
         println("Initializing the player")
     }
@@ -14,7 +16,14 @@ class Player {
     fun update(id: Long, system: EntitySystem, scene: Scene) {
         val transform = system.findTransformComponent(id)!!
         transform.position.set(x, 0.0f)
-        x -= 0.01f
+
+        if (x <= -0.75f) {
+            dir = 1
+        }
+        else if(x >= 0.75f) {
+            dir = -1
+        }
+        x += dir * 0.0001f
     }
 }
 
