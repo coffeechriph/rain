@@ -1,6 +1,7 @@
 package rain.vulkan
 
 import org.joml.Matrix4f
+import org.joml.Vector2i
 import org.lwjgl.BufferUtils
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
@@ -27,14 +28,14 @@ internal class Pipeline {
 
     // TODO: For now we only render sprites
     // This will have to be expanded into a more generic thing
-    internal val spriteList = ArrayList<TransformComponent>()
+    internal val spriteList = ArrayList<Pair<TransformComponent, Vector2i>>()
 
     fun matchesShaderPair(vertexId: Long, fragmentId: Long): Boolean {
         return vertesShaderId == vertexId && fragmentShaderId == fragmentId
     }
 
-    fun addSpriteToDraw(transformComponent: TransformComponent) {
-        spriteList.add(transformComponent)
+    fun addSpriteToDraw(transformComponent: TransformComponent, textureTileOffset: Vector2i) {
+        spriteList.add(Pair(transformComponent, textureTileOffset))
     }
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
@@ -112,7 +113,7 @@ internal class Pipeline {
         shaderStages.get(1).set(fragmentShader.createInfo)
 
         // TODO: Change this when we want to support more than 1 descriptor set
-        var numDescriptorLayouts = descriptorPool.descriptorSets.size
+        val numDescriptorLayouts = descriptorPool.descriptorSets.size
 
         val descriptorSetLayouts = memAllocLong(numDescriptorLayouts)
         var i = 0
@@ -121,9 +122,11 @@ internal class Pipeline {
             i += 1
         }
 
+        // TODO: For now push constants are not changeable.
+        // They include a ModelMatrix and a tile offset for the current texture used
         val pushConstantRange = VkPushConstantRange.calloc(1)
                 .stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
-                .size(16 * 4)
+                .size(18 * 4)
                 .offset(0)
 
         // Create the pipeline layout that is used to generate the rendering pipelines that
@@ -208,15 +211,18 @@ internal class Pipeline {
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
-    fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: TransformComponent) {
+    fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: TransformComponent, textureTileOffset: Vector2i) {
         val modelMatrix = Matrix4f()
         modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
         modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
         modelMatrix.translate(transform.position.x, transform.position.y, 0.0f)
         modelMatrix.transpose()
 
-        val byteBuffer = memAlloc(16 * 4)
+        val byteBuffer = memAlloc(18 * 4)
         val buffer = modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+        val ibuf = buffer.asFloatBuffer()
+        ibuf.put(16, textureTileOffset.x.toFloat())
+        ibuf.put(17, textureTileOffset.y.toFloat())
 
         vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, buffer)
         vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);

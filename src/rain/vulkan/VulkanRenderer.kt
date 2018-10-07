@@ -1,5 +1,6 @@
 package rain.vulkan
 
+import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
@@ -59,12 +60,12 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     }
 
     // TODO: This one should be thread-safe but isn't really atm
-    override fun submitDrawSprite(transform: TransformComponent, material: Material) {
+    override fun submitDrawSprite(transform: TransformComponent, material: Material, textureTileOffset: Vector2i) {
         val mat = material as VulkanMaterial
 
         for (pipeline in pipelines) {
             if (pipeline.matchesShaderPair(mat.vertexShader.id,mat.fragmentShader.id)) {
-                pipeline.addSpriteToDraw(transform)
+                pipeline.addSpriteToDraw(transform, textureTileOffset)
                 return
             }
         }
@@ -74,7 +75,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         val pipeline = Pipeline()
         pipeline.create(logicalDevice, renderpass, quadVertexBuffer, vertex, fragment, mat.descriptorPool)
-        pipeline.addSpriteToDraw(transform)
+        pipeline.addSpriteToDraw(transform, textureTileOffset)
         pipelines.add(pipeline)
     }
 
@@ -162,8 +163,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         for (pipeline in pipelines) {
             pipeline.begin(renderCommandBuffers[frameIndex], pipeline.descriptorPool, nextImage)
-            for (transform in pipeline.spriteList) {
-                pipeline.draw(renderCommandBuffers[frameIndex], transform)
+            for (sprite in pipeline.spriteList) {
+                pipeline.draw(renderCommandBuffers[frameIndex], sprite.first, sprite.second)
             }
             pipeline.spriteList.clear()
         }

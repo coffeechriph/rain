@@ -32,8 +32,8 @@ internal class VulkanTexture2d: Texture2d {
     }
 
     override fun setTiledTexture(tileWidth: Int, tileHeight: Int) {
-        texCoordWidth = (width.toFloat() / tileWidth.toFloat())
-        texCoordHeight = (height.toFloat() / tileHeight.toFloat())
+        texCoordWidth = (tileWidth.toFloat() / width.toFloat())
+        texCoordHeight = (tileHeight.toFloat() / height.toFloat())
     }
 
     fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String) {

@@ -18,7 +18,7 @@ class Scene {
                 sprite.transform.position = transform.position
                 sprite.transform.scale = transform.scale
                 sprite.transform.rotation = transform.rotation
-                renderer.submitDrawSprite(sprite.transform, sprite.material)
+                renderer.submitDrawSprite(sprite.transform, sprite.material, sprite.textureTileOffset)
             }
         }
     }

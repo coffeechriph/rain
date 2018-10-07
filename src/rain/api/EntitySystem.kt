@@ -1,5 +1,6 @@
 package rain.api
 
+import org.joml.Vector2i
 import kotlin.IllegalStateException
 
 /*
@@ -46,7 +47,7 @@ class EntitySystem {
             val entityId = system.entities[system.entities.size - 1]
             val tr = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
-            val c = SpriteComponent(entityId, material, tr)
+            val c = SpriteComponent(entityId, material, tr, Vector2i())
             system.spriteComponents.add(c)
             return this
         }

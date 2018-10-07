@@ -1,5 +1,7 @@
 package rain.api
 
+import org.joml.Vector2i
+
 /*
     Renderer interface implemented for different APIs and created once an
     API is chosen.
@@ -7,5 +9,5 @@ package rain.api
 interface Renderer {
     fun create()
     fun render()
-    fun submitDrawSprite(transform: TransformComponent, material: Material)
+    fun submitDrawSprite(transform: TransformComponent, material: Material, textureTileOffset: Vector2i)
 }
