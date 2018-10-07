@@ -3,11 +3,12 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.api.VertexBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
-internal class VertexBuffer {
+internal class VulkanVertexBuffer: VertexBuffer {
     var buffer: Long = 0
         private set
     var bufferSize: Long = 0

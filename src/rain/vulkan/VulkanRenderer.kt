@@ -8,12 +8,12 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Material
 import rain.api.Renderer
-import rain.api.SpriteComponent
+import rain.api.Tilemap
 import rain.api.TransformComponent
 import java.nio.LongBuffer
 
 internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
-    private val quadVertexBuffer: VertexBuffer
+    private val quadVertexBuffer: VulkanVertexBuffer
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
     private val logicalDevice: LogicalDevice = vk.logicalDevice
@@ -42,7 +42,17 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     var frameIndex = 0
 
     init {
-        this.quadVertexBuffer = resourceFactory.quadVertexBuffer
+        val vertices = floatArrayOf(
+                -0.5f, -0.5f, 0.0f, 0.0f,
+                -0.5f, 0.5f, 0.0f, 1.0f,
+                0.5f, 0.5f, 1.0f, 1.0f,
+
+                0.5f, 0.5f, 1.0f, 1.0f,
+                0.5f, -0.5f, 1.0f, 0.0f,
+                -0.5f, -0.5f, 0.0f, 0.0f
+        )
+        this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices)
+
         this.queueFamilyIndices = vk.queueFamilyIndices
         this.swapchain = Swapchain()
         this.surfaceColorFormat = vk.surface.format
@@ -77,6 +87,12 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         pipeline.create(logicalDevice, renderpass, quadVertexBuffer, vertex, fragment, mat.descriptorPool)
         pipeline.addSpriteToDraw(transform, textureTileOffset)
         pipelines.add(pipeline)
+    }
+
+    // TODO: Allow tilemaps to have a special material
+    // TODO: Create/Use a pipeline to render this tilemap
+    override fun submitDrawTilemap(tilemap: Tilemap) {
+
     }
 
     override fun create() {

@@ -18,6 +18,7 @@ class Player {
 
     fun update(scene: Scene, input: Input, transformComponent: TransformComponent, spriteComponent: SpriteComponent) {
         transformComponent.position.set(x, 0.0f)
+        transformComponent.scale.set(0.1f, 0.16f)
 
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
             println("Left was pressed!")
@@ -27,12 +28,12 @@ class Player {
         }
 
         counter++
-        if (counter >= 30) {
+        if (counter >= 20) {
             tileIndexX += 1
-            if (tileIndexX >= 16) {
+            if (tileIndexX >= 4) {
                 tileIndexX = 0
                 tileIndexY += 1
-                if (tileIndexY >= 16) {
+                if (tileIndexY >= 1) {
                     tileIndexY = 0
                     tileIndexX = 0
                 }
@@ -49,8 +50,8 @@ class HelloRain: Rain() {
     lateinit var playerEntitySystem: EntitySystem
     lateinit var player: Player
     override fun init() {
-        basicTexture = resourceFactory.createTexture2d("./data/textures/town.png", TextureFilter.NEAREST)
-        basicTexture.setTiledTexture(16, 16)
+        basicTexture = resourceFactory.createTexture2d("./data/textures/sprite.png", TextureFilter.NEAREST)
+        basicTexture.setTiledTexture(32, 32)
         basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", basicTexture, Vector3f(1.0f,1.0f,1.0f))
         playerEntitySystem = EntitySystem()
         player = Player()

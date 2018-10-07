@@ -2,12 +2,21 @@ package rain.api
 
 class Scene {
     private val entitySystems = ArrayList<EntitySystem>()
+    private val tilemaps = ArrayList<Tilemap>()
 
     fun registerSystem(system: EntitySystem) {
         entitySystems.add(system)
     }
 
+    fun registerTilemap(tilemap: Tilemap) {
+        tilemaps.add(tilemap)
+    }
+
     internal fun update(renderer: Renderer, input: Input) {
+        for (tilemap in tilemaps) {
+            renderer.submitDrawTilemap(tilemap)
+        }
+
         for (system in entitySystems) {
             for (update in system.updateIterator()) {
                 update.update(this, input, system.findTransformComponent(update.entity)!!, system.findSpriteComponent(update.entity)!!)

@@ -10,4 +10,5 @@ interface Renderer {
     fun create()
     fun render()
     fun submitDrawSprite(transform: TransformComponent, material: Material, textureTileOffset: Vector2i)
+    fun submitDrawTilemap(tilemap: Tilemap)
 }

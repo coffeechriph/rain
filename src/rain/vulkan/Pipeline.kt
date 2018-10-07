@@ -2,13 +2,12 @@ package rain.vulkan
 
 import org.joml.Matrix4f
 import org.joml.Vector2i
-import org.lwjgl.BufferUtils
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.api.Tilemap
 import rain.api.TransformComponent
 import java.nio.LongBuffer
-import java.util.concurrent.CopyOnWriteArrayList
 
 internal class Pipeline {
     var pipeline: Long = 0
@@ -17,7 +16,7 @@ internal class Pipeline {
     var pipelineLayout: Long = 0
         private set
 
-    lateinit var vertexBuffer: VertexBuffer
+    lateinit var vertexBuffer: VulkanVertexBuffer
         private set
 
     private lateinit var pOffset: LongBuffer // Used to temporarily store return values from vulkan
@@ -26,9 +25,9 @@ internal class Pipeline {
     private var fragmentShaderId = 0L
     internal lateinit var descriptorPool: DescriptorPool
 
-    // TODO: For now we only render sprites
-    // This will have to be expanded into a more generic thing
+    // TODO: We want to make these more generic - as to be able to more dynamically render stuff
     internal val spriteList = ArrayList<Pair<TransformComponent, Vector2i>>()
+    internal val tilemapList = ArrayList<Tilemap>()
 
     fun matchesShaderPair(vertexId: Long, fragmentId: Long): Boolean {
         return vertesShaderId == vertexId && fragmentShaderId == fragmentId
@@ -38,7 +37,11 @@ internal class Pipeline {
         spriteList.add(Pair(transformComponent, textureTileOffset))
     }
 
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
+    fun addTilemapToDraw(tilemap: Tilemap) {
+        tilemapList.add(tilemap)
+    }
+
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
         var err: Int
         // Vertex input state
         // Describes the topoloy used with this pipeline

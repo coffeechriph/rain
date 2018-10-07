@@ -2,10 +2,7 @@ package rain.vulkan
 
 import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
-import rain.api.Material
-import rain.api.ResourceFactory
-import rain.api.Texture2d
-import rain.api.TextureFilter
+import rain.api.*
 
 internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
     private var resourceId: Long = 0
@@ -16,7 +13,7 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
     internal val materials: MutableList<VulkanMaterial>
     private val textures: MutableMap<Long, VulkanTexture2d>
     private val shaders: MutableMap<Long, ShaderModule>
-    internal val quadVertexBuffer: VertexBuffer
+    private val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2))
 
     init {
         this.materials = ArrayList()
@@ -27,24 +24,16 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         this.queue = vk.deviceQueue
         this.commandPool = CommandPool()
         this.commandPool.create(logicalDevice, vk.queueFamilyIndices.graphicsFamily)
-
-        val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2))
-        val vertices = floatArrayOf(
-                -0.5f, -0.5f, 0.0f, 0.0f,
-                -0.5f, 0.5f, 0.0f, 1.0f,
-                0.5f, 0.5f, 1.0f, 1.0f,
-
-                0.5f, 0.5f, 1.0f, 1.0f,
-                0.5f, -0.5f, 1.0f, 0.0f,
-                -0.5f, -0.5f, 0.0f, 0.0f
-        )
-
-        quadVertexBuffer = VertexBuffer()
-        quadVertexBuffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, VertexBufferState.DYNAMIC)
     }
 
     fun getShader(id: Long): ShaderModule? {
         return shaders.get(id)
+    }
+
+    override fun createVertexBuffer(vertices: FloatArray): VulkanVertexBuffer {
+        val buffer = VulkanVertexBuffer()
+        buffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, VertexBufferState.DYNAMIC)
+        return buffer
     }
 
     // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
