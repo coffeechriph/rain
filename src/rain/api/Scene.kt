@@ -3,16 +3,29 @@ package rain.api
 class Scene {
     private val entitySystems = ArrayList<EntitySystem>()
     private val tilemaps = ArrayList<Tilemap>()
+    private val cameras = ArrayList<Camera>()
 
-    fun registerSystem(system: EntitySystem) {
+    private var camera = Camera()
+
+    fun addSystem(system: EntitySystem) {
         entitySystems.add(system)
     }
 
-    fun registerTilemap(tilemap: Tilemap) {
+    fun addTilemap(tilemap: Tilemap) {
         tilemaps.add(tilemap)
     }
 
+    fun addCamera(camera: Camera) {
+        cameras.add(camera)
+    }
+
+    fun setActiveCamera(camera: Camera) {
+        this.camera = camera
+    }
+
     internal fun update(renderer: Renderer, input: Input) {
+        renderer.setActiveCamera(camera)
+
         for (tilemap in tilemaps) {
             renderer.submitDrawTilemap(tilemap)
         }

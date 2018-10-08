@@ -1,6 +1,5 @@
 package example
 
-import org.joml.Vector2f
 import org.joml.Vector3f
 import rain.Api
 import rain.Rain
@@ -18,8 +17,8 @@ class Player {
     }
 
     fun update(scene: Scene, input: Input, transformComponent: TransformComponent, spriteComponent: SpriteComponent) {
-        transformComponent.transform.position.set(x, 0.0f)
-        transformComponent.transform.scale.set(0.1f, 0.16f)
+        transformComponent.transform.position.set(512.0f, 256.0f)
+        transformComponent.transform.scale.set(64.0f, 64.0f)
 
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
             println("Left was pressed!")
@@ -52,6 +51,7 @@ class HelloRain: Rain() {
     lateinit var tilemapTexture: Texture2d
     lateinit var playerEntitySystem: EntitySystem
     lateinit var player: Player
+    lateinit var camera: Camera
     val mapIndices = Array(16*16){ TileIndex(0,0) }
     val tilemap = Tilemap()
 
@@ -71,15 +71,21 @@ class HelloRain: Rain() {
                 .attachTransformComponent()
                 .attachSpriteComponent(basicMaterial)
                 .build(scene, player::init)
-        scene.registerSystem(playerEntitySystem)
+
+        scene.addSystem(playerEntitySystem)
 
         for (i in 0 until 16) {
             mapIndices[i] = TileIndex(1, 0)
             mapIndices[i * 16] = TileIndex(2, 0)
         }
-        tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 0.1f, 0.166f, mapIndices)
-        tilemap.transform.position.set(-0.7f, -0.6f)
-        scene.registerTilemap(tilemap)
+
+        tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 32.0f, 32.0f, mapIndices)
+        tilemap.transform.position.set(0.0f, 0.0f)
+        tilemap.transform.scale.set(1.0f, 1.0f)
+        scene.addTilemap(tilemap)
+
+        camera = Camera()
+        scene.setActiveCamera(camera)
     }
 
     override fun update() {

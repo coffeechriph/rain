@@ -25,6 +25,7 @@ internal class Pipeline {
     private var vertesShaderId = 0L
     private var fragmentShaderId = 0L
     internal lateinit var descriptorPool: DescriptorPool
+    internal lateinit var material: VulkanMaterial
 
     // TODO: We want to make these more generic - as to be able to more dynamically render stuff
     internal val spriteList = ArrayList<Pair<TransformComponent, Vector2i>>()
@@ -42,7 +43,7 @@ internal class Pipeline {
         tilemapList.add(tilemap)
     }
 
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, vertexShader: ShaderModule, fragmentShader: ShaderModule, descriptorPool: DescriptorPool) {
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, material: VulkanMaterial, descriptorPool: DescriptorPool) {
         var err: Int
         // Vertex input state
         // Describes the topoloy used with this pipeline
@@ -118,8 +119,8 @@ internal class Pipeline {
                 .rasterizationSamples(VK_SAMPLE_COUNT_1_BIT)
 
         val shaderStages = VkPipelineShaderStageCreateInfo.calloc(2)
-        shaderStages.get(0).set(vertexShader.createInfo)
-        shaderStages.get(1).set(fragmentShader.createInfo)
+        shaderStages.get(0).set(material.vertexShader.createInfo)
+        shaderStages.get(1).set(material.fragmentShader.createInfo)
 
         // TODO: Change this when we want to support more than 1 descriptor set
         val numDescriptorLayouts = descriptorPool.descriptorSets.size
@@ -178,9 +179,10 @@ internal class Pipeline {
         pBuffer = memAllocLong(1)
         pOffset = memAllocLong(1)
         this.vertexBuffer = vertexBuffer
-        this.vertesShaderId = vertexShader.id
-        this.fragmentShaderId = fragmentShader.id
+        this.vertesShaderId = material.vertexShader.id
+        this.fragmentShaderId = material.fragmentShader.id
         this.descriptorPool = descriptorPool
+        this.material = material
 
         shaderStages.free()
         multisampleState.free()
@@ -222,10 +224,9 @@ internal class Pipeline {
 
     fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: Transform, textureTileOffset: Vector2i) {
         val modelMatrix = Matrix4f()
-        modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
-        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
+        //modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
         modelMatrix.translate(transform.position.x, transform.position.y, 0.0f)
-        modelMatrix.transpose()
+        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
 
         val byteBuffer = memAlloc(18 * 4)
         val buffer = modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")

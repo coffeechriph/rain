@@ -2,6 +2,7 @@ package rain.vulkan
 
 import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
@@ -38,6 +39,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     var swapchainIsDirty = true
     var frameIndex = 0
 
+    private lateinit var camera: Camera
+
     init {
         val vertices = floatArrayOf(
                 -0.5f, -0.5f, 0.0f, 0.0f,
@@ -66,6 +69,10 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
     }
 
+    override fun setActiveCamera(camera: Camera) {
+        this.camera = camera
+    }
+
     // TODO: This one should be thread-safe but isn't really atm
     override fun submitDrawSprite(transform: TransformComponent, material: Material, textureTileOffset: Vector2i) {
         val mat = material as VulkanMaterial
@@ -77,11 +84,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             }
         }
 
-        val vertex = resourceFactory.getShader(mat.vertexShader.id) ?: throw IllegalStateException("Vertex shader with id ${mat.vertexShader.id} does not exist!")
-        val fragment = resourceFactory.getShader(mat.fragmentShader.id) ?: throw IllegalStateException("Fragment shader with id ${mat.fragmentShader.id} does not exist!")
-
         val pipeline = Pipeline()
-        pipeline.create(logicalDevice, renderpass, quadVertexBuffer, vertex, fragment, mat.descriptorPool)
+        pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat, mat.descriptorPool)
         pipeline.addSpriteToDraw(transform, textureTileOffset)
         pipelines.add(pipeline)
     }
@@ -100,11 +104,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             }
         }
 
-        val vertex = resourceFactory.getShader(mat.vertexShader.id) ?: throw IllegalStateException("Vertex shader with id ${mat.vertexShader.id} does not exist!")
-        val fragment = resourceFactory.getShader(mat.fragmentShader.id) ?: throw IllegalStateException("Fragment shader with id ${mat.fragmentShader.id} does not exist!")
-
         val pipeline = Pipeline()
-        pipeline.create(logicalDevice, renderpass, vbuf, vertex, fragment, mat.descriptorPool)
+        pipeline.create(logicalDevice, renderpass, vbuf, mat, mat.descriptorPool)
         pipeline.addTilemapToDraw(tilemap)
         pipelines.add(pipeline)
     }
@@ -181,9 +182,6 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             return
         }
 
-        //VK10.vkResetCommandBuffer(renderCommandBuffers[frameIndex].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
-        //VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
-
         renderCommandBuffers[frameIndex].begin()
         if (graphicsQueue[frameIndex].queue != presentQueue[frameIndex].queue) {
             attachPrePresentBarrier(renderCommandBuffers[frameIndex], swapchain.images[nextImage])
@@ -191,7 +189,10 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
 
+        val projectionMatrixBuffer = memAlloc(16 * 4)
+        camera.projection.get(projectionMatrixBuffer)
         for (pipeline in pipelines) {
+            pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer, nextImage)
             pipeline.begin(renderCommandBuffers[frameIndex], pipeline.descriptorPool, nextImage)
             // TODO: The draw method is adapted for sprites... but the tilemap will work a bit different
             for (tilemap in pipeline.tilemapList) {

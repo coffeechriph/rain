@@ -22,7 +22,7 @@ class Tilemap {
     private lateinit var vertices: FloatArray
 
     fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32, tileNumY: Int = 32,
-               tileWidth: Float = 0.1f, tileHeight: Float = 0.16f, map: Array<TileIndex>) {
+               tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileIndex>) {
         assert(map.size == tileNumX * tileNumY)
 
         var x = 0.0f

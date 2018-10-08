@@ -10,11 +10,15 @@ layout(push_constant) uniform ModelMatrix {
     vec2 textureOffset;
 } modelMatrix;
 
-layout(set = 0, binding = 0) uniform TextureData {
+layout(set = 0, binding = 0) uniform SceneData {
+    mat4 projectionMatrix;
+} sceneData;
+
+layout(set = 1, binding = 0) uniform TextureData {
     vec2 uvScale;
 } textureData;
 
 void main() {
-    gl_Position = vec4(pos.x, pos.y, 0, 1.0) * modelMatrix.matrix;
+    gl_Position = sceneData.projectionMatrix * modelMatrix.matrix * vec4(pos.x, pos.y, 0, 1.0);
     Uv = uv;
 }
