@@ -17,8 +17,8 @@ class Player {
     }
 
     fun update(scene: Scene, input: Input, transformComponent: TransformComponent, spriteComponent: SpriteComponent) {
-        transformComponent.position.set(x, 0.0f)
-        transformComponent.scale.set(0.1f, 0.16f)
+        transformComponent.transform.position.set(x, 0.0f)
+        transformComponent.transform.scale.set(0.1f, 0.16f)
 
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
             println("Left was pressed!")
@@ -47,12 +47,19 @@ class Player {
 class HelloRain: Rain() {
     lateinit var basicMaterial: Material
     lateinit var basicTexture: Texture2d
+    lateinit var tilemapMaterial: Material
+    lateinit var tilemapTexture: Texture2d
     lateinit var playerEntitySystem: EntitySystem
     lateinit var player: Player
     override fun init() {
         basicTexture = resourceFactory.createTexture2d("./data/textures/sprite.png", TextureFilter.NEAREST)
         basicTexture.setTiledTexture(32, 32)
+        tilemapTexture = resourceFactory.createTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)
+        tilemapTexture.setTiledTexture(16,16)
+
         basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", basicTexture, Vector3f(1.0f,1.0f,1.0f))
+        tilemapMaterial = resourceFactory.createMaterial("./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", tilemapTexture, Vector3f(1.0f,1.0f,1.0f))
+
         playerEntitySystem = EntitySystem()
         player = Player()
         playerEntitySystem.newEntity()
@@ -61,6 +68,11 @@ class HelloRain: Rain() {
                 .attachSpriteComponent(basicMaterial)
                 .build(scene, player::init)
         scene.registerSystem(playerEntitySystem)
+
+        val tilemap = Tilemap()
+        tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 0.1f, 0.166f)
+        tilemap.transform.position.set(-0.7f, -0.6f)
+        scene.registerTilemap(tilemap)
     }
 
     override fun update() {

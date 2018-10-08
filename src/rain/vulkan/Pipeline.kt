@@ -6,6 +6,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Tilemap
+import rain.api.Transform
 import rain.api.TransformComponent
 import java.nio.LongBuffer
 
@@ -59,10 +60,15 @@ internal class Pipeline {
                 .rasterizerDiscardEnable(false)
                 .depthBiasEnable(false)
 
-        // Color blend state
-        // Describes blend modes and color masks
+        // TODO: Alpha blending should not be enabled by default
         val colorWriteMask = VkPipelineColorBlendAttachmentState.calloc(1)
-                .blendEnable(false)
+                .blendEnable(true)
+                .srcColorBlendFactor(VK_BLEND_FACTOR_SRC_ALPHA)
+                .dstColorBlendFactor(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
+                .colorBlendOp(VK_BLEND_OP_ADD)
+                .srcAlphaBlendFactor(VK_BLEND_FACTOR_ONE)
+                .dstAlphaBlendFactor(VK_BLEND_FACTOR_ZERO)
+                .alphaBlendOp(VK_BLEND_OP_ADD)
                 .colorWriteMask(VK_COLOR_COMPONENT_R_BIT or VK_COLOR_COMPONENT_G_BIT or VK_COLOR_COMPONENT_B_BIT or VK_COLOR_COMPONENT_A_BIT) // <- RGBA
 
         val colorBlendState = VkPipelineColorBlendStateCreateInfo.calloc()
@@ -214,7 +220,7 @@ internal class Pipeline {
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
-    fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: TransformComponent, textureTileOffset: Vector2i) {
+    fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: Transform, textureTileOffset: Vector2i) {
         val modelMatrix = Matrix4f()
         modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
         modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)

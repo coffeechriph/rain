@@ -24,9 +24,9 @@ class Scene {
 
             for (sprite in system.spriteIterator()) {
                 val transform = system.findTransformComponent(sprite.entity)!!
-                sprite.transform.position = transform.position
-                sprite.transform.scale = transform.scale
-                sprite.transform.rotation = transform.rotation
+                sprite.transform.transform.position = transform.transform.position
+                sprite.transform.transform.scale = transform.transform.scale
+                sprite.transform.transform.rotation = transform.transform.rotation
                 renderer.submitDrawSprite(sprite.transform, sprite.material, sprite.textureTileOffset)
             }
         }

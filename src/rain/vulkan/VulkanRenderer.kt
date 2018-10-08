@@ -92,7 +92,24 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     // TODO: Allow tilemaps to have a special material
     // TODO: Create/Use a pipeline to render this tilemap
     override fun submitDrawTilemap(tilemap: Tilemap) {
+        val mat = tilemap.material as VulkanMaterial
+        val vbuf = tilemap.vertexBuffer as VulkanVertexBuffer
 
+        for (pipeline in pipelines) {
+            if (pipeline.matchesShaderPair(mat.vertexShader.id, mat.fragmentShader.id) &&
+                pipeline.vertexBuffer == vbuf) {
+                pipeline.addTilemapToDraw(tilemap)
+                return
+            }
+        }
+
+        val vertex = resourceFactory.getShader(mat.vertexShader.id) ?: throw IllegalStateException("Vertex shader with id ${mat.vertexShader.id} does not exist!")
+        val fragment = resourceFactory.getShader(mat.fragmentShader.id) ?: throw IllegalStateException("Fragment shader with id ${mat.fragmentShader.id} does not exist!")
+
+        val pipeline = Pipeline()
+        pipeline.create(logicalDevice, renderpass, vbuf, vertex, fragment, mat.descriptorPool)
+        pipeline.addTilemapToDraw(tilemap)
+        pipelines.add(pipeline)
     }
 
     override fun create() {
@@ -179,8 +196,12 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         for (pipeline in pipelines) {
             pipeline.begin(renderCommandBuffers[frameIndex], pipeline.descriptorPool, nextImage)
+            // TODO: The draw method is adapted for sprites... but the tilemap will work a bit different
+            for (tilemap in pipeline.tilemapList) {
+                pipeline.draw(renderCommandBuffers[frameIndex], tilemap.transform, Vector2i(0,0))
+            }
             for (sprite in pipeline.spriteList) {
-                pipeline.draw(renderCommandBuffers[frameIndex], sprite.first, sprite.second)
+                pipeline.draw(renderCommandBuffers[frameIndex], sprite.first.transform, sprite.second)
             }
             pipeline.spriteList.clear()
         }

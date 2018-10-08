@@ -206,6 +206,30 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
         return desc
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VulkanVertexBuffer
+
+        if (buffer != other.buffer) return false
+        if (bufferSize != other.bufferSize) return false
+        if (vertexCount != other.vertexCount) return false
+        if (vertexPipelineVertexInputStateCreateInfo != other.vertexPipelineVertexInputStateCreateInfo) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = buffer.hashCode()
+        result = 31 * result + bufferSize.hashCode()
+        result = 31 * result + vertexCount
+        result = 31 * result + vertexPipelineVertexInputStateCreateInfo.hashCode()
+        return result
+    }
+
+
 }
 
 // TODO: Move this to another file as it's used by multiple

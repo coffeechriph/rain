@@ -3,16 +3,16 @@ package rain.api
 class Tilemap {
     var tileNumX = 128
     var tileNumY = 128
-    var tileWidth = 16
-    var tileHeight = 16
+    var tileWidth = 16.0f
+    var tileHeight = 16.0f
     private lateinit var vertices: FloatArray
     internal lateinit var vertexBuffer: VertexBuffer
         private set
-    internal lateinit var texture: Texture2d
+    internal lateinit var material: Material
+    internal var transform = Transform()
 
     // TODO: Implement support for specifying tile type
-    // TODO: We want to be able to set a material for a tilemap
-    fun create(resourceFactory: ResourceFactory, texture2d: Texture2d, tileNumX: Int, tileNumY: Int, tileWidth: Int, tileHeight: Int) {
+    fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int, tileNumY: Int, tileWidth: Float, tileHeight: Float) {
         var x = 0.0f
         var y = 0.0f
 
@@ -22,8 +22,8 @@ class Tilemap {
             vi = 24*i
             val tileX = 0
             val tileY = 0
-            val uvx = texture2d.getTexCoordWidth()
-            val uvy = texture2d.getTexCoordHeight()
+            val uvx = material.getTexture2d().getTexCoordWidth()
+            val uvy = material.getTexture2d().getTexCoordHeight()
 
             vertices[vi+0] = x
             vertices[vi+1] = y
@@ -31,23 +31,23 @@ class Tilemap {
             vertices[vi+3] = tileY * uvy
 
             vertices[vi+4] = x
-            vertices[vi+5] = y + 0.5f
+            vertices[vi+5] = y + tileHeight
             vertices[vi+6] = tileX * uvx
-            vertices[vi+7] = tileY + tileY * uvy
+            vertices[vi+7] = uvy + tileY * uvy
 
-            vertices[vi+8] = x + 0.5f
-            vertices[vi+9] = y + 0.5f
-            vertices[vi+10] = tileX + tileX * uvx
-            vertices[vi+11] = tileY + tileY * uvy
+            vertices[vi+8] = x + tileWidth
+            vertices[vi+9] = y + tileHeight
+            vertices[vi+10] = uvx + tileX * uvx
+            vertices[vi+11] = uvy + tileY * uvy
 
-            vertices[vi+12] = x + 0.5f
-            vertices[vi+13] = y + 0.5f
-            vertices[vi+14] = tileX + tileX * uvx
-            vertices[vi+15] = tileY + tileY * uvy
+            vertices[vi+12] = x + tileWidth
+            vertices[vi+13] = y + tileHeight
+            vertices[vi+14] = uvx + tileX * uvx
+            vertices[vi+15] = uvy + tileY * uvy
 
-            vertices[vi+16] = x + 0.5f
+            vertices[vi+16] = x + tileWidth
             vertices[vi+17] = y
-            vertices[vi+18] = tileX + tileX * uvx
+            vertices[vi+18] = uvx + tileX * uvx
             vertices[vi+19] = tileY * uvy
 
             vertices[vi+20] = x
@@ -67,6 +67,6 @@ class Tilemap {
         this.tileNumY = tileNumY
         this.tileWidth = tileWidth
         this.tileHeight = tileHeight
-        this.texture = texture
+        this.material = material
     }
 }
