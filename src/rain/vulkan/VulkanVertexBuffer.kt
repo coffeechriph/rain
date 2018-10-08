@@ -25,8 +25,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
 
-    // TODO: Why are we storing bufferMemory as a LongBuffer
-    internal class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long)
+    internal class Buffer(var buffer: Long, var bufferMemory: Long, var bufferSize: Long)
 
     // TODO: Can we optimize this?
     override fun update(vertices: FloatArray) {
@@ -119,7 +118,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
             throw AssertionError("Failed to bind memory to vertex buffer: " + VulkanResult(err))
         }
 
-        return Buffer(buffer, bufferMemory, bufferSize)
+        return Buffer(buffer, bufferMemory.get(), bufferSize)
     }
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
@@ -129,7 +128,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         fb.put(vertices)
 
         val pData = memAllocPointer(1)
-        val err = vkMapMemory(logicalDevice.device, buffer.bufferMemory.get(0), 0, buffer.bufferSize, 0, pData)
+        val err = vkMapMemory(logicalDevice.device, buffer.bufferMemory, 0, buffer.bufferSize, 0, pData)
 
         val data = pData.get(0)
         memFree(pData)
@@ -139,7 +138,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
         memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())
         memFree(vertexBuffer)
-        vkUnmapMemory(logicalDevice.device, buffer.bufferMemory.get(0))
+        vkUnmapMemory(logicalDevice.device, buffer.bufferMemory)
 
         this.buffer = buffer.buffer
         this.bufferSize = buffer.bufferSize
@@ -152,7 +151,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         fb.put(vertices)
 
         val pData = memAllocPointer(1)
-        val err = vkMapMemory(logicalDevice.device, stagingBuffer.bufferMemory.get(0), 0, stagingBuffer.bufferSize, 0, pData)
+        val err = vkMapMemory(logicalDevice.device, stagingBuffer.bufferMemory, 0, stagingBuffer.bufferSize, 0, pData)
 
         val data = pData.get(0)
         memFree(pData)
@@ -162,13 +161,13 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
         memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())
         memFree(vertexBuffer)
-        vkUnmapMemory(logicalDevice.device, stagingBuffer.bufferMemory.get(0))
+        vkUnmapMemory(logicalDevice.device, stagingBuffer.bufferMemory)
 
         val actualBuffer = createBuffer(logicalDevice, stagingBuffer.bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT or VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, memoryProperties)
         copyBuffer(logicalDevice, queue, commandPool, stagingBuffer.buffer, actualBuffer.buffer, stagingBuffer.bufferSize)
 
         vkDestroyBuffer(logicalDevice.device, stagingBuffer.buffer, null)
-        vkFreeMemory(logicalDevice.device, stagingBuffer.bufferMemory.get(0), null)
+        vkFreeMemory(logicalDevice.device, stagingBuffer.bufferMemory, null)
 
         this.buffer = actualBuffer.buffer
         this.bufferSize = actualBuffer.bufferSize

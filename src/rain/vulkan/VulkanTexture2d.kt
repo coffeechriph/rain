@@ -66,7 +66,7 @@ internal class VulkanTexture2d: Texture2d {
         imageDataBuffer.flip()
 
         val pData = MemoryUtil.memAllocPointer(1)
-        var err = VK10.vkMapMemory(logicalDevice.device, buffer.bufferMemory.get(0), 0, buffer.bufferSize, 0, pData)
+        var err = VK10.vkMapMemory(logicalDevice.device, buffer.bufferMemory, 0, buffer.bufferSize, 0, pData)
 
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
@@ -76,8 +76,7 @@ internal class VulkanTexture2d: Texture2d {
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(imageDataBuffer), data, imageDataBuffer.remaining().toLong())
         MemoryUtil.memFree(imageDataBuffer)
-        VK10.vkUnmapMemory(logicalDevice.device, buffer.bufferMemory.get(0))
-        //stbi_image_free(imageData)
+        VK10.vkUnmapMemory(logicalDevice.device, buffer.bufferMemory)
 
         MemoryStack.stackPush().use {
             val imageCreateInfo: VkImageCreateInfo = VkImageCreateInfo.calloc()
