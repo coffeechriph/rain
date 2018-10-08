@@ -6,10 +6,7 @@ import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
-import rain.api.Material
-import rain.api.Renderer
-import rain.api.Tilemap
-import rain.api.TransformComponent
+import rain.api.*
 import java.nio.LongBuffer
 
 internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
@@ -51,7 +48,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
                 0.5f, -0.5f, 1.0f, 0.0f,
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
-        this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices)
+        this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
 
         this.queueFamilyIndices = vk.queueFamilyIndices
         this.swapchain = Swapchain()

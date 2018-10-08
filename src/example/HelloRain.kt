@@ -5,6 +5,7 @@ import org.joml.Vector3f
 import rain.Api
 import rain.Rain
 import rain.api.*
+import rain.api.Tilemap.TileIndex
 
 class Player {
     var x = 0.0f
@@ -69,8 +70,13 @@ class HelloRain: Rain() {
                 .build(scene, player::init)
         scene.registerSystem(playerEntitySystem)
 
+        val mapIndices = Array(16*16){ TileIndex(0,0) }
+        for (i in 0 until 16) {
+            mapIndices[i] = TileIndex(1, 0)
+            mapIndices[i * 16] = TileIndex(2, 0)
+        }
         val tilemap = Tilemap()
-        tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 0.1f, 0.166f)
+        tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 0.1f, 0.166f, mapIndices)
         tilemap.transform.position.set(-0.7f, -0.6f)
         scene.registerTilemap(tilemap)
     }

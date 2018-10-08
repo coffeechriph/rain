@@ -1,18 +1,31 @@
 package rain.api
 
 class Tilemap {
+    data class TileIndex(val x: Int, val y: Int)
+
     var tileNumX = 128
+        private set
     var tileNumY = 128
+        private set
     var tileWidth = 16.0f
+        private set
     var tileHeight = 16.0f
-    private lateinit var vertices: FloatArray
+        private set
+
     internal lateinit var vertexBuffer: VertexBuffer
         private set
     internal lateinit var material: Material
+        private set
     internal var transform = Transform()
+        private set
+
+    private lateinit var vertices: FloatArray
 
     // TODO: Implement support for specifying tile type
-    fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int, tileNumY: Int, tileWidth: Float, tileHeight: Float) {
+    fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32, tileNumY: Int = 32,
+               tileWidth: Float = 0.1f, tileHeight: Float = 0.16f, map: Array<TileIndex>) {
+        assert(map.size == tileNumX * tileNumY)
+
         var x = 0.0f
         var y = 0.0f
 
@@ -20,8 +33,8 @@ class Tilemap {
         var vi: Int
         for (i in 0 until tileNumX*tileNumY) {
             vi = 24*i
-            val tileX = 0
-            val tileY = 0
+            val tileX = map[i].x
+            val tileY = map[i].y
             val uvx = material.getTexture2d().getTexCoordWidth()
             val uvy = material.getTexture2d().getTexCoordHeight()
 
@@ -62,7 +75,7 @@ class Tilemap {
             }
         }
 
-        vertexBuffer = resourceFactory.createVertexBuffer(vertices)
+        vertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
         this.tileNumX = tileNumX
         this.tileNumY = tileNumY
         this.tileWidth = tileWidth

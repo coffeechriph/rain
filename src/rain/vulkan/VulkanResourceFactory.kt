@@ -30,9 +30,9 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
         return shaders.get(id)
     }
 
-    override fun createVertexBuffer(vertices: FloatArray): VulkanVertexBuffer {
+    override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState): VulkanVertexBuffer {
         val buffer = VulkanVertexBuffer()
-        buffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, VertexBufferState.DYNAMIC)
+        buffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, state)
         return buffer
     }
 
