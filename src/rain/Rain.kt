@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class Rain {
     private val context = Window()
     private val vk = Vk()
-    private val input = Input()
+    internal val input = Input()
     lateinit var resourceFactory: ResourceFactory
         private set
     private lateinit var vulkanRenderer: VulkanRenderer

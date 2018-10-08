@@ -20,15 +20,35 @@ internal class VulkanVertexBuffer: VertexBuffer {
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
         private set
 
+    private var bufferState = VertexBufferState.STATIC
+
+    private lateinit var vk: Vk
+    private lateinit var commandPool: CommandPool
+
     // TODO: Why are we storing bufferMemory as a LongBuffer
     internal class Buffer(var buffer: Long, var bufferMemory: LongBuffer, var bufferSize: Long)
 
-    fun create(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
-        if (state == VertexBufferState.STATIC) {
-            createVertexBufferWithStaging(logicalDevice, queue, commandPool, memoryProperties, vertices)
+    // TODO: Can we optimize this?
+    override fun update(vertices: FloatArray) {
+        if (this.buffer > 0L) {
+            vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
+            this.buffer = 0L
+        }
+
+        if (bufferState == VertexBufferState.STATIC) {
+            createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
         }
         else {
-            createVertexBuffer(logicalDevice, queue, commandPool, memoryProperties, vertices)
+            createVertexBuffer(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
+        }
+    }
+
+    fun create(vk: Vk, commandPool: CommandPool, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
+        if (state == VertexBufferState.STATIC) {
+            createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
+        }
+        else {
+            createVertexBuffer(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
         }
 
         // Assign to vertex buffer
@@ -45,6 +65,9 @@ internal class VulkanVertexBuffer: VertexBuffer {
         }
 
         vertexCount = vertices.size / vertexSize
+        this.bufferState = bufferState
+        this.vk = vk
+        this.commandPool = commandPool
     }
 
     // TODO: This method is used to create a buffer for image data, which makes

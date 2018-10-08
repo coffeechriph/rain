@@ -4,7 +4,7 @@ import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
 import rain.api.*
 
-internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
+internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
     private val physicalDevice: PhysicalDevice
@@ -32,7 +32,7 @@ internal class VulkanResourceFactory(vk: Vk) : ResourceFactory {
 
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState): VulkanVertexBuffer {
         val buffer = VulkanVertexBuffer()
-        buffer.create(logicalDevice, queue, commandPool, physicalDevice.memoryProperties, vertices, attributes, state)
+        buffer.create(vk, commandPool, vertices, attributes, state)
         return buffer
     }
 

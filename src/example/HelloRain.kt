@@ -52,6 +52,9 @@ class HelloRain: Rain() {
     lateinit var tilemapTexture: Texture2d
     lateinit var playerEntitySystem: EntitySystem
     lateinit var player: Player
+    val mapIndices = Array(16*16){ TileIndex(0,0) }
+    val tilemap = Tilemap()
+
     override fun init() {
         basicTexture = resourceFactory.createTexture2d("./data/textures/sprite.png", TextureFilter.NEAREST)
         basicTexture.setTiledTexture(32, 32)
@@ -70,19 +73,23 @@ class HelloRain: Rain() {
                 .build(scene, player::init)
         scene.registerSystem(playerEntitySystem)
 
-        val mapIndices = Array(16*16){ TileIndex(0,0) }
         for (i in 0 until 16) {
             mapIndices[i] = TileIndex(1, 0)
             mapIndices[i * 16] = TileIndex(2, 0)
         }
-        val tilemap = Tilemap()
         tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 0.1f, 0.166f, mapIndices)
         tilemap.transform.position.set(-0.7f, -0.6f)
         scene.registerTilemap(tilemap)
     }
 
     override fun update() {
-
+        if (input.keyState(Input.Key.KEY_0) == Input.InputState.PRESSED) {
+            for (i in 0 until 16) {
+                mapIndices[i] = TileIndex(0, 0)
+                mapIndices[i * 16] = TileIndex(1, 0)
+            }
+            tilemap.update(mapIndices)
+        }
     }
 }
 
