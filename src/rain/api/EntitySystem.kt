@@ -3,47 +3,34 @@ package rain.api
 import org.joml.Vector2i
 import kotlin.IllegalStateException
 
-/*
-    EntitySystem keeps track of components for a specific entity type.
-
-    Idea for nice creation:
-        var system = renderer.newSystem<Entity>()
-        val entity = system.newInstance()
-                           .attachTransform()
-                           .attachUpdate()
-                           .attachSprite()
-                           .create() -> Will throw if one component is missing a dependency
-                           For example if there's no Transform attached but Sprite has been
-                           attached.
- */
-class EntitySystem {
+class EntitySystem<T: Entity> {
     private var entityId: Long = 0
     private var entities = ArrayList<Long>()
     private var transformComponents = ArrayList<TransformComponent>()
-    private var updateComponents = ArrayList<UpdateComponent>()
+    private var updateComponents = ArrayList<UpdateComponent<T>>()
     private var spriteComponents = ArrayList<SpriteComponent>()
 
-    fun newEntity(): Builder {
+    fun newEntity(entity: T): Builder<T> {
         val id = uniqueId()
+        entity.setId(id)
         entities.add(id)
-        return Builder(id,this)
+        return Builder(id,entity, this)
     }
 
-    class Builder internal constructor(private var entityId: Long, private var system: EntitySystem) {
-        fun attachTransformComponent(): Builder {
+    class Builder<T: Entity> internal constructor(private var entityId: Long, private val entity: T, private var system: EntitySystem<T>) {
+        fun attachTransformComponent(): Builder<T> {
             val c = TransformComponent(system.entities[system.entities.size - 1])
             system.transformComponents.add(c)
             return this
         }
 
-        fun attachUpdateComponent(update: (scene: Scene, input: Input, transform: TransformComponent, sprite: SpriteComponent) -> Unit): Builder {
-            val c = UpdateComponent(system.entities[system.entities.size - 1])
-            c.update = update
+        fun attachUpdateComponent(): Builder<T> {
+            val c = UpdateComponent<T>(system.entities[system.entities.size - 1], entity)
             system.updateComponents.add(c)
             return this
         }
 
-        fun attachSpriteComponent(material: Material): Builder {
+        fun attachSpriteComponent(material: Material): Builder<T> {
             val entityId = system.entities[system.entities.size - 1]
             val tr = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
@@ -52,8 +39,8 @@ class EntitySystem {
             return this
         }
 
-        fun build(scene: Scene, init: (entityId: Long, system: EntitySystem, scene: Scene) -> Unit): Long {
-            init(entityId, system, scene)
+        fun build(scene: Scene): Long {
+            entity.init(scene, system as EntitySystem<Entity>)
             return system.entities[system.entities.size-1]
         }
     }
@@ -68,9 +55,9 @@ class EntitySystem {
         return null
     }
 
-    fun findUpdateComponent(entityId: Long): UpdateComponent? {
+    fun findUpdateComponent(entityId: Long): UpdateComponent<T>? {
         for (e in updateComponents) {
-            if (e.entity == entityId) {
+            if (e.entityHandler == entityId) {
                 return e
             }
         }
@@ -92,7 +79,7 @@ class EntitySystem {
         return spriteComponents.iterator()
     }
 
-    fun updateIterator(): Iterator<UpdateComponent> {
+    fun updateIterator(): Iterator<UpdateComponent<T>> {
         return updateComponents.iterator()
     }
 

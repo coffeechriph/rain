@@ -1,14 +1,14 @@
 package rain.api
 
 class Scene {
-    private val entitySystems = ArrayList<EntitySystem>()
+    private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
 
     private var camera = Camera()
 
-    fun addSystem(system: EntitySystem) {
-        entitySystems.add(system)
+    fun<T: Entity> addSystem(system: EntitySystem<T>) {
+        entitySystems.add(system as EntitySystem<Entity>)
     }
 
     fun addTilemap(tilemap: Tilemap) {
@@ -32,7 +32,7 @@ class Scene {
 
         for (system in entitySystems) {
             for (update in system.updateIterator()) {
-                update.update(this, input, system.findTransformComponent(update.entity)!!, system.findSpriteComponent(update.entity)!!)
+                update.update(this, input, system)
             }
 
             for (sprite in system.spriteIterator()) {

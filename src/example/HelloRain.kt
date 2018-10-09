@@ -6,17 +6,20 @@ import rain.Rain
 import rain.api.*
 import rain.api.Tilemap.TileIndex
 
-class Player {
+class Player : Entity() {
     var x = 0.0f
     var tileIndexX = 0
     var tileIndexY = 0
     var counter = 0
 
-    fun init(id: Long, system: EntitySystem, scene: Scene) {
+    override fun init(scene: Scene, system: EntitySystem<Entity>) {
         println("Initializing the player")
     }
 
-    fun update(scene: Scene, input: Input, transformComponent: TransformComponent, spriteComponent: SpriteComponent) {
+    override fun update(scene: Scene, input: Input, system: EntitySystem<Entity>) {
+        val transformComponent = system.findTransformComponent(id)!!
+        val spriteComponent = system.findSpriteComponent(id)!!
+
         transformComponent.transform.position.set(512.0f, 256.0f)
         transformComponent.transform.scale.set(64.0f, 64.0f)
 
@@ -49,7 +52,7 @@ class HelloRain: Rain() {
     lateinit var basicTexture: Texture2d
     lateinit var tilemapMaterial: Material
     lateinit var tilemapTexture: Texture2d
-    lateinit var playerEntitySystem: EntitySystem
+    lateinit var playerEntitySystem: EntitySystem<Player>
     lateinit var player: Player
     lateinit var camera: Camera
     val mapIndices = Array(16*16){ TileIndex(0,0) }
@@ -66,11 +69,11 @@ class HelloRain: Rain() {
 
         playerEntitySystem = EntitySystem()
         player = Player()
-        playerEntitySystem.newEntity()
-                .attachUpdateComponent(player::update)
+        playerEntitySystem.newEntity(player)
+                .attachUpdateComponent()
                 .attachTransformComponent()
                 .attachSpriteComponent(basicMaterial)
-                .build(scene, player::init)
+                .build(scene)
 
         scene.addSystem(playerEntitySystem)
 

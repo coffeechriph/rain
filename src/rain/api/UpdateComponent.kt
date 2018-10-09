@@ -1,5 +1,7 @@
 package rain.api
 
-class UpdateComponent internal constructor(val entity: Long) {
-    lateinit var update: (scene: Scene, input: Input, transform: TransformComponent, sprite: SpriteComponent) -> Unit
+class UpdateComponent<T: Entity> internal constructor(val entityHandler: Long, val entity: T) {
+    fun update(scene: Scene, input: Input, system: EntitySystem<T>) {
+        entity.update(scene, input, system as EntitySystem<Entity>)
+    }
 }
