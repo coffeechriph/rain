@@ -8,6 +8,6 @@ open class Entity {
         this.id = id
     }
 
-    open fun init(scene: Scene, system: EntitySystem<Entity>){}
-    open fun update(scene: Scene, input: Input, system: EntitySystem<Entity>){}
+    open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}
+    open fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>){}
 }

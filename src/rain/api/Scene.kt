@@ -36,6 +36,17 @@ class Scene {
             }
 
             for (sprite in system.spriteIterator()) {
+                sprite.animationTime += 1
+                if (sprite.animationTime >= 20) {
+                    sprite.textureTileOffset.x += 1
+                    sprite.animationTime = 0
+
+                    // TODO: Give sprite information about the number of animations
+                    // TODO: Create Animation structure to specify which animation to play
+                    if (sprite.textureTileOffset.x >= 4) {
+                        sprite.textureTileOffset.x = 0
+                    }
+                }
                 val transform = system.findTransformComponent(sprite.entity)!!
                 sprite.transform.transform.position = transform.transform.position
                 sprite.transform.transform.scale = transform.transform.scale

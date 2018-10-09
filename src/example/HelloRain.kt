@@ -7,16 +7,11 @@ import rain.api.*
 import rain.api.Tilemap.TileIndex
 
 class Player : Entity() {
-    var x = 0.0f
-    var tileIndexX = 0
-    var tileIndexY = 0
-    var counter = 0
-
-    override fun init(scene: Scene, system: EntitySystem<Entity>) {
-        println("Initializing the player")
+    override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
+        println("Initialize Player!")
     }
 
-    override fun update(scene: Scene, input: Input, system: EntitySystem<Entity>) {
+    override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>) {
         val transformComponent = system.findTransformComponent(id)!!
         val spriteComponent = system.findSpriteComponent(id)!!
 
@@ -29,21 +24,6 @@ class Player : Entity() {
         else if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.RELEASED) {
             println("Left was released!")
         }
-
-        counter++
-        if (counter >= 20) {
-            tileIndexX += 1
-            if (tileIndexX >= 4) {
-                tileIndexX = 0
-                tileIndexY += 1
-                if (tileIndexY >= 1) {
-                    tileIndexY = 0
-                    tileIndexX = 0
-                }
-            }
-            counter = 0
-        }
-        spriteComponent.textureTileOffset.set(tileIndexX, tileIndexY)
     }
 }
 

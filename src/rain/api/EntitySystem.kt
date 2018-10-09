@@ -40,7 +40,7 @@ class EntitySystem<T: Entity> {
         }
 
         fun build(scene: Scene): Long {
-            entity.init(scene, system as EntitySystem<Entity>)
+            entity.init(scene, system)
             return system.entities[system.entities.size-1]
         }
     }
