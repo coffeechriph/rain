@@ -8,6 +8,8 @@ import rain.api.Tilemap.TileIndex
 
 class Player : Entity() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
+        val sprite = system.findSpriteComponent(id)!!
+        sprite.addAnimation("walk", 0, 4, 0)
         println("Initialize Player!")
     }
 

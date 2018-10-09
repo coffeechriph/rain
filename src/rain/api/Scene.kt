@@ -23,7 +23,7 @@ class Scene {
         this.camera = camera
     }
 
-    internal fun update(renderer: Renderer, input: Input) {
+    internal fun update(renderer: Renderer, input: Input, deltaTime: Float) {
         renderer.setActiveCamera(camera)
 
         for (tilemap in tilemaps) {
@@ -36,15 +36,15 @@ class Scene {
             }
 
             for (sprite in system.spriteIterator()) {
-                sprite.animationTime += 1
-                if (sprite.animationTime >= 20) {
-                    sprite.textureTileOffset.x += 1
-                    sprite.animationTime = 0
+                sprite.animationTime += deltaTime * 2.0f
+                if (sprite.animationTime >= 1.0f) {
+                    sprite.animationTime = 0.0f
+                    sprite.animationIndex += 1
 
-                    // TODO: Give sprite information about the number of animations
-                    // TODO: Create Animation structure to specify which animation to play
-                    if (sprite.textureTileOffset.x >= 4) {
-                        sprite.textureTileOffset.x = 0
+                    sprite.textureTileOffset.x = sprite.animation.startFrame + sprite.animationIndex
+
+                    if (sprite.animationIndex >= (sprite.animation.endFrame - sprite.animation.startFrame)) {
+                        sprite.animationIndex = 0
                     }
                 }
                 val transform = system.findTransformComponent(sprite.entity)!!

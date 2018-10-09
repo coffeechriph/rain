@@ -202,6 +202,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
                 pipeline.draw(renderCommandBuffers[frameIndex], sprite.first.transform, sprite.second)
             }
             pipeline.spriteList.clear()
+            pipeline.tilemapList.clear()
         }
 
         renderpass.end(renderCommandBuffers[frameIndex])

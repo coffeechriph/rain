@@ -47,7 +47,7 @@ open class Rain {
                 vulkanRenderer.recreateRenderCommandBuffers()
             }
 
-            scene.update(vulkanRenderer, input)
+            scene.update(vulkanRenderer, input, timer.deltaTime)
             update()
             vulkanRenderer.render()
 
