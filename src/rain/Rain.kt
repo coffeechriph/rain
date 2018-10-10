@@ -37,6 +37,8 @@ open class Rain {
 
     fun run() {
         init()
+        scene.init(resourceFactory)
+
         while (context.pollEvents()) {
             timer.update()
             context.title = "FPS: " + timer.framesPerSecond

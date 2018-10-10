@@ -5,10 +5,10 @@ import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.Tilemap
+import rain.api.Drawable
 import rain.api.Transform
-import rain.api.TransformComponent
 import java.nio.LongBuffer
+import java.util.*
 
 internal class Pipeline {
     var pipeline: Long = 0
@@ -27,20 +27,14 @@ internal class Pipeline {
     internal lateinit var descriptorPool: DescriptorPool
     internal lateinit var material: VulkanMaterial
 
-    // TODO: We want to make these more generic - as to be able to more dynamically render stuff
-    internal val spriteList = ArrayList<Pair<TransformComponent, Vector2i>>()
-    internal val tilemapList = ArrayList<Tilemap>()
+    private val nextFrameDrawQueue = ArrayDeque<Drawable>()
+
+    fun submitDrawInstance(drawable: Drawable) {
+        nextFrameDrawQueue.add(drawable)
+    }
 
     fun matchesShaderPair(vertexId: Long, fragmentId: Long): Boolean {
         return vertesShaderId == vertexId && fragmentShaderId == fragmentId
-    }
-
-    fun addSpriteToDraw(transformComponent: TransformComponent, textureTileOffset: Vector2i) {
-        spriteList.add(Pair(transformComponent, textureTileOffset))
-    }
-
-    fun addTilemapToDraw(tilemap: Tilemap) {
-        tilemapList.add(tilemap)
     }
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, material: VulkanMaterial, descriptorPool: DescriptorPool) {
@@ -236,5 +230,15 @@ internal class Pipeline {
 
         vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, buffer)
         vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
+    }
+
+    fun drawAll(cmdBuffer: CommandPool.CommandBuffer) {
+        while(nextFrameDrawQueue.peek() != null) {
+            val drawable = nextFrameDrawQueue.pop()
+            val pushData = drawable.getStreamedUniformData()
+
+            vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
+            vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
+        }
     }
 }

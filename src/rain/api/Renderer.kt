@@ -10,6 +10,5 @@ interface Renderer {
     fun create()
     fun render()
     fun setActiveCamera(camera: Camera)
-    fun submitDrawSprite(transform: TransformComponent, material: Material, textureTileOffset: Vector2i)
-    fun submitDrawTilemap(tilemap: Tilemap)
+    fun submitDraw(drawable: Drawable, vertexBuffer: VertexBuffer)
 }

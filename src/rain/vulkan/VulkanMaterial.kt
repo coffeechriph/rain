@@ -40,4 +40,32 @@ internal class VulkanMaterial(logicalDevice: LogicalDevice, memoryProperties: Vk
                 .withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
                 .build(logicalDevice)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VulkanMaterial
+
+        if (vertexShader != other.vertexShader) return false
+        if (fragmentShader != other.fragmentShader) return false
+        if (texture2d != other.texture2d) return false
+        if (color != other.color) return false
+        if (descriptorPool != other.descriptorPool) return false
+        if (textureDataUBO != other.textureDataUBO) return false
+        if (sceneData != other.sceneData) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = vertexShader.hashCode()
+        result = 31 * result + fragmentShader.hashCode()
+        result = 31 * result + texture2d.hashCode()
+        result = 31 * result + color.hashCode()
+        result = 31 * result + descriptorPool.hashCode()
+        result = 31 * result + textureDataUBO.hashCode()
+        result = 31 * result + sceneData.hashCode()
+        return result
+    }
 }

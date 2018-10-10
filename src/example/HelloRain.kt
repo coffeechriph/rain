@@ -65,8 +65,8 @@ class HelloRain: Rain() {
         }
 
         tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 32.0f, 32.0f, mapIndices)
-        tilemap.transform.position.set(0.0f, 0.0f)
-        tilemap.transform.scale.set(1.0f, 1.0f)
+        tilemap.getTransform().position.set(0.0f, 0.0f)
+        tilemap.getTransform().scale.set(1.0f, 1.0f)
         scene.addTilemap(tilemap)
 
         camera = Camera()

@@ -1,6 +1,7 @@
 package rain.api
 
 class Scene {
+    private lateinit var quadVertexBuffer: VertexBuffer
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
@@ -23,11 +24,24 @@ class Scene {
         this.camera = camera
     }
 
+    internal fun init(resourceFactory: ResourceFactory) {
+        val vertices = floatArrayOf(
+                -0.5f, -0.5f, 0.0f, 0.0f,
+                -0.5f, 0.5f, 0.0f, 1.0f,
+                0.5f, 0.5f, 1.0f, 1.0f,
+
+                0.5f, 0.5f, 1.0f, 1.0f,
+                0.5f, -0.5f, 1.0f, 0.0f,
+                -0.5f, -0.5f, 0.0f, 0.0f
+        )
+        this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
+    }
+
     internal fun update(renderer: Renderer, input: Input, deltaTime: Float) {
         renderer.setActiveCamera(camera)
 
         for (tilemap in tilemaps) {
-            renderer.submitDrawTilemap(tilemap)
+            renderer.submitDraw(tilemap, tilemap.vertexBuffer)
         }
 
         for (system in entitySystems) {
@@ -51,7 +65,7 @@ class Scene {
                 sprite.transform.transform.position = transform.transform.position
                 sprite.transform.transform.scale = transform.transform.scale
                 sprite.transform.transform.rotation = transform.transform.rotation
-                renderer.submitDrawSprite(sprite.transform, sprite.material, sprite.textureTileOffset)
+                renderer.submitDraw(sprite, quadVertexBuffer)
             }
         }
     }

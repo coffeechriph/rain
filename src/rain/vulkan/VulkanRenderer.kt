@@ -9,9 +9,11 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
 import rain.api.*
 import java.nio.LongBuffer
+import java.util.*
 
 internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactory) : Renderer {
-    private val quadVertexBuffer: VulkanVertexBuffer
+    private data class DrawOp(val drawable: Drawable, val buffer: VulkanVertexBuffer)
+
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
     private val logicalDevice: LogicalDevice = vk.logicalDevice
@@ -36,23 +38,14 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     private val pRenderCompleteSemaphore = MemoryUtil.memAllocLong(1)
     private val pImageIndex = MemoryUtil.memAllocInt(1)
 
+    private val drawOpsQueue = ArrayDeque<DrawOp>()
+
     var swapchainIsDirty = true
     var frameIndex = 0
 
     private lateinit var camera: Camera
 
     init {
-        val vertices = floatArrayOf(
-                -0.5f, -0.5f, 0.0f, 0.0f,
-                -0.5f, 0.5f, 0.0f, 1.0f,
-                0.5f, 0.5f, 1.0f, 1.0f,
-
-                0.5f, 0.5f, 1.0f, 1.0f,
-                0.5f, -0.5f, 1.0f, 0.0f,
-                -0.5f, -0.5f, 0.0f, 0.0f
-        )
-        this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
-
         this.queueFamilyIndices = vk.queueFamilyIndices
         this.swapchain = Swapchain()
         this.surfaceColorFormat = vk.surface.format
@@ -73,41 +66,8 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         this.camera = camera
     }
 
-    // TODO: This one should be thread-safe but isn't really atm
-    override fun submitDrawSprite(transform: TransformComponent, material: Material, textureTileOffset: Vector2i) {
-        val mat = material as VulkanMaterial
-
-        for (pipeline in pipelines) {
-            if (pipeline.matchesShaderPair(mat.vertexShader.id,mat.fragmentShader.id)) {
-                pipeline.addSpriteToDraw(transform, textureTileOffset)
-                return
-            }
-        }
-
-        val pipeline = Pipeline()
-        pipeline.create(logicalDevice, renderpass, quadVertexBuffer, mat, mat.descriptorPool)
-        pipeline.addSpriteToDraw(transform, textureTileOffset)
-        pipelines.add(pipeline)
-    }
-
-    // TODO: Allow tilemaps to have a special material
-    // TODO: Create/Use a pipeline to render this tilemap
-    override fun submitDrawTilemap(tilemap: Tilemap) {
-        val mat = tilemap.material as VulkanMaterial
-        val vbuf = tilemap.vertexBuffer as VulkanVertexBuffer
-
-        for (pipeline in pipelines) {
-            if (pipeline.matchesShaderPair(mat.vertexShader.id, mat.fragmentShader.id) &&
-                pipeline.vertexBuffer == vbuf) {
-                pipeline.addTilemapToDraw(tilemap)
-                return
-            }
-        }
-
-        val pipeline = Pipeline()
-        pipeline.create(logicalDevice, renderpass, vbuf, mat, mat.descriptorPool)
-        pipeline.addTilemapToDraw(tilemap)
-        pipelines.add(pipeline)
+    override fun submitDraw(drawable: Drawable, vertexBuffer: VertexBuffer) {
+        drawOpsQueue.add(DrawOp(drawable, vertexBuffer as VulkanVertexBuffer))
     }
 
     override fun create() {
@@ -170,6 +130,22 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     }
 
     override fun render() {
+        while (drawOpsQueue.peek() != null) {
+            val op = drawOpsQueue.pop()
+            for (pipeline in pipelines) {
+                if (pipeline.vertexBuffer == op.buffer && pipeline.material == op.drawable.getMaterial()) {
+                    pipeline.submitDrawInstance(op.drawable)
+                    continue
+                }
+            }
+
+            val material = op.drawable.getMaterial() as VulkanMaterial
+            val pipeline = Pipeline()
+            pipeline.create(logicalDevice, renderpass, op.buffer, material, material.descriptorPool)
+            pipeline.submitDrawInstance(op.drawable)
+            pipelines.add(pipeline)
+        }
+
         var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000);
         if (result != VK_SUCCESS) {
             print("Failed to wait for fence!")
@@ -181,6 +157,9 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
             swapchainIsDirty = true
             return
         }
+
+        VK10.vkResetCommandBuffer(renderCommandBuffers[nextImage].buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
+        VK10.vkResetCommandBuffer(postPresentBuffer.buffer, VK10.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT)
 
         renderCommandBuffers[frameIndex].begin()
         if (graphicsQueue[frameIndex].queue != presentQueue[frameIndex].queue) {
@@ -194,15 +173,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
         for (pipeline in pipelines) {
             pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer, nextImage)
             pipeline.begin(renderCommandBuffers[frameIndex], pipeline.descriptorPool, nextImage)
-            // TODO: The draw method is adapted for sprites... but the tilemap will work a bit different
-            for (tilemap in pipeline.tilemapList) {
-                pipeline.draw(renderCommandBuffers[frameIndex], tilemap.transform, Vector2i(0,0))
-            }
-            for (sprite in pipeline.spriteList) {
-                pipeline.draw(renderCommandBuffers[frameIndex], sprite.first.transform, sprite.second)
-            }
-            pipeline.spriteList.clear()
-            pipeline.tilemapList.clear()
+            pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
 
         renderpass.end(renderCommandBuffers[frameIndex])

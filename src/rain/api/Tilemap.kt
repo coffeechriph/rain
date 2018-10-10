@@ -1,6 +1,30 @@
 package rain.api
 
-class Tilemap {
+import org.joml.Matrix4f
+import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAlloc
+import java.nio.ByteBuffer
+
+class Tilemap: Drawable() {
+    override fun getMaterial(): Material {
+        return material
+    }
+
+    override fun getTransform(): Transform {
+        return transform
+    }
+
+    override fun getStreamedUniformData(): ByteBuffer {
+        val modelMatrix = Matrix4f()
+        modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
+        modelMatrix.translate(transform.position.x, transform.position.y, 0.0f)
+        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
+
+        val byteBuffer = MemoryUtil.memAlloc(16 * 4)
+        modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+        return byteBuffer
+    }
+
     data class TileIndex(val x: Int, val y: Int)
 
     var tileNumX = 128
@@ -14,10 +38,8 @@ class Tilemap {
 
     internal lateinit var vertexBuffer: VertexBuffer
         private set
-    internal lateinit var material: Material
-        private set
-    internal var transform = Transform()
-        private set
+    private lateinit var material: Material
+    private var transform = Transform()
 
     private lateinit var vertices: FloatArray
 
