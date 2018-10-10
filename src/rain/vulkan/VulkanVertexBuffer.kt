@@ -10,6 +10,9 @@ import java.nio.LongBuffer
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanVertexBuffer: VertexBuffer {
+    internal class Buffer(var buffer: Long, var bufferMemory: Long, var bufferSize: Long)
+
+    private val id: Long
     var buffer: Long = 0
         private set
     var bufferSize: Long = 0
@@ -25,7 +28,9 @@ internal class VulkanVertexBuffer: VertexBuffer {
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
 
-    internal class Buffer(var buffer: Long, var bufferMemory: Long, var bufferSize: Long)
+    constructor(id: Long) {
+        this.id = id
+    }
 
     // TODO: Can we optimize this?
     override fun update(vertices: FloatArray) {
@@ -67,58 +72,6 @@ internal class VulkanVertexBuffer: VertexBuffer {
         this.bufferState = bufferState
         this.vk = vk
         this.commandPool = commandPool
-    }
-
-    // TODO: This method is used to create a buffer for image data, which makes
-    // TODO: 'VertexBuffer' an ill fit for this class
-    internal fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, properties: Int, memoryProperties: VkPhysicalDeviceMemoryProperties): Buffer {
-        val bufInfo = VkBufferCreateInfo.calloc()
-                .sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
-                .pNext(0)
-                .size(size)
-                .usage(usage)
-                .flags(0)
-
-        val pBuffer = memAllocLong(1)
-        var err = vkCreateBuffer(logicalDevice.device, bufInfo, null, pBuffer)
-
-        val buffer = pBuffer.get(0)
-        memFree(pBuffer)
-        bufInfo.free()
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create vertex buffer: " + VulkanResult(err))
-        }
-
-        val memReqs = VkMemoryRequirements.calloc()
-        vkGetBufferMemoryRequirements(logicalDevice.device, buffer, memReqs)
-
-        val memAlloc = VkMemoryAllocateInfo.calloc()
-                .sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
-                .pNext(0)
-                .allocationSize(memReqs.size())
-                .memoryTypeIndex(0)
-
-        val memoryTypeIndex = memAllocInt(1)
-        getMemoryType(memoryProperties, memReqs.memoryTypeBits(), properties, memoryTypeIndex)
-        memAlloc.memoryTypeIndex(memoryTypeIndex.get(0))
-
-        memFree(memoryTypeIndex)
-        memReqs.free()
-
-        val bufferMemory = memAllocLong(1)
-        val bufferSize = memAlloc.allocationSize()
-        err = vkAllocateMemory(logicalDevice.device, memAlloc, null, bufferMemory)
-
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to allocate vertex memory: " + VulkanResult(err))
-        }
-
-        err = vkBindBufferMemory(logicalDevice.device, buffer, bufferMemory.get(0), 0)
-        if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to bind memory to vertex buffer: " + VulkanResult(err))
-        }
-
-        return Buffer(buffer, bufferMemory.get(), bufferSize)
     }
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
@@ -236,12 +189,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
         other as VulkanVertexBuffer
 
-        if (buffer != other.buffer) return false
-        if (bufferSize != other.bufferSize) return false
-        if (vertexCount != other.vertexCount) return false
-        if (vertexPipelineVertexInputStateCreateInfo != other.vertexPipelineVertexInputStateCreateInfo) return false
-
-        return true
+        return other.id == id
     }
 
     override fun hashCode(): Int {
@@ -249,6 +197,9 @@ internal class VulkanVertexBuffer: VertexBuffer {
         result = 31 * result + bufferSize.hashCode()
         result = 31 * result + vertexCount
         result = 31 * result + vertexPipelineVertexInputStateCreateInfo.hashCode()
+        result = 31 * result + bufferState.hashCode()
+        result = 31 * result + vk.hashCode()
+        result = 31 * result + commandPool.hashCode()
         return result
     }
 

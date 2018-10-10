@@ -59,7 +59,7 @@ internal class Swapchain {
             throw AssertionError("Failed to get physical device surface presentation modes: " + VulkanResult(err))
         }
 
-        var preferredPresentMode = VK_PRESENT_MODE_FIFO_KHR
+        var preferredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR
         var swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR
         for (i in 0 until presentModeCount) {
             if (pPresentModes.get(i) == preferredPresentMode) {

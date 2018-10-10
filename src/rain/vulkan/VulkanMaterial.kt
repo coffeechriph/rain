@@ -7,13 +7,32 @@ import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
 import rain.api.Material
 import rain.api.Texture2d
 
-internal class VulkanMaterial(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: VulkanTexture2d, internal val color: Vector3f) : Material {
+internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: VulkanTexture2d, internal val color: Vector3f, logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer()
     internal val sceneData = UniformBuffer()
 
     override fun getTexture2d(): Texture2d {
         return texture2d
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VulkanMaterial
+        return other.id == this.id
+    }
+
+    override fun hashCode(): Int {
+        var result = vertexShader.hashCode()
+        result = 31 * result + fragmentShader.hashCode()
+        result = 31 * result + texture2d.hashCode()
+        result = 31 * result + color.hashCode()
+        result = 31 * result + descriptorPool.hashCode()
+        result = 31 * result + textureDataUBO.hashCode()
+        result = 31 * result + sceneData.hashCode()
+        return result
     }
 
     init {
@@ -39,33 +58,5 @@ internal class VulkanMaterial(logicalDevice: LogicalDevice, memoryProperties: Vk
                 .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_VERTEX_BIT)
                 .withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
                 .build(logicalDevice)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as VulkanMaterial
-
-        if (vertexShader != other.vertexShader) return false
-        if (fragmentShader != other.fragmentShader) return false
-        if (texture2d != other.texture2d) return false
-        if (color != other.color) return false
-        if (descriptorPool != other.descriptorPool) return false
-        if (textureDataUBO != other.textureDataUBO) return false
-        if (sceneData != other.sceneData) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = vertexShader.hashCode()
-        result = 31 * result + fragmentShader.hashCode()
-        result = 31 * result + texture2d.hashCode()
-        result = 31 * result + color.hashCode()
-        result = 31 * result + descriptorPool.hashCode()
-        result = 31 * result + textureDataUBO.hashCode()
-        result = 31 * result + sceneData.hashCode()
-        return result
     }
 }

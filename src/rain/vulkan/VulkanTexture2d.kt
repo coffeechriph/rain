@@ -58,8 +58,7 @@ internal class VulkanTexture2d: Texture2d {
             throw RuntimeException("Failed to load image $filePath")
         }
 
-        val stagingBuffer = VulkanVertexBuffer()
-        val buffer = stagingBuffer.createBuffer(logicalDevice, (width.get(0)*height.get(0)*channels.get(0)).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
+        val buffer = createBuffer(logicalDevice, (width.get(0)*height.get(0)*channels.get(0)).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
 
         val imageDataBuffer = MemoryUtil.memAlloc(imageData.remaining())
         imageDataBuffer.put(imageData)

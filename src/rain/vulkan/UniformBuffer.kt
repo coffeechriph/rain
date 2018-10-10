@@ -24,7 +24,7 @@ internal class UniformBuffer {
         this.bufferSize = bufferSize
 
         for (i in 0 until count) {
-            val buf = VulkanVertexBuffer().createBuffer(logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
+            val buf = createBuffer(logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
             this.buffer[i] = buf.buffer
             this.bufferMemory[i] = buf.bufferMemory
         }

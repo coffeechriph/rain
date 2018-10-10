@@ -216,22 +216,6 @@ internal class Pipeline {
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
-    fun draw(cmdBuffer: CommandPool.CommandBuffer, transform: Transform, textureTileOffset: Vector2i) {
-        val modelMatrix = Matrix4f()
-        //modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
-        modelMatrix.translate(transform.position.x, transform.position.y, 0.0f)
-        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
-
-        val byteBuffer = memAlloc(18 * 4)
-        val buffer = modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
-        val ibuf = buffer.asFloatBuffer()
-        ibuf.put(16, textureTileOffset.x.toFloat())
-        ibuf.put(17, textureTileOffset.y.toFloat())
-
-        vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, buffer)
-        vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
-    }
-
     fun drawAll(cmdBuffer: CommandPool.CommandBuffer) {
         while(nextFrameDrawQueue.peek() != null) {
             val drawable = nextFrameDrawQueue.pop()

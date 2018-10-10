@@ -31,7 +31,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     }
 
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState): VulkanVertexBuffer {
-        val buffer = VulkanVertexBuffer()
+        val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
         return buffer
     }
@@ -49,7 +49,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         shaders.put(vertex.id, vertex)
         shaders.put(fragment.id, fragment)
 
-        val material = VulkanMaterial(logicalDevice, physicalDevice.memoryProperties, vertex, fragment, texture2d as VulkanTexture2d, color)
+        val material = VulkanMaterial(uniqueId(), vertex, fragment, texture2d as VulkanTexture2d, color, logicalDevice, physicalDevice.memoryProperties)
         materials.add(material)
 
         return material

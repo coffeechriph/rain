@@ -132,18 +132,22 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
     override fun render() {
         while (drawOpsQueue.peek() != null) {
             val op = drawOpsQueue.pop()
+            val mat = op.drawable.getMaterial() as VulkanMaterial
+            var found = false
             for (pipeline in pipelines) {
-                if (pipeline.vertexBuffer == op.buffer && pipeline.material == op.drawable.getMaterial()) {
+                if (pipeline.vertexBuffer == op.buffer && pipeline.material == mat) {
                     pipeline.submitDrawInstance(op.drawable)
-                    continue
+                    found = true
                 }
             }
 
-            val material = op.drawable.getMaterial() as VulkanMaterial
-            val pipeline = Pipeline()
-            pipeline.create(logicalDevice, renderpass, op.buffer, material, material.descriptorPool)
-            pipeline.submitDrawInstance(op.drawable)
-            pipelines.add(pipeline)
+            if (!found) {
+                val material = op.drawable.getMaterial() as VulkanMaterial
+                val pipeline = Pipeline()
+                pipeline.create(logicalDevice, renderpass, op.buffer, material, material.descriptorPool)
+                pipeline.submitDrawInstance(op.drawable)
+                pipelines.add(pipeline)
+            }
         }
 
         var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000);
