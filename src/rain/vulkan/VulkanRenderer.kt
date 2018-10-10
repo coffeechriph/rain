@@ -172,6 +172,7 @@ internal class VulkanRenderer (vk: Vk, val resourceFactory: VulkanResourceFactor
 
         renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
 
+        // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
         val projectionMatrixBuffer = memAlloc(16 * 4)
         camera.projection.get(projectionMatrixBuffer)
         for (pipeline in pipelines) {

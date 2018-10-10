@@ -10,12 +10,11 @@ class Player : Entity() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val sprite = system.findSpriteComponent(id)!!
         sprite.addAnimation("walk", 0, 4, 0)
-        println("Initialize Player!")
+        println("Initialize Entity!")
     }
 
-    override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>) {
+    override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val transformComponent = system.findTransformComponent(id)!!
-        val spriteComponent = system.findSpriteComponent(id)!!
 
         transformComponent.transform.position.set(512.0f, 256.0f)
         transformComponent.transform.scale.set(64.0f, 64.0f)

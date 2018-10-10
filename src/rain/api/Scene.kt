@@ -46,7 +46,7 @@ class Scene {
 
         for (system in entitySystems) {
             for (update in system.updateIterator()) {
-                update.update(this, input, system)
+                update.update(this, input, system, deltaTime)
             }
 
             for (sprite in system.spriteIterator()) {
