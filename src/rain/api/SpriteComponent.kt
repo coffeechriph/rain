@@ -39,11 +39,14 @@ data class SpriteComponent internal constructor(val entity: Long, val material: 
         val animation = Animation(startFrame, endFrame, yPos, speed)
         animations[name] = animation
         this.animation = animation
-        textureTileOffset.y = animation.yPos
+        textureTileOffset.y = yPos
     }
 
     fun startAnimation(name: String) {
-        animation = animations[name] ?: throw IllegalArgumentException("No animation named $name exists!")
-        textureTileOffset.y = animation.yPos
+        val tmp = animations[name] ?: throw IllegalArgumentException("No animation named $name exists!")
+        if (animation != tmp) {
+            animation = tmp
+            textureTileOffset.y = animation.yPos
+        }
     }
 }

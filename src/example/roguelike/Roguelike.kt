@@ -1,6 +1,7 @@
 package example.roguelike
 
 import example.roguelike.Entity.Player
+import example.roguelike.Level.Level
 import org.joml.Vector3f
 import rain.Api
 import rain.Rain
@@ -12,6 +13,7 @@ class Roguelike: Rain() {
     private var playerSystem = EntitySystem<Player>()
     private var player = Player()
     private var camera = Camera()
+    private var level = Level()
 
     override fun init() {
         mobTexture = resourceFactory.createTexture2d("./data/textures/sprite.png", TextureFilter.NEAREST)
@@ -25,12 +27,20 @@ class Roguelike: Rain() {
                 .build(scene)
         scene.addSystem(playerSystem)
 
+        // TODO: Constant window dimensions
+        level.create(resourceFactory, 1280 / 16, 720 / 16)
+        level.build(resourceFactory, 0)
+        scene.addTilemap(level.tilemap)
+
         camera = Camera()
         scene.setActiveCamera(camera)
     }
 
     override fun update() {
-
+        if (player.playerMovedCell) {
+            level.build(resourceFactory, (player.cellX+player.cellY*1024).toLong())
+            player.playerMovedCell = false
+        }
     }
 }
 

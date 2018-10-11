@@ -8,13 +8,13 @@ import rain.api.Tilemap.TileIndex
 
 class Player : Entity() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
-        val sprite = system.findSpriteComponent(id)!!
+        val sprite = system.findSpriteComponent(getId())!!
         sprite.addAnimation("walk", 0, 4, 0, 4.0f)
         println("Initialize Entity!")
     }
 
     override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        val transformComponent = system.findTransformComponent(id)!!
+        val transformComponent = system.findTransformComponent(getId())!!
 
         transformComponent.transform.position.set(512.0f, 256.0f)
         transformComponent.transform.scale.set(64.0f, 64.0f)
