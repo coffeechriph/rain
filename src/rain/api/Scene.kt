@@ -50,7 +50,7 @@ class Scene {
             }
 
             for (sprite in system.spriteIterator()) {
-                sprite.animationTime += deltaTime * 2.0f
+                sprite.animationTime += deltaTime * sprite.animation.speed
                 if (sprite.animationTime >= 1.0f) {
                     sprite.animationTime = 0.0f
                     sprite.animationIndex += 1

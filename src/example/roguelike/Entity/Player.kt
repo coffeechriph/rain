@@ -17,8 +17,8 @@ class Player : Entity() {
         transform.transform.position.set(512.0f,512.0f)
         transform.transform.scale.set(64.0f,64.0f)
 
-        sprite.addAnimation("idle", 0, 0, 0)
-        sprite.addAnimation("walk_down", 0, 3, 0)
+        sprite.addAnimation("idle", 0, 0, 0, 0.0f)
+        sprite.addAnimation("walk_down", 0, 4, 0, 4.0f)
         sprite.startAnimation("idle")
     }
 
@@ -42,6 +42,7 @@ class Player : Entity() {
 
         if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED || input.keyState(Input.Key.KEY_UP) == Input.InputState.DOWN) {
             ydir = Direction.UP
+            sprite.startAnimation("walk_down")
         }
         else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.RELEASED) {
             ydir = Direction.NONE
@@ -56,16 +57,19 @@ class Player : Entity() {
         }
 
         if (ydir != Direction.NONE || xdir != Direction.NONE) {
-            vel = 100.0f * deltaTime
+            println(sprite.animationIndex)
+            if (sprite.animationIndex == 1 || sprite.animationIndex == 3) {
+                vel = 100.0f * deltaTime
 
-            when(xdir) {
-                Direction.LEFT -> transform.transform.position.x -= vel
-                Direction.RIGHT -> transform.transform.position.x += vel
-            }
+                when (xdir) {
+                    Direction.LEFT -> transform.transform.position.x -= vel
+                    Direction.RIGHT -> transform.transform.position.x += vel
+                }
 
-            when(ydir) {
-                Direction.UP -> transform.transform.position.y -= vel
-                Direction.DOWN -> transform.transform.position.y += vel
+                when (ydir) {
+                    Direction.UP -> transform.transform.position.y -= vel
+                    Direction.DOWN -> transform.transform.position.y += vel
+                }
             }
         }
         else {
