@@ -22,7 +22,7 @@ internal class Swapchain {
     lateinit var images: Array<Long>
         private set
 
-    lateinit var imageViews: Array<Long>
+    var imageViews = Array<Long>(0){0}
         private set
 
     var framebuffers: Array<Long>? = null
@@ -177,6 +177,7 @@ internal class Swapchain {
         }
         cmdbuffer.end()
         cmdbuffer.submit(deviceQueue.queue)
+        vkQueueWaitIdle(deviceQueue.queue)
 
         memFree(pBufferView)
         memFree(pSwapchainImages)
@@ -213,11 +214,6 @@ internal class Swapchain {
     }
 
     fun createFramebuffers(logicalDevice: LogicalDevice, renderpass: Renderpass, extent: VkExtent2D) {
-        if (framebuffers != null) {
-            for (i in 0 until framebuffers!!.size)
-                vkDestroyFramebuffer(logicalDevice.device, framebuffers!![i], null)
-        }
-
         val attachments = memAllocLong(1)
         val fci = VkFramebufferCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
@@ -257,5 +253,12 @@ internal class Swapchain {
             return -1
         }
         return pImageIndex.get(0)
+    }
+
+    fun destroy(logicalDevice: LogicalDevice) {
+        for (i in imageViews) {
+            vkDestroyImageView(logicalDevice.device, i, null)
+        }
+        vkDestroySwapchainKHR(logicalDevice.device, swapchain, null)
     }
 }

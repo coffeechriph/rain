@@ -99,10 +99,7 @@ internal class Renderpass {
         vkCmdEndRenderPass(cmdBuffer.buffer)
     }
 
-    fun destroy() {
-        clearValues.free()
-        renderPassBeginInfo.free()
-        viewport.free()
-        scissor.free()
+    fun destroy(logicalDevice: LogicalDevice) {
+        vkDestroyRenderPass(logicalDevice.device, renderpass, null)
     }
 }

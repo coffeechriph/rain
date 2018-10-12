@@ -45,10 +45,6 @@ open class Rain {
             vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
             context.windowDirty = false
 
-            if(vulkanRenderer.recreateSwapchain(vk.surface)) {
-                vulkanRenderer.recreateRenderCommandBuffers()
-            }
-
             scene.update(vulkanRenderer, input, timer.deltaTime)
             update()
             vulkanRenderer.render()
