@@ -28,7 +28,7 @@ open class Rain {
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
         resourceFactory = VulkanResourceFactory(vk)
-        vulkanRenderer = VulkanRenderer(vk, resourceFactory as VulkanResourceFactory)
+        vulkanRenderer = VulkanRenderer(vk, context, resourceFactory as VulkanResourceFactory)
         vulkanRenderer.create()
     }
 
