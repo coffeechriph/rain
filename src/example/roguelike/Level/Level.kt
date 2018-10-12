@@ -28,9 +28,31 @@ class Level {
         generate(seed, 3)
 
         val tileIndices = Array(width*height){ Tilemap.TileIndex(0,0)}
+        var x = 0
+        var y = 0
         for (i in 0 until width * height) {
-            if (map[i] == 0) {
-                tileIndices[i] = Tilemap.TileIndex(2, 0)
+            if (map[i] == 1) {
+                tileIndices[i] = Tilemap.TileIndex(1, 1)
+                if (y > 0 && y < height - 2) {
+                    if(map[x + (y+1)*width] != 0) {
+                        if (map[x + (y+1)*width] == 1 &&
+                            map[x + (y+2)*width] == 0) {
+                            tileIndices[i] = Tilemap.TileIndex(3, 1)
+                        }
+                        else {
+                            tileIndices[i] = Tilemap.TileIndex(2, 1)
+                        }
+                    }
+                }
+            }
+            else {
+                tileIndices[i] = Tilemap.TileIndex(0, 0)
+            }
+
+            x += 1
+            if (x >= width) {
+                x = 0
+                y += 1
             }
         }
 
