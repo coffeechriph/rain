@@ -3,6 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.assertion
 import java.nio.LongBuffer
 
 internal class CommandPool {
@@ -22,7 +23,7 @@ internal class CommandPool {
         memFree(pCmdPool)
 
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create command pool: " + VulkanResult(err))
+            assertion("Failed to create command pool: " + VulkanResult(err))
         }
 
         pool = commandPool
@@ -42,7 +43,7 @@ internal class CommandPool {
         val buffers = Array(pCommandBuffer.remaining()) {i -> CommandBuffer(VkCommandBuffer(pCommandBuffer.get(i), device))}
         memFree(pCommandBuffer)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to allocate command buffer: " + VulkanResult(err))
+            assertion("Failed to allocate command buffer: " + VulkanResult(err))
         }
 
         return buffers
@@ -58,14 +59,14 @@ internal class CommandPool {
                     .pNext(0)
             val err = vkBeginCommandBuffer(buffer, commandBufferBeginInfo)
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to begin command buffer: " + VulkanResult(err))
+                assertion("Failed to begin command buffer: " + VulkanResult(err))
             }
         }
 
         fun end() {
             val err = vkEndCommandBuffer(buffer)
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to end command buffer: " + VulkanResult(err))
+                assertion("Failed to end command buffer: " + VulkanResult(err))
             }
         }
 
@@ -87,7 +88,7 @@ internal class CommandPool {
             submitInfo.free()
 
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to submit command buffer: " + VulkanResult(err))
+                assertion("Failed to submit command buffer: " + VulkanResult(err))
             }
         }
 
@@ -123,7 +124,7 @@ internal class CommandPool {
             submitInfo.free()
 
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to submit command buffer: " + VulkanResult(err))
+                assertion("Failed to submit command buffer: " + VulkanResult(err))
             }
         }
     }

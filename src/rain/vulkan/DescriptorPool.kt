@@ -4,6 +4,7 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
 import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+import rain.assertion
 import java.nio.LongBuffer
 
 internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val bufferMode: BufferMode)
@@ -119,7 +120,7 @@ internal class DescriptorPool {
         val descriptorPool = MemoryUtil.memAllocLong(1)
         val err = VK10.vkCreateDescriptorPool(logicalDevice.device, descriptorPoolCreateInfo, null, descriptorPool)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Unable to create descriptor pool " + VulkanResult(err))
+            assertion("Unable to create descriptor pool " + VulkanResult(err))
         }
 
         pool = descriptorPool.get(0)
@@ -140,7 +141,7 @@ internal class DescriptorPool {
         val descriptorSetLayout = MemoryUtil.memAllocLong(1)
         val err = VK10.vkCreateDescriptorSetLayout(logicalDevice.device, descriptorSetCreateInfo, null, descriptorSetLayout)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to create descriptor set layout " + VulkanResult(err))
+            assertion("Failed to create descriptor set layout " + VulkanResult(err))
         }
 
         return descriptorSetLayout
@@ -158,7 +159,7 @@ internal class DescriptorPool {
         val descriptorSets = MemoryUtil.memAllocLong(1)
         val err = VK10.vkAllocateDescriptorSets(logicalDevice.device, descriptorSetInfo, descriptorSets)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Unable to create descriptor sets " + VulkanResult(err))
+            assertion("Unable to create descriptor sets " + VulkanResult(err))
         }
 
         val samplerInfo = VkDescriptorImageInfo.calloc(1)
@@ -194,7 +195,7 @@ internal class DescriptorPool {
         val descriptorSets = MemoryUtil.memAllocLong(uniformBuffer.buffer.size)
         val err = VK10.vkAllocateDescriptorSets(logicalDevice.device, descriptorSetInfo, descriptorSets)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Unable to create descriptor sets " + VulkanResult(err))
+            assertion("Unable to create descriptor sets " + VulkanResult(err))
         }
 
         for (i in 0 until uniformBuffer.buffer.size) {

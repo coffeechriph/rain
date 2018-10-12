@@ -8,6 +8,7 @@ import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Texture2d
+import rain.assertion
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -70,7 +71,7 @@ internal class VulkanTexture2d: Texture2d {
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to map image memory: " + VulkanResult(err))
+            assertion("Failed to map image memory: " + VulkanResult(err))
         }
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(imageDataBuffer), data, imageDataBuffer.remaining().toLong())
@@ -112,7 +113,7 @@ internal class VulkanTexture2d: Texture2d {
             val textureImageMemory = memAllocLong(1)
             err = vkAllocateMemory(logicalDevice.device, memoryAllocateInfo, null, textureImageMemory)
             if (err != VK_SUCCESS) {
-                throw AssertionError("Error allocating texture memory " + VulkanResult(err))
+                assertion("Error allocating texture memory " + VulkanResult(err))
             }
 
             vkBindImageMemory(logicalDevice.device, textureImage.get(0), textureImageMemory.get(0), 0)
@@ -151,7 +152,7 @@ internal class VulkanTexture2d: Texture2d {
             val sampler = memAllocLong(1)
             err = vkCreateSampler(logicalDevice.device, samplerCreateInfo, null, sampler)
             if (err != VK_SUCCESS) {
-                throw AssertionError("Unable to create texture sampler " + VulkanResult(err))
+                assertion("Unable to create texture sampler " + VulkanResult(err))
             }
             this.textureSampler = sampler.get(0)
         }

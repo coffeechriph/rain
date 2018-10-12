@@ -5,6 +5,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.VertexBuffer
 import rain.api.VertexBufferState
+import rain.assertion
 import java.nio.IntBuffer
 import java.nio.LongBuffer
 
@@ -86,7 +87,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         val data = pData.get(0)
         memFree(pData)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to map vertex memory: " + VulkanResult(err))
+            assertion("Failed to map vertex memory: " + VulkanResult(err))
         }
 
         memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())
@@ -109,7 +110,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         val data = pData.get(0)
         memFree(pData)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to map vertex memory: " + VulkanResult(err))
+            assertion("Failed to map vertex memory: " + VulkanResult(err))
         }
 
         memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())

@@ -12,6 +12,8 @@ import org.lwjgl.vulkan.VkExtensionProperties
 import org.lwjgl.vulkan.VkInstance
 import org.lwjgl.vulkan.VkInstanceCreateInfo
 import org.lwjgl.vulkan.VkLayerProperties
+import rain.assertion
+import rain.log
 import java.nio.ByteBuffer
 
 
@@ -45,7 +47,7 @@ internal class Instance {
         val instance = pInstance.get(0)
         memFree(pInstance)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create VkInstance: " + VulkanResult(err))
+            assertion("Failed to create VkInstance: " + VulkanResult(err))
         }
 
         this.instance = VkInstance(instance, pCreateInfo)
@@ -56,32 +58,6 @@ internal class Instance {
         appInfo.free()
     }
 
-    private fun checkValidationLayers() {
-        MemoryStack.stackPush().use {
-            val countBuffer = it.mallocInt(1)
-            vkEnumerateInstanceLayerProperties(countBuffer, null)
-            val layers = VkLayerProperties.calloc(countBuffer[0])
-            vkEnumerateInstanceLayerProperties(countBuffer, layers)
-
-            for(layerName in validationLayers) {
-                var found = false
-
-                layers.forEach { layer ->
-                    if(layer.layerNameString() == layerName) {
-                        found = true
-                        return@forEach
-                    }
-                }
-
-                if(!found) {
-                    error("Missing validation layer '$layerName'")
-                }
-            }
-        }
-
-        println("Found all validation layers")
-    }
-
     private fun checkExtensions() {
         MemoryStack.stackPush().use {
             val countBuffer = it.mallocInt(1)
@@ -90,7 +66,7 @@ internal class Instance {
             vkEnumerateInstanceExtensionProperties(null as? ByteBuffer, countBuffer, extensions)
 
             extensions.forEach { extension ->
-                println("Found extension ${extension.extensionNameString()}")
+                log("Found extension ${extension.extensionNameString()}")
             }
         }
     }

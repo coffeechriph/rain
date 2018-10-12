@@ -3,6 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
+import rain.assertion
 import java.nio.ByteBuffer
 
 internal class UniformBuffer {
@@ -37,7 +38,7 @@ internal class UniformBuffer {
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to map uniform buffer memory: " + VulkanResult(err))
+            assertion("Failed to map uniform buffer memory: " + VulkanResult(err))
         }
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(bufferData), data, bufferData.remaining().toLong())

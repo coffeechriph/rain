@@ -5,6 +5,8 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
+import rain.assertion
+import rain.log
 
 internal class Swapchain {
     enum class SwapchainMode(internal val mode: Int) {
@@ -43,24 +45,24 @@ internal class Swapchain {
         val surfCaps = VkSurfaceCapabilitiesKHR.calloc()
         err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, surface.surface, surfCaps)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to get physical device surface capabilities: " + VulkanResult(err))
+            assertion("Failed to get physical device surface capabilities: " + VulkanResult(err))
         }
 
         val pPresentModeCount = memAllocInt(1)
         err = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice.device, surface.surface, pPresentModeCount, null)
         val presentModeCount = pPresentModeCount.get(0)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to get number of physical device surface presentation modes: " + VulkanResult(err))
+            assertion("Failed to get number of physical device surface presentation modes: " + VulkanResult(err))
         }
 
         val pPresentModes = memAllocInt(presentModeCount)
         err = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice.device, surface.surface, pPresentModeCount, pPresentModes)
         memFree(pPresentModeCount)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to get physical device surface presentation modes: " + VulkanResult(err))
+            assertion("Failed to get physical device surface presentation modes: " + VulkanResult(err))
         }
 
-        var preferredPresentMode = VK_PRESENT_MODE_FIFO_KHR
+        val preferredPresentMode = VK_PRESENT_MODE_FIFO_KHR
         var swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR
         for (i in 0 until presentModeCount) {
             if (pPresentModes.get(i) == preferredPresentMode) {
@@ -116,7 +118,7 @@ internal class Swapchain {
         val newSwapChain = pSwapChain.get(0)
         memFree(pSwapChain)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create swap chain: " + VulkanResult(err))
+            assertion("Failed to create swap chain: " + VulkanResult(err))
         }
 
         // If we just re-created an existing swapchain, we should destroy the old swapchain at this point.
@@ -130,13 +132,13 @@ internal class Swapchain {
         err = vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, pImageCount, null)
         val imageCount = pImageCount.get(0)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to get number of swapchain images: " + VulkanResult(err))
+            assertion("Failed to get number of swapchain images: " + VulkanResult(err))
         }
 
         val pSwapchainImages = memAllocLong(imageCount)
         err = vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, pImageCount, pSwapchainImages)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to get swapchain images: " + VulkanResult(err))
+            assertion("Failed to get swapchain images: " + VulkanResult(err))
         }
         memFree(pImageCount)
 
@@ -156,7 +158,7 @@ internal class Swapchain {
             imageView.create(logicalDevice, images[i], surface.format, VK_IMAGE_VIEW_TYPE_2D)
             imageViews[i] = imageView.imageView
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to create image view: " + VulkanResult(err))
+                assertion("Failed to create image view: " + VulkanResult(err))
             }
         }
         cmdbuffer.end()
@@ -165,6 +167,8 @@ internal class Swapchain {
 
         memFree(pBufferView)
         memFree(pSwapchainImages)
+
+        log("Created Swapchain[images: ${images.size}, presentMode: $swapchainPresentMode, format: ${surface.format}, colorSpace: ${surface.space}]")
     }
 
     private fun imageBarrier(cmdbuffer: VkCommandBuffer, image: Long, aspectMask: Int, oldImageLayout: Int, srcAccess: Int, newImageLayout: Int, dstAccess: Int) {
@@ -217,7 +221,7 @@ internal class Swapchain {
             val err = vkCreateFramebuffer(logicalDevice.device, fci, null, pFramebuffer)
             val framebuffer = pFramebuffer.get(0)
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to create framebuffer: " + VulkanResult(err))
+                assertion("Failed to create framebuffer: " + VulkanResult(err))
             }
             framebuffers[i] = framebuffer
         }
@@ -231,7 +235,7 @@ internal class Swapchain {
     fun aquireNextImage(logicalDevice: LogicalDevice, semaphore: Long): Int {
         val err = vkAcquireNextImageKHR(logicalDevice.device, swapchain, -1L, semaphore, 0, pImageIndex)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to acquire next image from swapchain " + VulkanResult(err))
+            assertion("Failed to acquire next image from swapchain " + VulkanResult(err))
         }
         else if (err == VK_ERROR_OUT_OF_DATE_KHR) {
             return -1

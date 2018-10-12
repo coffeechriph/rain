@@ -6,6 +6,7 @@ import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkPhysicalDevice
 import org.lwjgl.vulkan.VkQueueFamilyProperties
+import rain.assertion
 
 internal data class QueueFamilyIndices(var graphicsFamily: Int = -1, var presentFamily: Int = -1) {
     val isComplete get()= graphicsFamily >= 0 && presentFamily >= 0
@@ -60,7 +61,7 @@ internal fun findTransferFamily(device: VkPhysicalDevice): Int {
     }
 
     if (index == -1) {
-        throw AssertionError("Unable to find a queue family that only support transfers!")
+        assertion("Unable to find a queue family that only support transfers!")
     }
 
     return index

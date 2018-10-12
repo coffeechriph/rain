@@ -4,6 +4,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo
+import rain.assertion
 import rain.readFileAsByteBuffer
 
 internal class ShaderModule(val id: Long) {
@@ -23,7 +24,7 @@ internal class ShaderModule(val id: Long) {
         val shaderModule = pShaderModule.get(0)
         memFree(pShaderModule)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create shader module: " + VulkanResult(err))
+            assertion("Failed to create shader module: " + VulkanResult(err))
         }
 
         return shaderModule

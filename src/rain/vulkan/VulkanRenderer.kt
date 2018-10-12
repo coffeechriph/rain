@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
 import rain.Window
 import rain.api.*
-import java.nio.LongBuffer
+import rain.assertion
 import java.util.*
 
 internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFactory: VulkanResourceFactory) : Renderer {
@@ -83,15 +83,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
 
     fun destroy() {
         vkDeviceWaitIdle(logicalDevice.device)
-        for (pipeline in pipelines) {
-            pipeline.destroy(logicalDevice)
-        }
-
-        renderpass.destroy(logicalDevice)
-        for (i in 0 until imageAcquiredSemaphore.size) {
-            vkDestroySemaphore(logicalDevice.device, imageAcquiredSemaphore[i].semaphore, null)
-            vkDestroySemaphore(logicalDevice.device, completeRenderSemaphore[i].semaphore, null)
-        }
+        cleanUpResources()
     }
 
     internal fun recreateRenderCommandBuffers() {
@@ -102,7 +94,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         if (swapchainIsDirty) {
             vkDeviceWaitIdle(logicalDevice.device)
 
-            cleanUpForResize()
+            cleanUpResources()
             val capabilities = VkSurfaceCapabilitiesKHR.calloc()
             KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, surface.surface, capabilities)
             val extent2D = VkExtent2D.create()
@@ -139,7 +131,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
 
                 val err = vkCreateFence(logicalDevice.device, fenceCreateInfo, null, drawingFinishedFence[i])
                 if (err != VK_SUCCESS) {
-                    throw AssertionError("Error creating fence " + VulkanResult(err))
+                    assertion("Error creating fence " + VulkanResult(err))
                 }
             }
 
@@ -149,7 +141,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         return false
     }
 
-    private fun cleanUpForResize() {
+    private fun cleanUpResources() {
         if (swapchain.framebuffers != null) {
             for (i in 0 until swapchain.framebuffers!!.size)
                 vkDestroyFramebuffer(logicalDevice.device, swapchain.framebuffers!![i], null)
@@ -265,7 +257,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
 
         val err = KHRSwapchain.vkQueuePresentKHR(presentQueue[frameIndex].queue, presentInfo);
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to present the swapchain image: " + VulkanResult(err));
+            assertion("Failed to present the swapchain image: " + VulkanResult(err));
         }
         else if (err == VK_ERROR_OUT_OF_DATE_KHR) {
             swapchainIsDirty = true

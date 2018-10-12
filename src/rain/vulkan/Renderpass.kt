@@ -8,6 +8,7 @@ import org.lwjgl.vulkan.VkClearValue
 import org.lwjgl.vulkan.VkRect2D
 import org.lwjgl.vulkan.VkRenderPassBeginInfo
 import org.lwjgl.vulkan.VkViewport
+import rain.assertion
 
 
 internal class Renderpass {
@@ -56,7 +57,7 @@ internal class Renderpass {
         renderpass = MemoryStack.stackPush().use {
             val pRenderPass = it.mallocLong(1)
             if(vkCreateRenderPass(logicalDevice.device, renderPassInfo, null, pRenderPass) != VK_SUCCESS)
-                error("Could not create render pass")
+                assertion("Could not create render pass")
             pRenderPass[0]
         }
     }

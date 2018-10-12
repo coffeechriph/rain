@@ -36,6 +36,7 @@ open class Rain {
     open fun update() {}
 
     fun run() {
+        startLog()
         init()
         scene.init(resourceFactory)
 
@@ -54,5 +55,6 @@ open class Rain {
 
         vulkanRenderer.destroy()
         context.destroy();
+        endLog()
     }
 }

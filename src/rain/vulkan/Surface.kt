@@ -9,6 +9,7 @@ import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 import org.lwjgl.vulkan.VkSurfaceFormatKHR
+import rain.assertion
 
 internal class Surface {
     var surface: Long = 0
@@ -40,7 +41,7 @@ internal class Surface {
             supportsPresent.position(i)
             val err = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice.device, i, surface, supportsPresent)
             if (err != VK_SUCCESS) {
-                throw AssertionError("Failed to physical device surface support: " + VulkanResult(err))
+                assertion("Failed to physical device surface support: " + VulkanResult(err))
             }
         }
 
@@ -73,13 +74,13 @@ internal class Surface {
 
         // Generate error if could not find both a graphics and a present queue
         if (graphicsQueueNodeIndex == Integer.MAX_VALUE) {
-            throw AssertionError("No graphics queue found")
+            assertion("No graphics queue found")
         }
         if (presentQueueNodeIndex == Integer.MAX_VALUE) {
-            throw AssertionError("No presentation queue found")
+            assertion("No presentation queue found")
         }
         if (graphicsQueueNodeIndex != presentQueueNodeIndex) {
-            throw AssertionError("Presentation queue != graphics queue")
+            assertion("Presentation queue != graphics queue")
         }
 
         // Get list of supported formats
@@ -87,14 +88,14 @@ internal class Surface {
         var err = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice.device, surface, pFormatCount, null)
         val formatCount = pFormatCount.get(0)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to query number of physical device surface formats: " + VulkanResult(err))
+            assertion("Failed to query number of physical device surface formats: " + VulkanResult(err))
         }
 
         val surfFormats = VkSurfaceFormatKHR.calloc(formatCount)
         err = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice.device, surface, pFormatCount, surfFormats)
         memFree(pFormatCount)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to query physical device surface formats: " + VulkanResult(err))
+            assertion("Failed to query physical device surface formats: " + VulkanResult(err))
         }
 
         val colorFormat: Int

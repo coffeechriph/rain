@@ -5,6 +5,7 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocPointer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.assertion
 import java.nio.ByteBuffer
 
 internal class PhysicalDevice {
@@ -36,7 +37,7 @@ internal class PhysicalDevice {
             }
         }
 
-        device = graphicsCard ?: error("No suitable physical device found!")
+        device = graphicsCard ?: assertion("No suitable physical device found!")
 
         val properties = VkPhysicalDeviceProperties.malloc()
         memoryProperties = VkPhysicalDeviceMemoryProperties.malloc()

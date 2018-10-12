@@ -3,6 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkImageViewCreateInfo
+import rain.assertion
 
 internal class ImageView {
     internal var imageView: Long = 0
@@ -34,7 +35,7 @@ internal class ImageView {
         val pBufferView = MemoryUtil.memAllocLong(1)
         val err = VK10.vkCreateImageView(logicalDevice.device, colorAttachmentView, null, pBufferView)
         if (err != VK10.VK_SUCCESS) {
-            throw AssertionError("Failed to create image view: " + VulkanResult(err))
+            assertion("Failed to create image view: " + VulkanResult(err))
         }
 
         imageView = pBufferView.get(0)

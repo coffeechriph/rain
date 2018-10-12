@@ -7,6 +7,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Drawable
 import rain.api.Transform
+import rain.assertion
 import java.nio.LongBuffer
 import java.util.*
 
@@ -147,7 +148,7 @@ internal class Pipeline {
         memFree(pPipelineLayout)
         pPipelineLayoutCreateInfo.free()
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create pipeline layout: " + VulkanResult(err))
+            assertion("Failed to create pipeline layout: " + VulkanResult(err))
         }
 
         // Assign states
@@ -189,7 +190,7 @@ internal class Pipeline {
         rasterizationState.free()
         inputAssemblyState.free()
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create pipeline: " + VulkanResult(err))
+            assertion("Failed to create pipeline: " + VulkanResult(err))
         }
     }
 

@@ -17,10 +17,17 @@ internal class Window {
 
     fun create(width: Int, height: Int, title: String, input: Input) {
         if(!glfwInit()) {
-            error("Could not init GLFW")
+            assertion("Could not init GLFW")
         }
+        else {
+            log("GLFW initialized properly!")
+        }
+
         if (!glfwVulkanSupported()) {
-            error("Vulkan is not supported by GLFW")
+            assertion("Vulkan is not supported by GLFW")
+        }
+        else {
+            log("Vulkan is supported!")
         }
 
         glfwDefaultWindowHints();
@@ -30,13 +37,14 @@ internal class Window {
         windowPointer = glfwCreateWindow(width, height, title, 0, 0)
         this.title = title
         createCallbacks(input)
+
+        log("Created window[w: $width, h: $height]")
     }
 
     private fun createCallbacks(input: Input) {
         // TODO: We can log this to a file
         GLFWErrorCallback.createPrint(System.err).set()
 
-        // TODO: Forward this to a Input class
         glfwSetKeyCallback(windowPointer) { window, key, scancode, action, mods ->
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
                 glfwSetWindowShouldClose(window, true)

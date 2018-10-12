@@ -2,6 +2,7 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
+import rain.assertion
 
 internal fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, properties: Int, memoryProperties: VkPhysicalDeviceMemoryProperties): VulkanVertexBuffer.Buffer {
     val bufInfo = VkBufferCreateInfo.calloc()
@@ -18,7 +19,7 @@ internal fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, 
     MemoryUtil.memFree(pBuffer)
     bufInfo.free()
     if (err != VK10.VK_SUCCESS) {
-        throw AssertionError("Failed to create vertex buffer: " + VulkanResult(err))
+        assertion("Failed to create vertex buffer: " + VulkanResult(err))
     }
 
     val memReqs = VkMemoryRequirements.calloc()
@@ -42,12 +43,12 @@ internal fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, 
     err = VK10.vkAllocateMemory(logicalDevice.device, memAlloc, null, bufferMemory)
 
     if (err != VK10.VK_SUCCESS) {
-        throw AssertionError("Failed to allocate vertex memory: " + VulkanResult(err))
+        assertion("Failed to allocate vertex memory: " + VulkanResult(err))
     }
 
     err = VK10.vkBindBufferMemory(logicalDevice.device, buffer, bufferMemory.get(0), 0)
     if (err != VK10.VK_SUCCESS) {
-        throw AssertionError("Failed to bind memory to vertex buffer: " + VulkanResult(err))
+        assertion("Failed to bind memory to vertex buffer: " + VulkanResult(err))
     }
 
     return VulkanVertexBuffer.Buffer(buffer, bufferMemory.get(), bufferSize)

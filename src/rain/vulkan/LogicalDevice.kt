@@ -8,6 +8,7 @@ import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkDeviceCreateInfo
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
 import org.lwjgl.vulkan.VkPhysicalDeviceFeatures
+import rain.assertion
 
 internal class LogicalDevice {
     lateinit var device: VkDevice
@@ -39,7 +40,7 @@ internal class LogicalDevice {
         val handle = MemoryStack.stackPush().use {
             val pDevice = it.mallocPointer(1)
             if(vkCreateDevice(physicalDevice.device, createInfo, null, pDevice) != VK_SUCCESS)
-                error("Failed to create logical device")
+                assertion("Failed to create logical device")
             pDevice[0]
         }
 
