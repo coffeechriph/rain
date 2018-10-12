@@ -22,7 +22,7 @@ internal class Swapchain {
     lateinit var images: Array<Long>
         private set
 
-    lateinit var imageViews: Array<Long>
+    var imageViews = Array<Long>(0){0}
         private set
 
     var framebuffers: Array<Long>? = null
@@ -33,10 +33,11 @@ internal class Swapchain {
 
     private val pImageIndex = memAllocInt(1)
 
-    fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, cmdbuffer: CommandPool.CommandBuffer, deviceQueue: Queue) {
+    fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, cmdbuffer: CommandPool.CommandBuffer, deviceQueue: Queue, extent2D: VkExtent2D) {
         var err: Int
-
-        cmdbuffer.begin()
+        extent = VkExtent2D.create()
+                .width(extent2D.width())
+                .height(extent2D.height())
 
         // Get physical device surface properties and formats
         val surfCaps = VkSurfaceCapabilitiesKHR.calloc()
@@ -79,24 +80,6 @@ internal class Swapchain {
             desiredNumberOfSwapchainImages = surfCaps.maxImageCount()
         }
 
-        val currExtent = surfCaps.currentExtent()
-        val currentWidth = currExtent.width()
-        val currentHeight = currExtent.height()
-        var width = 0
-        var height = 0
-
-        if (currentWidth != -1 && currentHeight != -1) {
-            width = currentWidth
-            height = currentHeight
-        } else {
-            width = 1280
-            height = 720
-        }
-
-        extent = VkExtent2D.create()
-                .width(width)
-                .height(height)
-
         val preTransform: Int
         if (surfCaps.supportedTransforms() and VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR != 0) {
             preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
@@ -124,8 +107,8 @@ internal class Swapchain {
                 .compositeAlpha(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
 
         swapchainCI.imageExtent()
-                .width(width)
-                .height(height)
+                .width(extent2D.width())
+                .height(extent2D.height())
 
         val pSwapChain = memAllocLong(1)
         err = vkCreateSwapchainKHR(logicalDevice.device, swapchainCI, null, pSwapChain)
@@ -161,6 +144,7 @@ internal class Swapchain {
         imageViews = LongArray(imageCount).toTypedArray()
         val pBufferView = memAllocLong(1)
 
+        cmdbuffer.begin()
         for (i in 0 until imageCount) {
             images[i] = pSwapchainImages.get(i)
             // Bring the image from an UNDEFINED state to the VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT state
@@ -177,6 +161,7 @@ internal class Swapchain {
         }
         cmdbuffer.end()
         cmdbuffer.submit(deviceQueue.queue)
+        vkQueueWaitIdle(deviceQueue.queue)
 
         memFree(pBufferView)
         memFree(pSwapchainImages)
@@ -213,11 +198,6 @@ internal class Swapchain {
     }
 
     fun createFramebuffers(logicalDevice: LogicalDevice, renderpass: Renderpass, extent: VkExtent2D) {
-        if (framebuffers != null) {
-            for (i in 0 until framebuffers!!.size)
-                vkDestroyFramebuffer(logicalDevice.device, framebuffers!![i], null)
-        }
-
         val attachments = memAllocLong(1)
         val fci = VkFramebufferCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
@@ -257,5 +237,12 @@ internal class Swapchain {
             return -1
         }
         return pImageIndex.get(0)
+    }
+
+    fun destroy(logicalDevice: LogicalDevice) {
+        for (i in imageViews) {
+            vkDestroyImageView(logicalDevice.device, i, null)
+        }
+        vkDestroySwapchainKHR(logicalDevice.device, swapchain, null)
     }
 }

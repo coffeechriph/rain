@@ -193,7 +193,9 @@ internal class Pipeline {
         }
     }
 
-    fun destroy() {
+    fun destroy(logicalDevice: LogicalDevice) {
+        vkDestroyPipeline(logicalDevice.device, pipeline, null)
+        vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, null)
         memFree(pBuffer)
         memFree(pOffset)
     }

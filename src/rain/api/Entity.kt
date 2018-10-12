@@ -1,11 +1,15 @@
 package rain.api
 
 open class Entity {
-    protected var id: Long = -1L
+    private var id: Long = -1L
         private set
 
     internal fun setId(id: Long) {
         this.id = id
+    }
+
+    fun getId(): Long {
+        return id
     }
 
     open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}

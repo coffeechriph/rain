@@ -28,7 +28,7 @@ open class Rain {
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
         resourceFactory = VulkanResourceFactory(vk)
-        vulkanRenderer = VulkanRenderer(vk, resourceFactory as VulkanResourceFactory)
+        vulkanRenderer = VulkanRenderer(vk, context, resourceFactory as VulkanResourceFactory)
         vulkanRenderer.create()
     }
 
@@ -44,10 +44,6 @@ open class Rain {
             context.title = "FPS: " + timer.framesPerSecond
             vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
             context.windowDirty = false
-
-            if(vulkanRenderer.recreateSwapchain(vk.surface)) {
-                vulkanRenderer.recreateRenderCommandBuffers()
-            }
 
             scene.update(vulkanRenderer, input, timer.deltaTime)
             update()
