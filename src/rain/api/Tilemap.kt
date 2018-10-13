@@ -17,7 +17,7 @@ class Tilemap: Drawable() {
     override fun getStreamedUniformData(): ByteBuffer {
         val modelMatrix = Matrix4f()
         modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
-        modelMatrix.translate(transform.position.x, transform.position.y, 0.0f)
+        modelMatrix.translate(transform.position.x, transform.position.y, transform.position.z)
         modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
 
         val byteBuffer = MemoryUtil.memAlloc(16 * 4)

@@ -10,7 +10,9 @@ class Level {
     private var height = 0
     private lateinit var material: Material
     private lateinit var texture: Texture2d
-    var tilemap = Tilemap()
+    var backTilemap = Tilemap()
+        private set
+    var frontTilemap = Tilemap()
         private set
     private var firstBuild = true
 
@@ -27,26 +29,27 @@ class Level {
     fun build(resourceFactory: ResourceFactory, seed: Long) {
         generate(seed, 3)
 
-        val tileIndices = Array(width*height){ Tilemap.TileIndex(0,0)}
+        val backIndices = Array(width*height){ Tilemap.TileIndex(0,1)}
+        val frontIndices = Array(width*height){ Tilemap.TileIndex(0,1)}
         var x = 0
         var y = 0
         for (i in 0 until width * height) {
             if (map[i] == 1) {
-                tileIndices[i] = Tilemap.TileIndex(1, 1)
+                backIndices[i] = Tilemap.TileIndex(1, 1)
                 if (y > 0 && y < height - 2) {
                     if(map[x + (y+1)*width] != 0) {
                         if (map[x + (y+1)*width] == 1 &&
                             map[x + (y+2)*width] == 0) {
-                            tileIndices[i] = Tilemap.TileIndex(3, 1)
+                            frontIndices[i] = Tilemap.TileIndex(3, 1)
                         }
                         else {
-                            tileIndices[i] = Tilemap.TileIndex(2, 1)
+                            frontIndices[i] = Tilemap.TileIndex(2, 1)
                         }
                     }
                 }
             }
             else {
-                tileIndices[i] = Tilemap.TileIndex(0, 0)
+                backIndices[i] = Tilemap.TileIndex(0, 0)
             }
 
             x += 1
@@ -57,11 +60,16 @@ class Level {
         }
 
         if (firstBuild) {
-            tilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, tileIndices)
+            backTilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, backIndices)
+            frontTilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, backIndices)
+
+            backTilemap.getTransform().position.set(0.0f, 0.0f, 1.0f)
+            frontTilemap.getTransform().position.set(0.0f, 0.0f, 3.0f)
             firstBuild = false
         }
         else {
-            tilemap.update(tileIndices)
+            backTilemap.update(backIndices)
+            frontTilemap.update(frontIndices)
         }
     }
 

@@ -17,7 +17,7 @@ data class SpriteComponent internal constructor(val entity: Long, val material: 
     override fun getStreamedUniformData(): ByteBuffer {
         val modelMatrix = Matrix4f()
         modelMatrix.rotate(transform.transform.rotation, 0.0f, 0.0f, 1.0f)
-        modelMatrix.translate(transform.transform.position.x, transform.transform.position.y, 0.0f)
+        modelMatrix.translate(transform.transform.position.x, transform.transform.position.y, transform.transform.position.z)
         modelMatrix.scale(transform.transform.scale.x, transform.transform.scale.y, 0.0f)
 
         // TODO: We're reallocating this every frame

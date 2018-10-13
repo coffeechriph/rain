@@ -94,17 +94,17 @@ internal class Pipeline {
         val depthStencilState = VkPipelineDepthStencilStateCreateInfo.calloc()
                 // No depth test/write and no stencil used
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO)
-                .depthTestEnable(false)
-                .depthWriteEnable(false)
-                .depthCompareOp(VK_COMPARE_OP_ALWAYS)
+                .depthTestEnable(true)
+                .depthWriteEnable(true)
+                .depthCompareOp(VK_COMPARE_OP_LESS)
                 .depthBoundsTestEnable(false)
                 .stencilTestEnable(false)
 
-        depthStencilState.back()
+        /*depthStencilState.back()
                 .failOp(VK_STENCIL_OP_KEEP)
                 .passOp(VK_STENCIL_OP_KEEP)
                 .compareOp(VK_COMPARE_OP_ALWAYS)
-        depthStencilState.front(depthStencilState.back())
+        depthStencilState.front(depthStencilState.back())*/
 
         // Multi sampling state
         // No multi sampling used in this example

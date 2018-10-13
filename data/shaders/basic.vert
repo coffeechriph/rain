@@ -19,7 +19,7 @@ layout(set = 1, binding = 0) uniform TextureData {
 } textureData;
 
 void main() {
-    gl_Position = sceneData.projectionMatrix * modelMatrix.matrix * vec4(pos.x, pos.y, 0, 1.0);
+    gl_Position = sceneData.projectionMatrix * modelMatrix.matrix * vec4(pos.x, pos.y, 1.0, 1.0);
     Uv = vec2(uv.x * textureData.uvScale.x + textureData.uvScale.x * modelMatrix.textureOffset.x,
               uv.y * textureData.uvScale.y + textureData.uvScale.y * modelMatrix.textureOffset.y);
 }

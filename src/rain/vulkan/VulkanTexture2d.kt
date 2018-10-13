@@ -11,6 +11,10 @@ import rain.api.Texture2d
 import rain.assertion
 import java.io.File
 import java.io.FileNotFoundException
+import org.lwjgl.vulkan.VK10.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+import org.lwjgl.vulkan.VK10.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
+
+
 
 internal class VulkanTexture2d: Texture2d {
     var texture: Long = 0
@@ -125,7 +129,7 @@ internal class VulkanTexture2d: Texture2d {
             texture = textureImage.get(0)
 
             val textureImageView = ImageView()
-            textureImageView.create(logicalDevice, texture, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_VIEW_TYPE_2D)
+            textureImageView.create(logicalDevice, texture, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_VIEW_TYPE_2D, VK10.VK_IMAGE_ASPECT_COLOR_BIT)
             textureView = textureImageView.imageView
             this.width = width[0]
             this.height = height[0]
@@ -156,52 +160,6 @@ internal class VulkanTexture2d: Texture2d {
             }
             this.textureSampler = sampler.get(0)
         }
-    }
-
-    private fun transitionImageLayout(logicalDevice: LogicalDevice, commandPool: CommandPool, queue: VkQueue, image: Long, format: Int, oldLayout: Int, newLayout: Int) {
-        val commandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
-        commandBuffer.begin()
-
-        val imageBarrier = VkImageMemoryBarrier.calloc(1)
-                .sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
-                .oldLayout(oldLayout)
-                .newLayout(newLayout)
-                .srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .image(image)
-
-        var sourceStage = 0
-        var dstStage = 0
-
-        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-            imageBarrier
-                    .srcAccessMask(0)
-                    .dstAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT)
-
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT
-        }
-        else if(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-            imageBarrier
-                    .srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT)
-                    .dstAccessMask(VK_ACCESS_SHADER_READ_BIT)
-
-            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT
-            dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
-        }
-
-        val subresourceRange = imageBarrier.subresourceRange()
-        subresourceRange
-                .aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
-                .baseMipLevel(0)
-                .levelCount(1)
-                .baseArrayLayer(0)
-                .layerCount(1)
-
-        vkCmdPipelineBarrier(commandBuffer.buffer, sourceStage, dstStage, 0, null, null, imageBarrier)
-        commandBuffer.end()
-        commandBuffer.submit(queue)
-        vkQueueWaitIdle(queue)
     }
 
     private fun copyBufferToImage(logicalDevice: LogicalDevice, commandPool: CommandPool, queue: VkQueue, buffer: Long, image: Long, width: Int, height: Int) {

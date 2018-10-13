@@ -16,7 +16,7 @@ class Player : Entity() {
     override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val transformComponent = system.findTransformComponent(getId())!!
 
-        transformComponent.transform.position.set(512.0f, 256.0f)
+        transformComponent.transform.position.set(512.0f, 256.0f, 0.0f)
         transformComponent.transform.scale.set(64.0f, 64.0f)
 
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
@@ -46,7 +46,7 @@ class HelloRain: Rain() {
         tilemapTexture.setTiledTexture(16,16)
 
         basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", basicTexture, Vector3f(1.0f,1.0f,1.0f))
-        tilemapMaterial = resourceFactory.createMaterial("./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", tilemapTexture, Vector3f(1.0f,1.0f,1.0f))
+        tilemapMaterial = resourceFactory.createMaterial("./data/shaders/backTilemap.vert.spv", "./data/shaders/basic.frag.spv", tilemapTexture, Vector3f(1.0f,1.0f,1.0f))
 
         playerEntitySystem = EntitySystem()
         player = Player()
@@ -64,7 +64,7 @@ class HelloRain: Rain() {
         }
 
         tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 32.0f, 32.0f, mapIndices)
-        tilemap.getTransform().position.set(0.0f, 0.0f)
+        tilemap.getTransform().position.set(0.0f, 0.0f, 0.0f)
         tilemap.getTransform().scale.set(1.0f, 1.0f)
         scene.addTilemap(tilemap)
 

@@ -30,7 +30,8 @@ class Roguelike: Rain() {
         // TODO: Constant window dimensions
         level.create(resourceFactory, 1280 / 16, 720 / 16)
         level.build(resourceFactory, 0)
-        scene.addTilemap(level.tilemap)
+        scene.addTilemap(level.backTilemap)
+        scene.addTilemap(level.frontTilemap)
 
         camera = Camera()
         scene.setActiveCamera(camera)
@@ -40,6 +41,11 @@ class Roguelike: Rain() {
         if (player.playerMovedCell) {
             level.build(resourceFactory, (player.cellX+player.cellY*1024).toLong())
             player.playerMovedCell = false
+        }
+
+        if (input.keyState(Input.Key.KEY_1) == Input.InputState.PRESSED) {
+            level.backTilemap.getTransform().position.set(0.0f, 0.0f, level.backTilemap.getTransform().position.z + 0.5f)
+            println(level.backTilemap.getTransform().position.z)
         }
     }
 }

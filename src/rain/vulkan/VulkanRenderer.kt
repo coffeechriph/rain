@@ -72,7 +72,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
     }
 
     override fun create() {
-        renderpass.create(logicalDevice, surfaceColorFormat)
+        renderpass.create(logicalDevice, surfaceColorFormat, findDepthFormat(physicalDevice))
         renderCommandPool.create(logicalDevice, queueFamilyIndices.graphicsFamily)
         postPresentBuffer = renderCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
 
@@ -111,8 +111,8 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
                         .height(height[0])
             }
 
-            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandBuffer, setupQueue, extent2D)
-            renderpass.create(logicalDevice, surface.format)
+            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandPool, setupCommandBuffer, setupQueue, extent2D)
+            renderpass.create(logicalDevice, surface.format, findDepthFormat(physicalDevice))
             pipelines.clear()
             swapchain.createFramebuffers(logicalDevice, renderpass, extent2D)
             swapchainIsDirty = false
@@ -145,6 +145,8 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         if (swapchain.framebuffers != null) {
             for (i in 0 until swapchain.framebuffers!!.size)
                 vkDestroyFramebuffer(logicalDevice.device, swapchain.framebuffers!![i], null)
+            vkDestroyImage(logicalDevice.device, swapchain.depthImage, null)
+            vkDestroyImageView(logicalDevice.device, swapchain.depthImageView, null)
         }
 
         for (b in renderCommandBuffers) {
@@ -170,25 +172,29 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
             recreateRenderCommandBuffers()
         }
 
-        while (drawOpsQueue.peek() != null) {
-            val op = drawOpsQueue.pop()
-            val mat = op.drawable.getMaterial() as VulkanMaterial
+        // Sort the order of rendering so alpha tests are correct
+        val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().position.z }
+        var index = 0
+        for (draw in sortedListOfDraw) {
+            val mat = draw.drawable.getMaterial() as VulkanMaterial
             var found = false
             for (pipeline in pipelines) {
-                if (pipeline.vertexBuffer == op.buffer && pipeline.material == mat) {
-                    pipeline.submitDrawInstance(op.drawable)
+                if (pipeline.vertexBuffer == draw.buffer && pipeline.material == mat) {
+                    pipeline.submitDrawInstance(draw.drawable)
                     found = true
                 }
             }
 
             if (!found) {
-                val material = op.drawable.getMaterial() as VulkanMaterial
+                val material = draw.drawable.getMaterial() as VulkanMaterial
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, op.buffer, material, material.descriptorPool)
-                pipeline.submitDrawInstance(op.drawable)
+                pipeline.create(logicalDevice, renderpass, draw.buffer, material, material.descriptorPool)
+                pipeline.submitDrawInstance(draw.drawable)
                 pipelines.add(pipeline)
             }
+            index++
         }
+        drawOpsQueue.clear()
 
         var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000);
         if (result != VK_SUCCESS) {
