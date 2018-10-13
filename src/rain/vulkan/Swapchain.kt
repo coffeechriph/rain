@@ -249,9 +249,8 @@ internal class Swapchain {
         this.framebuffers = framebuffers.toTypedArray()
     }
 
-    // TODO: Accept Semaphore instead of long
-    fun aquireNextImage(logicalDevice: LogicalDevice, semaphore: Long): Int {
-        val err = vkAcquireNextImageKHR(logicalDevice.device, swapchain, -1L, semaphore, 0, pImageIndex)
+    fun aquireNextImage(logicalDevice: LogicalDevice, semaphore: Semaphore): Int {
+        val err = vkAcquireNextImageKHR(logicalDevice.device, swapchain, -1L, semaphore.semaphore, 0, pImageIndex)
         if (err != VK_SUCCESS) {
             assertion("Failed to acquire next image from swapchain " + VulkanResult(err))
         }

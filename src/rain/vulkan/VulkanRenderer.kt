@@ -4,8 +4,7 @@ import org.lwjgl.glfw.GLFW.glfwGetFramebufferSize
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
-import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.Window
 import rain.api.*
@@ -83,6 +82,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
 
     fun destroy() {
         vkDeviceWaitIdle(logicalDevice.device)
+        vkDestroySwapchainKHR(logicalDevice.device, swapchain.swapchain, null)
         cleanUpResources()
     }
 
@@ -172,36 +172,14 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
             recreateRenderCommandBuffers()
         }
 
-        // Sort the order of rendering so alpha tests are correct
-        val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().position.z }
-        var index = 0
-        for (draw in sortedListOfDraw) {
-            val mat = draw.drawable.getMaterial() as VulkanMaterial
-            var found = false
-            for (pipeline in pipelines) {
-                if (pipeline.vertexBuffer == draw.buffer && pipeline.material == mat) {
-                    pipeline.submitDrawInstance(draw.drawable)
-                    found = true
-                }
-            }
-
-            if (!found) {
-                val material = draw.drawable.getMaterial() as VulkanMaterial
-                val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, draw.buffer, material, material.descriptorPool)
-                pipeline.submitDrawInstance(draw.drawable)
-                pipelines.add(pipeline)
-            }
-            index++
-        }
-        drawOpsQueue.clear()
+        issueDrawingCommands()
 
         var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000);
         if (result != VK_SUCCESS) {
             print("Failed to wait for fence!")
         }
 
-        val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore[frameIndex].semaphore)
+        val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore[frameIndex])
         if (nextImage == -1) { // Need to recreate swapchain
             swapchainIsDirty = true
             recreateSwapchain(vk.surface)
@@ -247,6 +225,32 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         }
     }
 
+    private fun issueDrawingCommands() {
+        // Sort the order of rendering so alpha tests are correct
+        val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().position.z }
+        var index = 0
+        for (draw in sortedListOfDraw) {
+            val mat = draw.drawable.getMaterial() as VulkanMaterial
+            var found = false
+            for (pipeline in pipelines) {
+                if (pipeline.vertexBuffer == draw.buffer && pipeline.material == mat) {
+                    pipeline.submitDrawInstance(draw.drawable)
+                    found = true
+                }
+            }
+
+            if (!found) {
+                val material = draw.drawable.getMaterial() as VulkanMaterial
+                val pipeline = Pipeline()
+                pipeline.create(logicalDevice, renderpass, draw.buffer, material, material.descriptorPool)
+                pipeline.submitDrawInstance(draw.drawable)
+                pipelines.add(pipeline)
+            }
+            index++
+        }
+        drawOpsQueue.clear()
+    }
+
     private fun presentImage(nextImage: Int) {
         pImageIndex.put(0, nextImage)
         pSwapchains.put(0, swapchain.swapchain)
@@ -267,8 +271,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         }
         else if (err == VK_ERROR_OUT_OF_DATE_KHR) {
             swapchainIsDirty = true
-            recreateSwapchain(vk.surface)
-            recreateRenderCommandBuffers()
         }
     }
 
