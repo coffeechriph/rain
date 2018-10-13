@@ -111,7 +111,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
                         .height(height[0])
             }
 
-            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandPool, setupCommandBuffer, setupQueue, extent2D)
+            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandPool, setupQueue, extent2D)
             renderpass.create(logicalDevice, surface.format, findDepthFormat(physicalDevice))
             pipelines.clear()
             swapchain.createFramebuffers(logicalDevice, renderpass, extent2D)
@@ -237,7 +237,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         if (result != VK_SUCCESS) {
             print("Failed to reset fence!")
         }
-        renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex].queue, imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence!![frameIndex])
+        renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence!![frameIndex])
 
         presentImage(nextImage)
 

@@ -1,5 +1,6 @@
 package rain.vulkan
 
+import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
@@ -52,6 +53,16 @@ internal class CommandPool {
     class CommandBuffer internal constructor(var buffer: VkCommandBuffer) {
         val commandBufferBeginInfo = VkCommandBufferBeginInfo.calloc()
 
+        private val pCommandBuffer: PointerBuffer
+        private val submitInfo: VkSubmitInfo
+
+        init {
+            pCommandBuffer = memAllocPointer(1)
+            submitInfo = VkSubmitInfo.calloc()
+                    .sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
+                    .pCommandBuffers(pCommandBuffer)
+        }
+
         fun begin() {
             commandBufferBeginInfo
                     .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
@@ -74,32 +85,21 @@ internal class CommandPool {
             if (buffer.address() == 0L)
                 return
 
-            // TODO: Don't have to allocate this every time
-            val pCommandBuffers = memAllocPointer(1)
-                    .put(buffer)
+            pCommandBuffer.put(buffer)
                     .flip()
 
-            val submitInfo = VkSubmitInfo.calloc()
-                    .sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
-                    .pCommandBuffers(pCommandBuffers)
-
             val err = vkQueueSubmit(queue, submitInfo, VK_NULL_HANDLE)
-            memFree(pCommandBuffers)
-            submitInfo.free()
 
             if (err != VK_SUCCESS) {
                 assertion("Failed to submit command buffer: " + VulkanResult(err))
             }
         }
 
-        // TODO: Accept a Queue instead of VkQueue
-        fun submit(queue: VkQueue, waitSemaphore: Semaphore, signalSemaphore: Semaphore, waitDstStageMask: Int, pFence: LongBuffer) {
+        fun submit(queue: Queue, waitSemaphore: Semaphore, signalSemaphore: Semaphore, waitDstStageMask: Int, pFence: LongBuffer) {
             if (buffer.address() == 0L)
                 return
 
-            // TODO: Don't have to allocate this every time
-            val pCommandBuffers = memAllocPointer(1)
-                    .put(buffer)
+            pCommandBuffer.put(buffer)
                     .flip()
 
             val pWaitSemaphore = memAllocLong(1)
@@ -111,17 +111,13 @@ internal class CommandPool {
             val pWaitDstStageMask = memAllocInt(1)
             pWaitDstStageMask.put(0, waitDstStageMask)
 
-            val submitInfo = VkSubmitInfo.calloc()
-                    .sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
-                    .pCommandBuffers(pCommandBuffers)
+            submitInfo
                     .waitSemaphoreCount(pWaitSemaphore.remaining())
                     .pWaitSemaphores(pWaitSemaphore)
                     .pSignalSemaphores(pSignalSemaphore)
                     .pWaitDstStageMask(pWaitDstStageMask)
 
-            val err = vkQueueSubmit(queue, submitInfo, pFence.get(0))
-            memFree(pCommandBuffers)
-            submitInfo.free()
+            val err = vkQueueSubmit(queue.queue, submitInfo, pFence.get(0))
 
             if (err != VK_SUCCESS) {
                 assertion("Failed to submit command buffer: " + VulkanResult(err))

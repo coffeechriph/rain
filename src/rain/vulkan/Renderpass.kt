@@ -109,7 +109,6 @@ internal class Renderpass {
 
         viewport.height(viewportSize.height().toFloat())
                 .width(viewportSize.width().toFloat())
-                // TODO: Correlate with camera -z +z
                 .minDepth(0.0f)
                 .maxDepth(1.0f)
 

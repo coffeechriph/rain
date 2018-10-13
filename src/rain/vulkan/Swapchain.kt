@@ -40,7 +40,7 @@ internal class Swapchain {
     private val pImageIndex = memAllocInt(1)
     private var pool = CommandPool()
 
-    fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, pool: CommandPool, cmdbuffer: CommandPool.CommandBuffer, deviceQueue: Queue, extent2D: VkExtent2D) {
+    fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, pool: CommandPool, deviceQueue: Queue, extent2D: VkExtent2D) {
         this.pool = pool
 
         var err: Int
@@ -153,13 +153,9 @@ internal class Swapchain {
         imageViews = LongArray(imageCount).toTypedArray()
         val pBufferView = memAllocLong(1)
 
-        cmdbuffer.begin()
         for (i in 0 until imageCount) {
             images[i] = pSwapchainImages.get(i)
-            // Bring the image from an UNDEFINED state to the VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT state
-            imageBarrier(cmdbuffer.buffer, images[i], VK_IMAGE_ASPECT_COLOR_BIT,
-                    VK_IMAGE_LAYOUT_UNDEFINED, 0,
-                    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
+            transitionImageLayout(logicalDevice, pool, deviceQueue.queue, images[i], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_UNDEFINED, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
 
             val imageView = ImageView()
             imageView.create(logicalDevice, images[i], surface.format, VK_IMAGE_VIEW_TYPE_2D, VK10.VK_IMAGE_ASPECT_COLOR_BIT)
@@ -168,9 +164,6 @@ internal class Swapchain {
                 assertion("Failed to create image view: " + VulkanResult(err))
             }
         }
-        cmdbuffer.end()
-        cmdbuffer.submit(deviceQueue.queue)
-        vkQueueWaitIdle(deviceQueue.queue)
 
         // Create depth image
         val depthFormat = findDepthFormat(physicalDevice)
@@ -223,40 +216,6 @@ internal class Swapchain {
         memFree(pSwapchainImages)
 
         log("Created Swapchain[images: ${images.size}, presentMode: $swapchainPresentMode, format: ${surface.format}, colorSpace: ${surface.space}]")
-    }
-
-    private fun imageBarrier(cmdbuffer: VkCommandBuffer, image: Long, aspectMask: Int, oldImageLayout: Int, srcAccess: Int, newImageLayout: Int, dstAccess: Int) {
-        // Create an image barrier object
-        val imageMemoryBarrier = VkImageMemoryBarrier.calloc(1)
-                .sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
-                .pNext(0)
-                .oldLayout(oldImageLayout)
-                .srcAccessMask(srcAccess)
-                .newLayout(newImageLayout)
-                .dstAccessMask(dstAccess)
-                .srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .image(image)
-
-        imageMemoryBarrier.subresourceRange()
-                .aspectMask(aspectMask)
-                .baseMipLevel(0)
-                .levelCount(1)
-                .layerCount(1)
-
-        // Put barrier on top
-        val srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-        var destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-
-        if (newImageLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-            destStageFlags = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-        }
-
-        // Put barrier inside setup command buffer
-        vkCmdPipelineBarrier(cmdbuffer, srcStageFlags, destStageFlags, 0, // no memory barriers
-                null, null, // no buffer memory barriers
-                imageMemoryBarrier) // one image memory barrier
-        imageMemoryBarrier.free()
     }
 
     fun createFramebuffers(logicalDevice: LogicalDevice, renderpass: Renderpass, extent: VkExtent2D) {

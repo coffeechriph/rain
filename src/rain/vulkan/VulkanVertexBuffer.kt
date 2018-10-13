@@ -206,18 +206,3 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
 
 }
-
-// TODO: Move this to another file as it's used by multiple
-internal fun getMemoryType(deviceMemoryProperties: VkPhysicalDeviceMemoryProperties, typeBits: Int, properties: Int, typeIndex: IntBuffer): Boolean {
-    var bits = typeBits
-    for (i in 0..31) {
-        if (bits and 1 == 1) {
-            if (deviceMemoryProperties.memoryTypes(i).propertyFlags() and properties == properties) {
-                typeIndex.put(0, i)
-                return true
-            }
-        }
-        bits = bits shr 1
-    }
-    return false
-}

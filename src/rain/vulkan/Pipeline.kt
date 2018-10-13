@@ -117,7 +117,6 @@ internal class Pipeline {
         shaderStages.get(0).set(material.vertexShader.createInfo)
         shaderStages.get(1).set(material.fragmentShader.createInfo)
 
-        // TODO: Change this when we want to support more than 1 descriptor set
         val numDescriptorLayouts = descriptorPool.descriptorSets.size
 
         val descriptorSetLayouts = memAllocLong(numDescriptorLayouts)
