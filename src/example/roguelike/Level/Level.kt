@@ -87,6 +87,7 @@ class Level {
         generate(seed, 5)
         removeLonelyWalls()
 
+        buildRooms()
         var x = 0
         var y = 0
 
@@ -127,7 +128,6 @@ class Level {
             }
         }
 
-        buildRooms()
         saveMapAsImage()
         switchCell(resourceFactory, 0, 0)
     }
@@ -226,7 +226,7 @@ class Level {
         var y = 0
         for (i in map) {
             val neighbors = numNeighbours(x,y)
-            if(neighbors == 0) {
+            if(neighbors < 2) {
                 map[i] = 0
             }
             x += 1
@@ -254,6 +254,91 @@ class Level {
             if (x >= mapWidth) {
                 x = 0
                 y += 1
+            }
+        }
+
+        connectRooms()
+    }
+
+    private fun connectRooms() {
+        for (i in 0 until 4) {
+            var rindex = 0
+            for (room in rooms) {
+                // Find the room that is the nearest to this room
+                var shortestLength = Int.MAX_VALUE
+                var firstTile = Vector2i()
+                var secondTile = Vector2i()
+                var nRoom: Room = room
+                var nRoomIndex = -1
+                var index = 0
+                for (otherRoom in rooms) {
+                    if (otherRoom != room && !room.connectedRooms.contains(nRoomIndex) && !otherRoom.connectedRooms.contains(rindex)) {
+                        for (tile in room.tiles) {
+                            for (otherTile in otherRoom.tiles) {
+                                val dx = otherTile.x - tile.x
+                                val dy = otherTile.y - tile.y
+                                val d = dx * dx + dy * dy
+                                if (d < shortestLength) {
+                                    shortestLength = d
+                                    firstTile = tile
+                                    secondTile = otherTile
+                                    nRoom = room
+                                    nRoomIndex = index
+                                }
+                            }
+                        }
+                    }
+                    index++
+                }
+
+                room.connectedRooms.add(nRoomIndex)
+                nRoom.connectedRooms.add(rindex)
+                rindex++
+
+                val dx = secondTile.x - firstTile.x
+                val dy = secondTile.y - firstTile.y
+
+                var x = firstTile.x
+                var y = firstTile.y
+                while (true) {
+                    map[x + y * mapWidth] = 0
+
+                    if (x > 0) {
+                        map[(x - 1) + y * mapWidth] = 0
+                    }
+
+                    if (x < mapWidth - 1) {
+                        map[(x + 1) + y * mapWidth] = 0
+                    }
+
+                    if (y > 0) {
+                        map[x + (y - 1) * mapWidth] = 0
+                    }
+
+                    if (y < mapHeight - 1) {
+                        map[x + (y + 1) * mapWidth] = 0
+                    }
+
+                    if (x != secondTile.x) {
+                        if (dx > 0) {
+                            x += 1
+                        } else {
+                            x -= 1
+                        }
+                    }
+
+                    if (y != secondTile.y) {
+                        if (dy > 0) {
+                            y += 1
+                        } else {
+                            y -= 1
+                        }
+                    }
+
+                    if (x == secondTile.x && y == secondTile.y) {
+                        break
+                    }
+                }
             }
         }
     }
