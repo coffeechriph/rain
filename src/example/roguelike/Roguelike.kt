@@ -28,24 +28,28 @@ class Roguelike: Rain() {
         scene.addSystem(playerSystem)
 
         // TODO: Constant window dimensions
-        level.create(resourceFactory, 1280 / 16, 720 / 16)
+        level.create(resourceFactory, 12800 / 32, 7200/32, 1280 / 32, 720 / 32 + 1)
         level.build(resourceFactory, 0)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
 
         camera = Camera()
         scene.setActiveCamera(camera)
+
+        player.map = level.map
+        player.width = level.width
+        player.height = level.height
+        player.mapWidth = level.mapWidth
+        player.mapHeight = level.mapHeight
+        player.maxCellX = level.maxCellX
+        player.maxCellY = level.maxCellY
+        player.tileWidth = 32
     }
 
     override fun update() {
         if (player.playerMovedCell) {
-            level.build(resourceFactory, (player.cellX+player.cellY*1024).toLong())
+            level.switchCell(resourceFactory, player.cellX, player.cellY)
             player.playerMovedCell = false
-        }
-
-        if (input.keyState(Input.Key.KEY_1) == Input.InputState.PRESSED) {
-            level.backTilemap.getTransform().position.set(0.0f, 0.0f, level.backTilemap.getTransform().position.z + 0.5f)
-            println(level.backTilemap.getTransform().position.z)
         }
     }
 }
