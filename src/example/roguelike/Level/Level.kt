@@ -85,7 +85,6 @@ class Level {
 
     fun build(resourceFactory: ResourceFactory, seed: Long) {
         generate(seed, 5)
-        removeLonelyWalls()
 
         buildRooms()
         var x = 0
@@ -221,22 +220,6 @@ class Level {
         return count
     }
 
-    private fun removeLonelyWalls() {
-        var x = 0
-        var y = 0
-        for (i in map) {
-            val neighbors = numNeighbours(x,y)
-            if(neighbors < 2) {
-                map[i] = 0
-            }
-            x += 1
-            if (x >= mapWidth) {
-                x = 0
-                y += 1
-            }
-        }
-    }
-
     private fun buildRooms() {
         val mapCopy = map.copyOf()
 
@@ -261,7 +244,7 @@ class Level {
     }
 
     private fun connectRooms() {
-        for (i in 0 until 4) {
+        for (i in 0 until 3) {
             var rindex = 0
             for (room in rooms) {
                 // Find the room that is the nearest to this room
@@ -269,10 +252,10 @@ class Level {
                 var firstTile = Vector2i()
                 var secondTile = Vector2i()
                 var nRoom: Room = room
-                var nRoomIndex = -1
+                var nRoomIndex = 0
                 var index = 0
                 for (otherRoom in rooms) {
-                    if (otherRoom != room && !room.connectedRooms.contains(nRoomIndex) && !otherRoom.connectedRooms.contains(rindex)) {
+                    if (index != rindex && !room.connectedRooms.contains(index) && !otherRoom.connectedRooms.contains(rindex)) {
                         for (tile in room.tiles) {
                             for (otherTile in otherRoom.tiles) {
                                 val dx = otherTile.x - tile.x
@@ -297,6 +280,10 @@ class Level {
 
                 val dx = secondTile.x - firstTile.x
                 val dy = secondTile.y - firstTile.y
+
+                if (dx == 0 && dy == 0) {
+                    println("Ugh")
+                }
 
                 var x = firstTile.x
                 var y = firstTile.y

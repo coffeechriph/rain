@@ -29,7 +29,7 @@ class Roguelike: Rain() {
 
         // TODO: Constant window dimensions
         level.create(resourceFactory, 12800 / 32, 7200/32, 1280 / 32, 720 / 32 + 1)
-        level.build(resourceFactory, 1)
+        level.build(resourceFactory, 0)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
 

@@ -21,13 +21,13 @@ internal class Swapchain {
     var swapchain: Long = 0
         private set
 
-    lateinit var images: Array<Long>
+    lateinit var images: LongArray
         private set
 
-    var imageViews = Array<Long>(0){0}
+    lateinit var imageViews: LongArray
         private set
 
-    var framebuffers: Array<Long>? = null
+    var framebuffers = LongArray(0)
         private set
 
     var extent: VkExtent2D = VkExtent2D.create()
@@ -149,8 +149,8 @@ internal class Swapchain {
         }
         memFree(pImageCount)
 
-        images = LongArray(imageCount).toTypedArray()
-        imageViews = LongArray(imageCount).toTypedArray()
+        images = LongArray(imageCount)
+        imageViews = LongArray(imageCount)
         val pBufferView = memAllocLong(1)
 
         for (i in 0 until imageCount) {
@@ -246,7 +246,7 @@ internal class Swapchain {
         memFree(attachments)
         memFree(pFramebuffer)
         fci.free()
-        this.framebuffers = framebuffers.toTypedArray()
+        this.framebuffers = framebuffers
     }
 
     fun aquireNextImage(logicalDevice: LogicalDevice, semaphore: Semaphore): Int {

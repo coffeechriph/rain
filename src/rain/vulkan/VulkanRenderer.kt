@@ -142,12 +142,11 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
     }
 
     private fun cleanUpResources() {
-        if (swapchain.framebuffers != null) {
-            for (i in 0 until swapchain.framebuffers!!.size)
-                vkDestroyFramebuffer(logicalDevice.device, swapchain.framebuffers!![i], null)
-            vkDestroyImage(logicalDevice.device, swapchain.depthImage, null)
-            vkDestroyImageView(logicalDevice.device, swapchain.depthImageView, null)
+        for (i in 0 until swapchain.framebuffers.size) {
+            vkDestroyFramebuffer(logicalDevice.device, swapchain.framebuffers[i], null)
         }
+        vkDestroyImage(logicalDevice.device, swapchain.depthImage, null)
+        vkDestroyImageView(logicalDevice.device, swapchain.depthImageView, null)
 
         for (b in renderCommandBuffers) {
             vkFreeCommandBuffers(logicalDevice.device, renderCommandPool.pool, b.buffer)
@@ -192,7 +191,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
             attachPrePresentBarrier(renderCommandBuffers[frameIndex], swapchain.images[nextImage])
         }
 
-        renderpass.begin(swapchain.framebuffers!![nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
+        renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
 
         // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
         val projectionMatrixBuffer = memAlloc(16 * 4)
