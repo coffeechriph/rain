@@ -230,7 +230,7 @@ class Level {
             // Floor tile found - flood fill the room
             if (mapCopy[i] == 0) {
                 val tiles = floodSearchRoom(x,y,mapCopy,ArrayList())
-                val room = Room(tiles, RoomType.CAVE)
+                val room = Room(tiles, RoomType.values()[Random().nextInt(3)])
                 rooms.add(room)
             }
 

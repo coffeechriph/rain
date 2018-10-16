@@ -4,7 +4,8 @@ import org.joml.Vector2i
 
 enum class RoomType {
     CAVE,
-    PRISON,
+    MOSSY,
+    PURPLE,
 }
 
 class Room(val tiles: MutableList<Vector2i>, val type: RoomType) {
