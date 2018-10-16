@@ -7,6 +7,6 @@ enum class RoomType {
     PRISON,
 }
 
-class Room(val tiles: List<Vector2i>, val type: RoomType) {
+class Room(val tiles: MutableList<Vector2i>, val type: RoomType) {
     var connectedRooms = ArrayList<Int>()
 }

@@ -8,6 +8,7 @@ import java.io.File
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.collections.ArrayList
+import kotlin.math.sqrt
 
 class Level {
     lateinit var map: IntArray
@@ -84,7 +85,7 @@ class Level {
     }
 
     fun build(resourceFactory: ResourceFactory, seed: Long) {
-        generate(seed, 5)
+        generate(seed, 7)
 
         buildRooms()
         var x = 0
@@ -127,7 +128,7 @@ class Level {
             }
         }
 
-        saveMapAsImage()
+        saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
     }
 
@@ -240,11 +241,24 @@ class Level {
             }
         }
 
+        // Remove tiny rooms
+        var k = 0
+        for (i in 0 until rooms.size) {
+            if (rooms[k].tiles.size < 50) {
+                rooms.removeAt(k)
+                if (k > 0) {
+                    k -= 1
+                }
+            }
+
+            k += 1
+        }
+
         connectRooms()
     }
 
     private fun connectRooms() {
-        for (i in 0 until 3) {
+        for (i in 0 until 2) {
             var rindex = 0
             for (room in rooms) {
                 // Find the room that is the nearest to this room
@@ -255,17 +269,23 @@ class Level {
                 var nRoomIndex = 0
                 var index = 0
                 for (otherRoom in rooms) {
-                    if (index != rindex && !room.connectedRooms.contains(index) && !otherRoom.connectedRooms.contains(rindex)) {
+                    if (index == rindex) {
+                        index++
+                        continue
+                    }
+
+                    if (!room.connectedRooms.contains(index) && !otherRoom.connectedRooms.contains(rindex)) {
                         for (tile in room.tiles) {
                             for (otherTile in otherRoom.tiles) {
                                 val dx = otherTile.x - tile.x
                                 val dy = otherTile.y - tile.y
                                 val d = dx * dx + dy * dy
+
                                 if (d < shortestLength) {
                                     shortestLength = d
                                     firstTile = tile
                                     secondTile = otherTile
-                                    nRoom = room
+                                    nRoom = otherRoom
                                     nRoomIndex = index
                                 }
                             }
@@ -274,36 +294,54 @@ class Level {
                     index++
                 }
 
+                val dx = secondTile.x - firstTile.x
+                val dy = secondTile.y - firstTile.y
+                val dst = sqrt((dx*dx + dy*dy).toDouble())
+
+                // Maximum distance between connected tiles in pixels
+                if (dst > 50) {
+                    rindex++
+                    continue
+                }
+
                 room.connectedRooms.add(nRoomIndex)
                 nRoom.connectedRooms.add(rindex)
                 rindex++
 
-                val dx = secondTile.x - firstTile.x
-                val dy = secondTile.y - firstTile.y
-
-                if (dx == 0 && dy == 0) {
-                    println("Ugh")
-                }
-
                 var x = firstTile.x
                 var y = firstTile.y
                 while (true) {
-                    map[x + y * mapWidth] = 0
+                    if (map[x + y * mapWidth] == 1) {
+                        map[x + y * mapWidth] = 0
+                        room.tiles.add(Vector2i(x,y))
+                    }
 
                     if (x > 0) {
-                        map[(x - 1) + y * mapWidth] = 0
+                        if (map[(x-1) + y*mapWidth] == 1) {
+                            map[(x - 1) + y * mapWidth] = 0
+                            room.tiles.add(Vector2i(x - 1, y))
+                        }
                     }
 
                     if (x < mapWidth - 1) {
-                        map[(x + 1) + y * mapWidth] = 0
+                        if (map[(x+1) + y*mapWidth] == 1) {
+                            map[(x + 1) + y * mapWidth] = 0
+                            room.tiles.add(Vector2i(x + 1, y))
+                        }
                     }
 
                     if (y > 0) {
-                        map[x + (y - 1) * mapWidth] = 0
+                        if (map[x + (y-1)*mapWidth] == 1) {
+                            map[x + (y - 1) * mapWidth] = 0
+                            room.tiles.add(Vector2i(x, y - 1))
+                        }
                     }
 
                     if (y < mapHeight - 1) {
-                        map[x + (y + 1) * mapWidth] = 0
+                        if (map[x + (y+1)*mapWidth] == 1) {
+                            map[x + (y + 1) * mapWidth] = 0
+                            room.tiles.add(Vector2i(x, y + 1))
+                        }
                     }
 
                     if (x != secondTile.x) {
@@ -330,13 +368,25 @@ class Level {
         }
     }
 
-    private fun floodSearchRoom(x: Int, y: Int, mapCopy: IntArray, tiles: MutableList<Vector2i>): List<Vector2i> {
+    private fun floodSearchRoom(x: Int, y: Int, mapCopy: IntArray, tiles: MutableList<Vector2i>): MutableList<Vector2i> {
         tiles.add(Vector2i(x, y))
         mapCopy[x + y*mapWidth] = 1
 
         if (x > 0) {
             if (mapCopy[(x-1) + y*mapWidth] == 0) {
                 tiles.addAll(floodSearchRoom(x-1, y, mapCopy, ArrayList()))
+            }
+
+            if (y > 0) {
+                if (mapCopy[(x-1) + (y-1)*mapWidth] == 0) {
+                    tiles.addAll(floodSearchRoom(x-1, y-1, mapCopy, ArrayList()))
+                }
+            }
+
+            if (y < mapHeight - 1) {
+                if (mapCopy[(x-1) + (y+1)*mapWidth] == 0) {
+                    tiles.addAll(floodSearchRoom(x-1, y+1, mapCopy, ArrayList()))
+                }
             }
         }
 
@@ -350,6 +400,18 @@ class Level {
             if (mapCopy[(x+1) + y*mapWidth] == 0) {
                 tiles.addAll(floodSearchRoom(x+1, y, mapCopy, ArrayList()))
             }
+
+            if (y > 0) {
+                if (mapCopy[(x+1) + (y-1)*mapWidth] == 0) {
+                    tiles.addAll(floodSearchRoom(x+1, y-1, mapCopy, ArrayList()))
+                }
+            }
+
+            if (y < mapHeight - 1) {
+                if (mapCopy[(x+1) + (y+1)*mapWidth] == 0) {
+                    tiles.addAll(floodSearchRoom(x+1, y+1, mapCopy, ArrayList()))
+                }
+            }
         }
 
         if (y < mapHeight - 1) {
@@ -361,33 +423,16 @@ class Level {
         return tiles
     }
 
-    private fun saveMapAsImage() {
+    private fun saveMapAsImage(filename: String) {
         val image = BufferedImage(mapWidth, mapHeight, BufferedImage.TYPE_3BYTE_BGR)
-        var x = 0
-        var y = 0
-
-        for (i in map) {
-            if (i == 1) {
-                image.setRGB(x,y,0xa0938e)
-            }
-            else if (i == 0) {
-                image.setRGB(x,y,0x5e3643)
-            }
-
-            x += 1
-            if (x >= mapWidth) {
-                x = 0
-                y += 1
-            }
-        }
 
         for (r in rooms) {
-            val color = Random().nextInt(0xffffff)
+            val color = Math.min(0xffffff, Random().nextInt(0xffffff) + 128)
             for (t in r.tiles) {
                 image.setRGB(t.x, t.y, color)
             }
         }
 
-        ImageIO.write(image, "png", File("./data/map.png"))
+        ImageIO.write(image, "png", File("./data/" + filename))
     }
 }
