@@ -1,3 +1,5 @@
+build/
+.gradle/*
 *.txt
 *.log
 *.iml
