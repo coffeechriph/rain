@@ -36,8 +36,8 @@ class Level {
     private lateinit var texture: Texture2d
     private var firstBuild = true
 
-    private var mapBackIndices = Array(0){ Tilemap.TileIndex(0,0)}
-    private var mapFrontIndices = Array(0){Tilemap.TileIndex(0,0)}
+    private var mapBackIndices = Array(0){ TileIndex(0,0)}
+    private var mapFrontIndices = Array(0){TileIndex(0,0)}
     private var rooms = ArrayList<Room>()
 
     fun create(resourceFactory: ResourceFactory, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
@@ -55,8 +55,8 @@ class Level {
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
-        val backIndices = Array(width*height){ Tilemap.TileIndex(0,1)}
-        val frontIndices = Array(width*height){ Tilemap.TileIndex(0,1)}
+        val backIndices = Array(width*height){ TileIndexNone }
+        val frontIndices = Array(width*height){ TileIndexNone }
         var sx = cellX * width
         var sy = cellY * height
         for (i in 0 until width*height) {
@@ -73,16 +73,16 @@ class Level {
         if (firstBuild) {
             backTilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, backIndices)
             frontTilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, frontIndices)
-            backTilemap.update(backIndices)
-            frontTilemap.update(frontIndices)
+            backTilemap.update(resourceFactory, backIndices)
+            frontTilemap.update(resourceFactory, frontIndices)
 
             backTilemap.getTransform().position.set(0.0f, 0.0f, 1.0f)
             frontTilemap.getTransform().position.set(0.0f, 0.0f, 3.0f)
             firstBuild = false
         }
         else {
-            backTilemap.update(backIndices)
-            frontTilemap.update(frontIndices)
+            backTilemap.update(resourceFactory, backIndices)
+            frontTilemap.update(resourceFactory, frontIndices)
         }
     }
 
@@ -90,51 +90,9 @@ class Level {
         generate(seed, 7)
         buildRooms()
 
-        mapBackIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
-        mapFrontIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
+        mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
+        mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         populateTilemap()
-
-        /*
-        var x = 0
-        var y = 0
-
-        mapBackIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
-        mapFrontIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
-        for (i in 0 until mapWidth * mapHeight) {
-            if (map[i] == 1) {
-                mapBackIndices[i] = Tilemap.TileIndex(1, 1)
-                if (y > 0 && y < mapHeight - 1) {
-                    if (map[x + (y-1)*mapWidth] == 0 &&
-                        map[x + (y+1)*mapWidth] == 0) {
-                        mapBackIndices[i] = Tilemap.TileIndex(0,0)
-                        map[i] = 0
-                    }
-                    else if(map[x + (y+1)*mapWidth] == 1) {
-                        mapFrontIndices[i] = Tilemap.TileIndex(3,1)
-                        if (y < mapHeight - 2) {
-                            if (map[x + (y+2)*mapWidth] == 1) {
-                                mapFrontIndices[i] = Tilemap.TileIndex(2,1)
-                            }
-                        }
-                    }
-                }
-                else if(y == 0) {
-                    if (map[x + (y+1)*mapWidth] == 1) {
-                        mapFrontIndices[i] = Tilemap.TileIndex(2, 1)
-                    }
-                }
-            }
-            else {
-                mapBackIndices[i] = Tilemap.TileIndex(0, 0)
-            }
-
-            x += 1
-            if (x >= mapWidth) {
-                x = 0
-                y += 1
-            }
-        }
-        */
 
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
@@ -145,15 +103,15 @@ class Level {
             val groundTileY = room.type.ordinal
             for (tile in room.tiles) {
                 val index = tile.x + tile.y * mapWidth
-                mapBackIndices[index] = Tilemap.TileIndex(0,groundTileY)
+                mapBackIndices[index] = TileIndex(0,groundTileY)
 
                 if (tile.y > 0) {
                     if (map[tile.x + (tile.y-1)*mapWidth] == 1) {
-                        mapBackIndices[tile.x + (tile.y - 1) * mapWidth] = Tilemap.TileIndex(1,1)
+                        mapBackIndices[tile.x + (tile.y - 1) * mapWidth] = TileIndex(1,1)
 
                         if (tile.y > 1) {
                             if (map[tile.x + (tile.y-2)*mapWidth] == 1) {
-                                mapBackIndices[tile.x + (tile.y - 2) * mapWidth] = Tilemap.TileIndex(3,1)
+                                mapBackIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,1)
                             }
                         }
                     }
@@ -161,7 +119,7 @@ class Level {
 
                 if (tile.y < mapHeight - 1) {
                     if (map[tile.x + (tile.y+1)*mapWidth] == 1) {
-                        mapFrontIndices[tile.x + (tile.y+1)*mapWidth] = Tilemap.TileIndex(2,1)
+                        mapFrontIndices[tile.x + (tile.y+1)*mapWidth] = TileIndex(2,1)
                     }
                 }
             }

@@ -20,6 +20,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         private set
     var vertexCount: Int = 0
         private set
+    private var vertexSize = 0
 
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
         private set
@@ -35,6 +36,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
     // TODO: Can we optimize this?
     override fun update(vertices: FloatArray) {
+        vertexCount = vertices.size / vertexSize
         if (this.buffer > 0L) {
             vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
             this.buffer = 0L
@@ -44,16 +46,25 @@ internal class VulkanVertexBuffer: VertexBuffer {
             createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
         }
         else {
-            createVertexBuffer(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
+            createVertexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, vertices)
         }
     }
 
     fun create(vk: Vk, commandPool: CommandPool, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
+        if (vertices.isEmpty()) {
+            assertion("Unable to create vertex buffer with no vertices!")
+        }
+
+        if (this.buffer > 0L) {
+            vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
+            this.buffer = 0L
+        }
+
         if (state == VertexBufferState.STATIC) {
             createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
         }
         else {
-            createVertexBuffer(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
+            createVertexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, vertices)
         }
 
         // Assign to vertex buffer
@@ -70,12 +81,12 @@ internal class VulkanVertexBuffer: VertexBuffer {
         }
 
         vertexCount = vertices.size / vertexSize
-        this.bufferState = bufferState
+        this.vertexSize = vertexSize
         this.vk = vk
         this.commandPool = commandPool
     }
 
-    private fun createVertexBuffer(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
+    private fun createVertexBuffer(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
         val buffer = createBuffer(logicalDevice, (vertices.size * 4).toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
         val vertexBuffer = memAlloc(vertices.size * 4)
         val fb = vertexBuffer.asFloatBuffer()

@@ -4,7 +4,7 @@ import org.joml.Vector3f
 import rain.Api
 import rain.Rain
 import rain.api.*
-import rain.api.Tilemap.TileIndex
+import rain.api.TileIndex
 
 class Player : Entity() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
@@ -73,13 +73,6 @@ class HelloRain: Rain() {
     }
 
     override fun update() {
-        if (input.keyState(Input.Key.KEY_0) == Input.InputState.PRESSED) {
-            for (i in 0 until 16) {
-                mapIndices[i] = TileIndex(0, 0)
-                mapIndices[i * 16] = TileIndex(1, 0)
-            }
-            tilemap.update(mapIndices)
-        }
     }
 }
 
