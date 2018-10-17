@@ -25,7 +25,7 @@ class Player : Entity() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
         val sprite = system.findSpriteComponent(getId())!!
-        transform.transform.position.set(600.0f,552.0f, 2.0f)
+        transform.transform.position.set(600.0f,600.0f, 2.0f)
         transform.transform.scale.set(64.0f,64.0f)
 
         sprite.addAnimation("idle", 0, 0, 3, 0.0f)

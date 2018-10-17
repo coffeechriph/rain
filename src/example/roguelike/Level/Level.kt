@@ -91,8 +91,8 @@ class Level {
         var x = 0
         var y = 0
 
-        mapBackIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,1)}
-        mapFrontIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,1)}
+        mapBackIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
+        mapFrontIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
         for (i in 0 until mapWidth * mapHeight) {
             if (map[i] == 1) {
                 mapBackIndices[i] = Tilemap.TileIndex(1, 1)
@@ -244,6 +244,9 @@ class Level {
         // Remove tiny rooms
         var k = 0
         for (i in 0 until rooms.size) {
+            if (k >= rooms.size) {
+                break
+            }
             if (rooms[k].tiles.size < 50) {
                 rooms.removeAt(k)
                 if (k > 0) {

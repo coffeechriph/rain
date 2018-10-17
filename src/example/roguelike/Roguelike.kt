@@ -28,7 +28,7 @@ class Roguelike: Rain() {
         scene.addSystem(playerSystem)
 
         // TODO: Constant window dimensions
-        level.create(resourceFactory, 12800 / 32, 7200/32, 1280 / 32, 720 / 32 + 1)
+        level.create(resourceFactory, 12800 / 32 / 2, 7200/32 / 2, 1280 / 32, 720 / 32 + 1)
         level.build(resourceFactory, 0)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
@@ -52,11 +52,4 @@ class Roguelike: Rain() {
             player.playerMovedCell = false
         }
     }
-}
-
-
-fun main(args: Array<String>) {
-    val app = Roguelike()
-    app.create(1280,720,"Hello Rain!", Api.VULKAN)
-    app.run()
 }
