@@ -100,18 +100,19 @@ class Level {
 
     private fun populateTilemap() {
         for (room in rooms) {
-            val groundTileY = room.type.ordinal
+            val tileY = room.type.ordinal
+
             for (tile in room.tiles) {
                 val index = tile.x + tile.y * mapWidth
-                mapBackIndices[index] = TileIndex(0,groundTileY)
+                mapBackIndices[index] = TileIndex(0, tileY)
 
                 if (tile.y > 0) {
                     if (map[tile.x + (tile.y-1)*mapWidth] == 1) {
-                        mapBackIndices[tile.x + (tile.y - 1) * mapWidth] = TileIndex(1,1)
+                        mapBackIndices[tile.x + (tile.y - 1) * mapWidth] = TileIndex(1, tileY)
 
                         if (tile.y > 1) {
                             if (map[tile.x + (tile.y-2)*mapWidth] == 1) {
-                                mapBackIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,1)
+                                mapBackIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
                             }
                         }
                     }
