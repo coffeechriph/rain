@@ -11,7 +11,7 @@ import rain.api.*
 import rain.assertion
 import java.util.*
 
-internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFactory: VulkanResourceFactory) : Renderer {
+internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     private data class DrawOp(val drawable: Drawable, val buffer: VulkanVertexBuffer)
 
     private val pipelines: MutableList<Pipeline> = ArrayList()
@@ -87,7 +87,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
     }
 
     internal fun recreateRenderCommandBuffers() {
-        renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers!!.size)
+        renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers.size)
     }
 
     fun recreateSwapchain(surface: Surface): Boolean {
@@ -117,9 +117,9 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
             swapchain.createFramebuffers(logicalDevice, renderpass, extent2D)
             swapchainIsDirty = false
 
-            completeRenderSemaphore = Array(swapchain.framebuffers!!.size){ Semaphore() }
-            imageAcquiredSemaphore = Array(swapchain.framebuffers!!.size){ Semaphore() }
-            drawingFinishedFence = Array(swapchain.framebuffers!!.size){ memAllocLong(1)}
+            completeRenderSemaphore = Array(swapchain.framebuffers.size){ Semaphore() }
+            imageAcquiredSemaphore = Array(swapchain.framebuffers.size){ Semaphore() }
+            drawingFinishedFence = Array(swapchain.framebuffers.size){ memAllocLong(1)}
 
             for (i in 0 until completeRenderSemaphore.size) {
                 completeRenderSemaphore[i].create(logicalDevice)
@@ -161,7 +161,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         for (i in 0 until imageAcquiredSemaphore.size) {
             vkDestroySemaphore(logicalDevice.device, imageAcquiredSemaphore[i].semaphore, null)
             vkDestroySemaphore(logicalDevice.device, completeRenderSemaphore[i].semaphore, null)
-            vkDestroyFence(logicalDevice.device, drawingFinishedFence[i][0], null);
+            vkDestroyFence(logicalDevice.device, drawingFinishedFence[i][0], null)
         }
     }
 
@@ -173,7 +173,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
 
         issueDrawingCommands()
 
-        var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000);
+        var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000)
         if (result != VK_SUCCESS) {
             print("Failed to wait for fence!")
         }
@@ -214,7 +214,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
         if (result != VK_SUCCESS) {
             print("Failed to reset fence!")
         }
-        renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence!![frameIndex])
+        renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence[frameIndex])
 
         presentImage(nextImage)
 
@@ -227,7 +227,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
     private fun issueDrawingCommands() {
         // Sort the order of rendering so alpha tests are correct
         val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().position.z }
-        var index = 0
         for (draw in sortedListOfDraw) {
             val mat = draw.drawable.getMaterial() as VulkanMaterial
             var found = false
@@ -245,7 +244,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
                 pipeline.submitDrawInstance(draw.drawable)
                 pipelines.add(pipeline)
             }
-            index++
         }
         drawOpsQueue.clear()
     }
@@ -264,9 +262,9 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
                 .pImageIndices(pImageIndex)
                 .pResults(null)
 
-        val err = KHRSwapchain.vkQueuePresentKHR(presentQueue[frameIndex].queue, presentInfo);
+        val err = KHRSwapchain.vkQueuePresentKHR(presentQueue[frameIndex].queue, presentInfo)
         if (err != VK10.VK_SUCCESS) {
-            assertion("Failed to present the swapchain image: " + VulkanResult(err));
+            assertion("Failed to present the swapchain image: " + VulkanResult(err))
         }
         else if (err == VK_ERROR_OUT_OF_DATE_KHR) {
             swapchainIsDirty = true
@@ -300,7 +298,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
                 null, // No buffer memory barriers
                 imageMemoryBarrier)
 
-        imageMemoryBarrier.free();
+        imageMemoryBarrier.free()
     }
 
     private fun attachPostPresentBarrier(cmdBuffer: CommandPool.CommandBuffer, presentImage: Long) {
@@ -330,6 +328,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window, val resourceFacto
                 null, // No buffer memory barriers
                 imageMemoryBarrier)
 
-        imageMemoryBarrier.free();
+        imageMemoryBarrier.free()
     }
 }
