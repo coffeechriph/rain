@@ -2,13 +2,15 @@ package example.roguelike.Level
 
 import org.joml.Vector2i
 import org.joml.Vector3f
+import org.joml.Vector4i
 import rain.api.*
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
 import javax.imageio.ImageIO
+import kotlin.IllegalStateException
 import kotlin.collections.ArrayList
-import kotlin.math.sqrt
+import kotlin.math.sign
 
 class Level {
     lateinit var map: IntArray
@@ -86,8 +88,13 @@ class Level {
 
     fun build(resourceFactory: ResourceFactory, seed: Long) {
         generate(seed, 7)
-
         buildRooms()
+
+        mapBackIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
+        mapFrontIndices = Array(mapWidth*mapHeight){ Tilemap.TileIndex(0,3)}
+        populateTilemap()
+
+        /*
         var x = 0
         var y = 0
 
@@ -127,9 +134,38 @@ class Level {
                 y += 1
             }
         }
+        */
 
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
+    }
+
+    private fun populateTilemap() {
+        for (room in rooms) {
+            val groundTileY = room.type.ordinal
+            for (tile in room.tiles) {
+                val index = tile.x + tile.y * mapWidth
+                mapBackIndices[index] = Tilemap.TileIndex(0,groundTileY)
+
+                if (tile.y > 0) {
+                    if (map[tile.x + (tile.y-1)*mapWidth] == 1) {
+                        mapBackIndices[tile.x + (tile.y - 1) * mapWidth] = Tilemap.TileIndex(1,1)
+
+                        if (tile.y > 1) {
+                            if (map[tile.x + (tile.y-2)*mapWidth] == 1) {
+                                mapBackIndices[tile.x + (tile.y - 2) * mapWidth] = Tilemap.TileIndex(3,1)
+                            }
+                        }
+                    }
+                }
+
+                if (tile.y < mapHeight - 1) {
+                    if (map[tile.x + (tile.y+1)*mapWidth] == 1) {
+                        mapFrontIndices[tile.x + (tile.y+1)*mapWidth] = Tilemap.TileIndex(2,1)
+                    }
+                }
+            }
+        }
     }
 
     private fun generate(seed: Long, repeats: Int) {
@@ -229,8 +265,9 @@ class Level {
         for (i in 0 until map.size) {
             // Floor tile found - flood fill the room
             if (mapCopy[i] == 0) {
-                val tiles = floodSearchRoom(x,y,mapCopy,ArrayList())
-                val room = Room(tiles, RoomType.values()[Random().nextInt(3)])
+                val area = Vector4i(Int.MAX_VALUE, Int.MAX_VALUE, Int.MIN_VALUE, Int.MIN_VALUE)
+                val tiles = floodSearchRoom(x,y,area,mapCopy,ArrayList())
+                val room = Room(tiles, area, RoomType.values()[Random().nextInt(3)])
                 rooms.add(room)
             }
 
@@ -241,13 +278,49 @@ class Level {
             }
         }
 
-        // Remove tiny rooms
+        removeTinyRooms()
+        findNearestNeighbourOfRooms()
+        connectRooms()
+    }
+
+    private fun findNearestNeighbourOfRooms() {
+        for (room in rooms) {
+            while (room.neighbourRooms.size < 3) {
+                var nearestRoom: Room? = null
+                var shortestDist = Double.MAX_VALUE
+                for (otherRoom in rooms) {
+                    if (otherRoom == room || room.neighbourRooms.contains(otherRoom)) {
+                        continue
+                    }
+
+                    val dist = otherRoom.area.distance(room.area)
+                    if (dist < shortestDist) {
+                        shortestDist = dist
+                        nearestRoom = otherRoom
+                    }
+                }
+
+                if (nearestRoom != null) {
+                    room.neighbourRooms.add(nearestRoom)
+                    nearestRoom.neighbourRooms.add(room)
+                }
+                else {
+                    throw IllegalStateException("Unable to find a neighbouring room!")
+                }
+            }
+        }
+    }
+
+    private fun removeTinyRooms() {
         var k = 0
         for (i in 0 until rooms.size) {
             if (k >= rooms.size) {
                 break
             }
             if (rooms[k].tiles.size < 50) {
+                for (tiles in rooms[k].tiles) {
+                    map[tiles.x + tiles.y * mapWidth] = 1
+                }
                 rooms.removeAt(k)
                 if (k > 0) {
                     k -= 1
@@ -256,114 +329,117 @@ class Level {
 
             k += 1
         }
-
-        connectRooms()
     }
 
     private fun connectRooms() {
-        for (i in 0 until 2) {
-            var rindex = 0
-            for (room in rooms) {
-                // Find the room that is the nearest to this room
+
+        for (room in rooms) {
+            for (neighbour in room.neighbourRooms) {
                 var shortestLength = Int.MAX_VALUE
-                var firstTile = Vector2i()
-                var secondTile = Vector2i()
-                var nRoom: Room = room
-                var nRoomIndex = 0
-                var index = 0
-                for (otherRoom in rooms) {
-                    if (index == rindex) {
-                        index++
-                        continue
-                    }
+                var firstTile = Vector2i(0,0)
+                var secondTile = Vector2i(0,0)
 
-                    if (!room.connectedRooms.contains(index) && !otherRoom.connectedRooms.contains(rindex)) {
-                        for (tile in room.tiles) {
-                            for (otherTile in otherRoom.tiles) {
-                                val dx = otherTile.x - tile.x
-                                val dy = otherTile.y - tile.y
-                                val d = dx * dx + dy * dy
-
-                                if (d < shortestLength) {
-                                    shortestLength = d
-                                    firstTile = tile
-                                    secondTile = otherTile
-                                    nRoom = otherRoom
-                                    nRoomIndex = index
-                                }
-                            }
-                        }
+                // Find the tile closest to the neighbour rooms center as a starting point
+                var ln = Int.MAX_VALUE
+                for (tile in room.tiles) {
+                    val dx = ((neighbour.area.x+neighbour.area.z)/2) - tile.x
+                    val dy = ((neighbour.area.y+neighbour.area.w)/2) - tile.y
+                    val k = dx*dx + dy*dy
+                    if (k < ln) {
+                        firstTile = tile
+                        ln = k
                     }
-                    index++
                 }
 
-                val dx = secondTile.x - firstTile.x
-                val dy = secondTile.y - firstTile.y
-                val dst = sqrt((dx*dx + dy*dy).toDouble())
+                // Find the tile in the neighbouring room which is closest to the selected
+                // tile
+                for (otherTile in neighbour.tiles) {
+                    val dx = otherTile.x - firstTile.x
+                    val dy = otherTile.y - firstTile.y
+                    val d = dx * dx + dy * dy
 
-                // Maximum distance between connected tiles in pixels
-                if (dst > 50) {
-                    rindex++
-                    continue
+                    if (d < shortestLength) {
+                        shortestLength = d
+                        secondTile = otherTile
+                    }
                 }
 
-                room.connectedRooms.add(nRoomIndex)
-                nRoom.connectedRooms.add(rindex)
-                rindex++
+                val dx = (secondTile.x - firstTile.x).sign
+                val dy = (secondTile.y - firstTile.y).sign
 
                 var x = firstTile.x
                 var y = firstTile.y
+
+                // Create a tunnel between the two rooms, but stop as soon as we hit a collision
+                // This happens in cases when there's another room in between the two neighbouring
+                // rooms
                 while (true) {
+                    var traversalDone = 0
+                    var collisions = 0
+
                     if (map[x + y * mapWidth] == 1) {
                         map[x + y * mapWidth] = 0
                         room.tiles.add(Vector2i(x,y))
                     }
+                    else {
+                        collisions++
+                    }
 
                     if (x > 0) {
-                        if (map[(x-1) + y*mapWidth] == 1) {
+                        if (map[(x - 1) + y * mapWidth] == 1) {
                             map[(x - 1) + y * mapWidth] = 0
                             room.tiles.add(Vector2i(x - 1, y))
+                        }
+                        else {
+                            collisions++
                         }
                     }
 
                     if (x < mapWidth - 1) {
-                        if (map[(x+1) + y*mapWidth] == 1) {
+                        if (map[(x + 1) + y * mapWidth] == 1) {
                             map[(x + 1) + y * mapWidth] = 0
                             room.tiles.add(Vector2i(x + 1, y))
+                        }
+                        else {
+                            collisions++
                         }
                     }
 
                     if (y > 0) {
-                        if (map[x + (y-1)*mapWidth] == 1) {
+                        if (map[x + (y - 1) * mapWidth] == 1) {
                             map[x + (y - 1) * mapWidth] = 0
                             room.tiles.add(Vector2i(x, y - 1))
+                        }
+                        else {
+                            collisions++
                         }
                     }
 
                     if (y < mapHeight - 1) {
-                        if (map[x + (y+1)*mapWidth] == 1) {
+                        if (map[x + (y + 1) * mapWidth] == 1) {
                             map[x + (y + 1) * mapWidth] = 0
                             room.tiles.add(Vector2i(x, y + 1))
+                        }
+                        else {
+                            collisions++
                         }
                     }
 
                     if (x != secondTile.x) {
-                        if (dx > 0) {
-                            x += 1
-                        } else {
-                            x -= 1
-                        }
+                        x += dx
+                    }
+                    else {
+                        traversalDone += 1
                     }
 
                     if (y != secondTile.y) {
-                        if (dy > 0) {
-                            y += 1
-                        } else {
-                            y -= 1
-                        }
+                        y += dy
+                    }
+                    else {
+                        traversalDone += 1
                     }
 
-                    if (x == secondTile.x && y == secondTile.y) {
+                    if (traversalDone == 2 || collisions > 3) {
                         break
                     }
                 }
@@ -371,55 +447,68 @@ class Level {
         }
     }
 
-    private fun floodSearchRoom(x: Int, y: Int, mapCopy: IntArray, tiles: MutableList<Vector2i>): MutableList<Vector2i> {
+    private fun floodSearchRoom(x: Int, y: Int, area: Vector4i, mapCopy: IntArray, tiles: MutableList<Vector2i>): MutableList<Vector2i> {
+        if (x < area.x) {
+            area.x = x
+        }
+        if (y < area.y) {
+            area.y = y
+        }
+        if (x > area.z) {
+            area.z = x
+        }
+        if (y > area.w) {
+            area.w = y
+        }
+
         tiles.add(Vector2i(x, y))
         mapCopy[x + y*mapWidth] = 1
 
         if (x > 0) {
             if (mapCopy[(x-1) + y*mapWidth] == 0) {
-                tiles.addAll(floodSearchRoom(x-1, y, mapCopy, ArrayList()))
+                tiles.addAll(floodSearchRoom(x-1, y, area, mapCopy, ArrayList()))
             }
 
             if (y > 0) {
                 if (mapCopy[(x-1) + (y-1)*mapWidth] == 0) {
-                    tiles.addAll(floodSearchRoom(x-1, y-1, mapCopy, ArrayList()))
+                    tiles.addAll(floodSearchRoom(x-1, y-1, area, mapCopy, ArrayList()))
                 }
             }
 
             if (y < mapHeight - 1) {
                 if (mapCopy[(x-1) + (y+1)*mapWidth] == 0) {
-                    tiles.addAll(floodSearchRoom(x-1, y+1, mapCopy, ArrayList()))
+                    tiles.addAll(floodSearchRoom(x-1, y+1, area, mapCopy, ArrayList()))
                 }
             }
         }
 
         if (y > 0) {
             if (mapCopy[x + (y-1)*mapWidth] == 0) {
-                tiles.addAll(floodSearchRoom(x, y-1, mapCopy, ArrayList()))
+                tiles.addAll(floodSearchRoom(x, y-1, area, mapCopy, ArrayList()))
             }
         }
 
         if (x < mapWidth - 1) {
             if (mapCopy[(x+1) + y*mapWidth] == 0) {
-                tiles.addAll(floodSearchRoom(x+1, y, mapCopy, ArrayList()))
+                tiles.addAll(floodSearchRoom(x+1, y, area, mapCopy, ArrayList()))
             }
 
             if (y > 0) {
                 if (mapCopy[(x+1) + (y-1)*mapWidth] == 0) {
-                    tiles.addAll(floodSearchRoom(x+1, y-1, mapCopy, ArrayList()))
+                    tiles.addAll(floodSearchRoom(x+1, y-1, area, mapCopy, ArrayList()))
                 }
             }
 
             if (y < mapHeight - 1) {
                 if (mapCopy[(x+1) + (y+1)*mapWidth] == 0) {
-                    tiles.addAll(floodSearchRoom(x+1, y+1, mapCopy, ArrayList()))
+                    tiles.addAll(floodSearchRoom(x+1, y+1, area, mapCopy, ArrayList()))
                 }
             }
         }
 
         if (y < mapHeight - 1) {
             if (mapCopy[x + (y+1)*mapWidth] == 0) {
-                tiles.addAll(floodSearchRoom(x, y+1, mapCopy, ArrayList()))
+                tiles.addAll(floodSearchRoom(x, y+1, area, mapCopy, ArrayList()))
             }
         }
 

@@ -1,6 +1,7 @@
 package example.roguelike.Level
 
 import org.joml.Vector2i
+import org.joml.Vector4i
 
 enum class RoomType {
     CAVE,
@@ -8,6 +9,6 @@ enum class RoomType {
     PURPLE,
 }
 
-class Room(val tiles: MutableList<Vector2i>, val type: RoomType) {
-    var connectedRooms = ArrayList<Int>()
+class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomType) {
+    var neighbourRooms = ArrayList<Room>()
 }

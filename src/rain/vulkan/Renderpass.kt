@@ -77,7 +77,7 @@ internal class Renderpass {
             pRenderPass[0]
         }
 
-        setClearColor(0.2f, 0.5f, 1.0f)
+        setClearColor(0.0f, 0.0f, 0.0f)
     }
 
     fun setClearColor(red: Float, green: Float, blue: Float) {
