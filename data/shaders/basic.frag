@@ -7,4 +7,7 @@ layout(binding = 0) uniform sampler2D texSampler;
 layout(location = 0) in vec2 Uv;
 void main() {
     color = texture(texSampler, Uv);
+    if (color.w < 1) {
+        discard;
+    }
 }
