@@ -1,5 +1,6 @@
 package example.roguelike.Entity
 
+import org.joml.Vector2i
 import rain.api.*
 
 class Player : Entity() {
@@ -22,11 +23,19 @@ class Player : Entity() {
     private val playerWidth = 12.0f
     private val playerHeight = 4.0f
 
+    fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
+        val transform = system.findTransformComponent(getId())!!
+        transform.transform.position.x = pos.x.toFloat()%1280
+        transform.transform.position.y = pos.y.toFloat()%720
+        cellX = pos.x / 1280
+        cellY = pos.y / 720
+        playerMovedCell = true
+    }
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
         val sprite = system.findSpriteComponent(getId())!!
-        transform.transform.position.set(600.0f,600.0f, 2.0f)
-        transform.transform.scale.set(64.0f,64.0f)
+        transform.transform.position.set(1200.0f,600.0f, 2.0f)
+        transform.transform.scale.set(96.0f,96.0f)
 
         sprite.addAnimation("idle", 0, 0, 3, 0.0f)
         sprite.addAnimation("walk_left", 0, 4, 0, 4.0f)

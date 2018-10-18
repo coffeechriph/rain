@@ -40,6 +40,10 @@ class Level {
     private var mapFrontIndices = Array(0){TileIndex(0,0)}
     private var rooms = ArrayList<Room>()
 
+    fun getFirstTilePos(): Vector2i {
+        return Vector2i(rooms[0].tiles[0].x * 64, rooms[0].tiles[0].y * 64)
+    }
+
     fun create(resourceFactory: ResourceFactory, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
@@ -71,8 +75,8 @@ class Level {
         }
 
         if (firstBuild) {
-            backTilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, backIndices)
-            frontTilemap.create(resourceFactory, material, width, height, 32.0f, 32.0f, frontIndices)
+            backTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, backIndices)
+            frontTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, frontIndices)
             backTilemap.update(resourceFactory, backIndices)
             frontTilemap.update(resourceFactory, frontIndices)
 
@@ -112,7 +116,7 @@ class Level {
 
                         if (tile.y > 1) {
                             if (map[tile.x + (tile.y-2)*mapWidth] == 1) {
-                                mapBackIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
+                                mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
                             }
                         }
                     }
@@ -120,7 +124,28 @@ class Level {
 
                 if (tile.y < mapHeight - 1) {
                     if (map[tile.x + (tile.y+1)*mapWidth] == 1) {
-                        mapFrontIndices[tile.x + (tile.y+1)*mapWidth] = TileIndex(2,1)
+                        if(tile.y < mapHeight - 2 && map[tile.x + (tile.y+2)*mapWidth] == 1) {
+                            mapFrontIndices[tile.x + (tile.y + 1) * mapWidth] = TileIndex(2, 1)
+                        }
+                        else {
+                            map[tile.x + tile.y * mapWidth] = 1
+                            mapFrontIndices[tile.x + tile.y * mapWidth] = TileIndex(2, 1)
+                            mapBackIndices[tile.x + (tile.y + 1) * mapWidth] = TileIndex(3, tileY)
+                        }
+                    }
+
+                    if (tile.x > 0) {
+                        if (map[(tile.x - 1) + tile.y*mapWidth] == 1 &&
+                            map[(tile.x - 1) + (tile.y+1)*mapWidth] == 1) {
+                            mapFrontIndices[(tile.x-1) + tile.y*mapWidth] = TileIndex(2,1)
+                        }
+                    }
+
+                    if (tile.x < mapWidth - 1) {
+                        if (map[(tile.x + 1) + tile.y*mapWidth] == 1 &&
+                                map[(tile.x + 1) + (tile.y+1)*mapWidth] == 1) {
+                            mapFrontIndices[(tile.x+1) + tile.y*mapWidth] = TileIndex(2,1)
+                        }
                     }
                 }
             }

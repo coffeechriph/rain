@@ -28,7 +28,7 @@ class Roguelike: Rain() {
         scene.addSystem(playerSystem)
 
         // TODO: Constant window dimensions
-        level.create(resourceFactory, 8960 / 32, 5040/32, 1280 / 32, 720 / 32 + 1)
+        level.create(resourceFactory, 8960 / 64, 5040/64, 1280 / 64, 720 / 64 + 1)
         level.build(resourceFactory, 0)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
@@ -43,7 +43,8 @@ class Roguelike: Rain() {
         player.mapHeight = level.mapHeight
         player.maxCellX = level.maxCellX
         player.maxCellY = level.maxCellY
-        player.tileWidth = 32
+        player.tileWidth = 64
+        player.setPosition(playerSystem, level.getFirstTilePos())
     }
 
     override fun update() {
