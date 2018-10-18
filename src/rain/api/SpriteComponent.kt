@@ -34,6 +34,7 @@ data class SpriteComponent internal constructor(val entity: Long, val material: 
     internal var animation = Animation(0,0,0,0.0f)
         private set
     private var animations = HashMap<String, Animation>()
+    var visible = true
 
     fun addAnimation(name: String, startFrame: Int, endFrame: Int, yPos: Int, speed: Float) {
         val animation = Animation(startFrame, endFrame, yPos, speed)

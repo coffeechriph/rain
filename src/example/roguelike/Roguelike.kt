@@ -28,8 +28,8 @@ class Roguelike: Rain() {
         scene.addSystem(playerSystem)
 
         // TODO: Constant window dimensions
-        level.create(resourceFactory, 8960 / 64, 5040/64, 1280 / 64, 720 / 64 + 1)
-        level.build(resourceFactory, 0)
+        level.create(resourceFactory, scene, 8960 / 64, 5040/64, 1280 / 64, 720 / 64 + 1)
+        level.build(resourceFactory, scene, 0)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
 
@@ -48,6 +48,8 @@ class Roguelike: Rain() {
     }
 
     override fun update() {
+        level.update(player)
+
         if (player.playerMovedCell) {
             level.switchCell(resourceFactory, player.cellX, player.cellY)
             player.playerMovedCell = false

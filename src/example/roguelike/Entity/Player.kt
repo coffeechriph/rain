@@ -31,6 +31,7 @@ class Player : Entity() {
         cellY = pos.y / 720
         playerMovedCell = true
     }
+
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
         val sprite = system.findSpriteComponent(getId())!!
@@ -48,6 +49,7 @@ class Player : Entity() {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val sprite = system.findSpriteComponent(getId())!!
         val transform = system.findTransformComponent(getId())!!
+        transform.transform.position.z = 2.0f + transform.transform.position.y * 0.001f
 
         setDirectionBasedOnInput(input)
 

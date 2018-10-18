@@ -5,7 +5,7 @@ import rain.api.EntitySystem
 import rain.api.Input
 import rain.api.Scene
 
-class Krac: Entity() {
+class Krac: Enemy() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
 
     }

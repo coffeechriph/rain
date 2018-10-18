@@ -1,5 +1,8 @@
 package example.roguelike.Level
 
+import example.roguelike.Entity.Enemy
+import example.roguelike.Entity.Krac
+import example.roguelike.Entity.Player
 import org.joml.Vector2i
 import org.joml.Vector3f
 import org.joml.Vector4i
@@ -39,12 +42,21 @@ class Level {
     private var mapBackIndices = Array(0){ TileIndex(0,0)}
     private var mapFrontIndices = Array(0){TileIndex(0,0)}
     private var rooms = ArrayList<Room>()
+    private var enemies = ArrayList<Enemy>()
+    private var enemySystem = EntitySystem<Enemy>()
+    private lateinit var enemyMaterial: Material
+
+    fun update(player: Player) {
+        for (enemy in enemies) {
+            enemySystem.findSpriteComponent(enemy.getId())!!.visible = enemy.cellX == player.cellX && enemy.cellY == player.cellY
+        }
+    }
 
     fun getFirstTilePos(): Vector2i {
         return Vector2i(rooms[0].tiles[0].x * 64, rooms[0].tiles[0].y * 64)
     }
 
-    fun create(resourceFactory: ResourceFactory, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
+    fun create(resourceFactory: ResourceFactory, scene: Scene, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
         texture = resourceFactory.createTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)
@@ -56,6 +68,11 @@ class Level {
         this.width = width
         this.height = height
         map = IntArray(mapWidth*mapHeight)
+
+        val enemyTexture = resourceFactory.createTexture2d("./data/textures/krac.png", TextureFilter.NEAREST)
+        enemyTexture.setTiledTexture(32,32)
+        enemyMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        scene.addSystem(enemySystem)
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -81,7 +98,7 @@ class Level {
             frontTilemap.update(resourceFactory, frontIndices)
 
             backTilemap.getTransform().position.set(0.0f, 0.0f, 1.0f)
-            frontTilemap.getTransform().position.set(0.0f, 0.0f, 3.0f)
+            frontTilemap.getTransform().position.set(0.0f, 0.0f, 10.0f)
             firstBuild = false
         }
         else {
@@ -90,7 +107,7 @@ class Level {
         }
     }
 
-    fun build(resourceFactory: ResourceFactory, seed: Long) {
+    fun build(resourceFactory: ResourceFactory, scene: Scene, seed: Long) {
         generate(seed, 7)
         buildRooms()
 
@@ -100,6 +117,7 @@ class Level {
 
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
+        generateEnemies(scene)
     }
 
     private fun populateTilemap() {
@@ -497,6 +515,23 @@ class Level {
         }
 
         return tiles
+    }
+
+    private fun generateEnemies(scene: Scene) {
+        val random = Random()
+        for (i in 0 until 1000) {
+            val kracGuy = Krac()
+            enemySystem.newEntity(kracGuy)
+                    .attachUpdateComponent()
+                    .attachTransformComponent()
+                    .attachSpriteComponent(enemyMaterial)
+                    .build(scene)
+
+            val room = rooms[random.nextInt(rooms.size)]
+            val p = room.tiles[random.nextInt(room.tiles.size)]
+            kracGuy.setPosition(enemySystem, Vector2i(p.x*64, p.y*64))
+            enemies.add(kracGuy)
+        }
     }
 
     private fun saveMapAsImage(filename: String) {
