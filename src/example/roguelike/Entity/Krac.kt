@@ -31,5 +31,7 @@ class Krac: Enemy() {
                 else -> sprite.startAnimation("idle_down")
             }
         }
+
+        handleDamage(system.findTransformComponent(getId())!!)
     }
 }

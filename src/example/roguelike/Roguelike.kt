@@ -1,6 +1,7 @@
 package example.roguelike
 
 import example.roguelike.Entity.Attack
+import example.roguelike.Entity.HealthBar
 import example.roguelike.Entity.Player
 import example.roguelike.Level.Level
 import org.joml.Vector3f
@@ -11,8 +12,10 @@ class Roguelike: Rain() {
     private lateinit var attackMaterial: Material
     private lateinit var mobMaterial: Material
     private lateinit var mobTexture: Texture2d
+    private lateinit var healthMaterial: Material
     private var playerSystem = EntitySystem<Player>()
     private var attackSystem = EntitySystem<Attack>()
+    private var healthBarSystem = EntitySystem<HealthBar>()
     private var player = Player()
     private var camera = Camera()
     private var level = Level()
@@ -40,9 +43,15 @@ class Roguelike: Rain() {
                 .build(scene)
         scene.addSystem(attackSystem)
 
+        val healthTexture = resourceFactory.createTexture2d("./data/textures/health.png", TextureFilter.NEAREST)
+        healthMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", healthTexture, Vector3f(1.0f, 1.0f,
+                1.0f))
+        healthBarSystem = EntitySystem()
+        scene.addSystem(healthBarSystem)
+
         // TODO: Constant window dimensions
         level.create(resourceFactory, scene, 8960 / 64, 5040/64, 1280 / 64, 720 / 64 + 1)
-        level.build(resourceFactory, scene, 0)
+        level.build(resourceFactory, scene, 0, healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
 
@@ -61,7 +70,7 @@ class Roguelike: Rain() {
     }
 
     override fun update() {
-        level.update(player)
+        level.update(player, attackSystem, healthBarSystem)
 
         if (player.playerMovedCell) {
             level.switchCell(resourceFactory, player.cellX, player.cellY)

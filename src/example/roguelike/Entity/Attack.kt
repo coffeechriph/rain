@@ -18,6 +18,14 @@ class Attack : Entity() {
         this.direction = direction
     }
 
+    fun isReady(): Boolean {
+        return !active;
+    }
+
+    fun isActive(): Boolean {
+        return active
+    }
+
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
         transform.setPosition(1200.0f,600.0f, 9.0f)
@@ -28,6 +36,10 @@ class Attack : Entity() {
         sprite.addAnimation("right", 1, 1, 0, 0.0f)
         sprite.addAnimation("up", 2, 2, 0, 0.0f)
         sprite.addAnimation("left", 3, 3, 0, 0.0f)
+
+        // TODO: A problem here was that I had to add a idle animation for the LEFT
+        // animation to actually trigger due to how it works in the SpriteComponent
+        sprite.addAnimation("idle", 0, 0, 0, 0.0f)
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
@@ -57,7 +69,7 @@ class Attack : Entity() {
 
             sprite.visible = true
             activeTime++
-            if (activeTime > 20) {
+            if (activeTime > 10) {
                 active = false
                 activeTime = 0
             }

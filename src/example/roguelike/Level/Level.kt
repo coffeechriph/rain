@@ -1,8 +1,6 @@
 package example.roguelike.Level
 
-import example.roguelike.Entity.Enemy
-import example.roguelike.Entity.Krac
-import example.roguelike.Entity.Player
+import example.roguelike.Entity.*
 import org.joml.Vector2i
 import org.joml.Vector3f
 import org.joml.Vector4i
@@ -46,9 +44,22 @@ class Level {
     private var enemySystem = EntitySystem<Enemy>()
     private lateinit var enemyMaterial: Material
 
-    fun update(player: Player) {
+    fun update(player: Player, attackSystem: EntitySystem<Attack>, healthBarSystem: EntitySystem<HealthBar>) {
+        val attackTransform = attackSystem.findTransformComponent(player.attack.getId())!!
         for (enemy in enemies) {
-            enemySystem.findSpriteComponent(enemy.getId())!!.visible = enemy.cellX == player.cellX && enemy.cellY == player.cellY
+            enemySystem.findSpriteComponent(enemy.getId())!!.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
+            val healthBar = healthBarSystem.findSpriteComponent(enemy.healthBar.getId())!!
+            healthBar.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
+            val healthBarTransform = healthBarSystem.findTransformComponent(enemy.healthBar.getId())!!
+            healthBarTransform.sx = enemy.health / 2.0f
+
+            if (player.attack.isActive()) {
+                val tr = enemySystem.findTransformComponent(enemy.getId())!!
+                if (attackTransform.x >= tr.x - 32.0f && attackTransform.x < tr.x + 32.0f &&
+                        attackTransform.y >= tr.y - 32.0f && attackTransform.y < tr.y + 32.0f) {
+                    enemy.damage(10)
+                }
+            }
         }
     }
 
@@ -107,7 +118,7 @@ class Level {
         }
     }
 
-    fun build(resourceFactory: ResourceFactory, scene: Scene, seed: Long) {
+    fun build(resourceFactory: ResourceFactory, scene: Scene, seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
         generate(seed, 7)
         buildRooms()
 
@@ -117,7 +128,7 @@ class Level {
 
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
-        generateEnemies(scene)
+        generateEnemies(scene, healthBarMaterial, healthBarSystem)
     }
 
     private fun populateTilemap() {
@@ -517,14 +528,26 @@ class Level {
         return tiles
     }
 
-    private fun generateEnemies(scene: Scene) {
+    private fun generateEnemies(scene: Scene, healthBarMaterial: Material, healthBarSystem: EntitySystem<HealthBar>) {
         val random = Random()
-        for (i in 0 until 50) {
+        for (i in 0 until 1000) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
                     .build(scene)
+
+            val et = enemySystem.findTransformComponent(kracGuy.getId())!!
+            kracGuy.healthBar.parentTransform = et
+
+            healthBarSystem.newEntity(kracGuy.healthBar)
+                    .attachTransformComponent()
+                    .attachSpriteComponent(healthBarMaterial)
+                    .build(scene)
+
+            val tr = healthBarSystem.findTransformComponent(kracGuy.healthBar.getId())!!
+            tr.sx = 60.0f
+            tr.sy = 7.0f
 
             val room = rooms[random.nextInt(rooms.size)]
             val p = room.tiles[random.nextInt(room.tiles.size)]

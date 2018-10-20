@@ -55,19 +55,20 @@ class Player : Entity() {
 
         setDirectionBasedOnInput(input)
 
-        if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
-            attack.attack(Direction.LEFT)
-        }
-        else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
-            attack.attack(Direction.RIGHT)
-        }
-        else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
-            attack.attack(Direction.UP)
-        }
-        else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
-            attack.attack(Direction.DOWN)
+        if (attack.isReady()) {
+            if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
+                attack.attack(Direction.LEFT)
+            } else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
+                attack.attack(Direction.RIGHT)
+            } else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
+                attack.attack(Direction.UP)
+            } else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
+                attack.attack(Direction.DOWN)
+            }
         }
 
+        // TODO: Take in input as queue where we use the latest key pressed
+        // TODO: The current way of handling input fucks up the animation and feels clunky
         if (ydir != Direction.NONE || xdir != Direction.NONE) {
             vel = 200.0f * deltaTime * Math.max(sprite.animationTime, 0.5f)
 

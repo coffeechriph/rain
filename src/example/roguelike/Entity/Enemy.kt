@@ -1,10 +1,8 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.Entity
-import rain.api.EntitySystem
-import rain.api.Input
-import rain.api.Scene
+import rain.api.*
+import kotlin.math.sin
 
 open class Enemy : Entity() {
     lateinit var player: Player
@@ -13,6 +11,11 @@ open class Enemy : Entity() {
         private set
     var cellY = 0
         private set
+    private var attackAnimation = 0.0f
+    private var wasAttacked = false
+    var health = 100
+        private set
+    var healthBar = HealthBar()
 
     // TODO: Constant window size
     fun setPosition(system: EntitySystem<Enemy>, pos: Vector2i) {
@@ -23,6 +26,26 @@ open class Enemy : Entity() {
         transform.setScale(96.0f, 96.0f)
         cellX = pos.x / 1280
         cellY = pos.y / 720
+    }
+
+    fun damage(dmg: Int) {
+        if (wasAttacked == false) {
+            wasAttacked = true
+            attackAnimation = 0.0f
+            health -= dmg
+        }
+    }
+
+    protected fun handleDamage(transform: Transform) {
+        if (wasAttacked) {
+            transform.y = transform.y + sin(attackAnimation * 100.0f) * 2.0f
+            attackAnimation += 0.05f
+
+            if (attackAnimation >= 1.0f) {
+                wasAttacked = false
+                attackAnimation = 0.0f
+            }
+        }
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
