@@ -38,12 +38,12 @@ class Player : Entity() {
         val transform = system.findTransformComponent(getId())!!
         val sprite = system.findSpriteComponent(getId())!!
         transform.setPosition(1200.0f,600.0f, 2.0f)
-        transform.setScale(96.0f,96.0f)
+        transform.setScale(64.0f,64.0f)
 
-        sprite.addAnimation("idle", 0, 0, 3, 0.0f)
-        sprite.addAnimation("walk_left", 0, 4, 0, 4.0f)
+        sprite.addAnimation("idle", 0, 0, 0, 0.0f)
+        sprite.addAnimation("walk_down", 0, 4, 0, 4.0f)
         sprite.addAnimation("walk_right", 0, 4, 1, 4.0f)
-        sprite.addAnimation("walk_down", 0, 4, 2, 4.0f)
+        sprite.addAnimation("walk_left", 0, 4, 2, 4.0f)
         sprite.addAnimation("walk_up", 0, 4, 3, 4.0f)
         sprite.startAnimation("idle")
     }
@@ -54,6 +54,19 @@ class Player : Entity() {
         transform.z = 2.0f + transform.y * 0.001f
 
         setDirectionBasedOnInput(input)
+
+        if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
+            attack.attack(Direction.LEFT)
+        }
+        else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
+            attack.attack(Direction.RIGHT)
+        }
+        else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
+            attack.attack(Direction.UP)
+        }
+        else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
+            attack.attack(Direction.DOWN)
+        }
 
         if (ydir != Direction.NONE || xdir != Direction.NONE) {
             vel = 200.0f * deltaTime * Math.max(sprite.animationTime, 0.5f)

@@ -18,8 +18,8 @@ class Roguelike: Rain() {
     private var level = Level()
 
     override fun init() {
-        mobTexture = resourceFactory.createTexture2d("./data/textures/sprite.png", TextureFilter.NEAREST)
-        mobTexture.setTiledTexture(32,32)
+        mobTexture = resourceFactory.createTexture2d("./data/textures/dwarf.png", TextureFilter.NEAREST)
+        mobTexture.setTiledTexture(16,16)
         mobMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture, Vector3f(1.0f, 1.0f, 1.0f))
         player = Player()
         playerSystem.newEntity(player)

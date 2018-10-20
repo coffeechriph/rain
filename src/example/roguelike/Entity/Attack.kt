@@ -9,14 +9,61 @@ import rain.api.*
  */
 class Attack : Entity() {
     var parentTransform = Transform()
+    private var active = false
+    private var direction = Direction.DOWN
+    private var activeTime = 0
+
+    fun attack(direction: Direction) {
+        active = true
+        this.direction = direction
+    }
+
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
         transform.setPosition(1200.0f,600.0f, 9.0f)
         transform.setScale(96.0f,96.0f)
+
+        val sprite = system.findSpriteComponent(getId())!!
+        sprite.addAnimation("down", 0, 0, 0, 0.0f)
+        sprite.addAnimation("right", 1, 1, 0, 0.0f)
+        sprite.addAnimation("up", 2, 2, 0, 0.0f)
+        sprite.addAnimation("left", 3, 3, 0, 0.0f)
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        val transform = system.findTransformComponent(getId())!!
-        transform.setPosition(parentTransform.x, parentTransform.y, parentTransform.z + 0.01f)
+        val sprite = system.findSpriteComponent(getId())!!
+
+        if (active) {
+            val transform = system.findTransformComponent(getId())!!
+
+            when(direction) {
+                Direction.LEFT -> {
+                    transform.setPosition(parentTransform.x - 32, parentTransform.y, parentTransform.z + 0.01f)
+                    sprite.startAnimation("left")
+                }
+                Direction.RIGHT -> {
+                    transform.setPosition(parentTransform.x + 32, parentTransform.y, parentTransform.z + 0.01f)
+                    sprite.startAnimation("right")
+                }
+                Direction.UP -> {
+                    transform.setPosition(parentTransform.x, parentTransform.y - 32, parentTransform.z + 0.01f)
+                    sprite.startAnimation("up")
+                }
+                Direction.DOWN -> {
+                    transform.setPosition(parentTransform.x, parentTransform.y + 32, parentTransform.z + 0.01f)
+                    sprite.startAnimation("down")
+                }
+            }
+
+            sprite.visible = true
+            activeTime++
+            if (activeTime > 20) {
+                active = false
+                activeTime = 0
+            }
+        }
+        else {
+            sprite.visible = false
+        }
     }
 }
