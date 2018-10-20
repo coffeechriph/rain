@@ -16,8 +16,8 @@ class Player : Entity() {
     override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val transform = system.findTransformComponent(getId())!!
 
-        transform.position.set(512.0f, 256.0f, 0.0f)
-        transform.scale.set(64.0f, 64.0f)
+        transform.setPosition(512.0f, 256.0f, 0.0f)
+        transform.setScale(64.0f, 64.0f)
 
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
             println("Left was pressed!")
@@ -51,7 +51,6 @@ class HelloRain: Rain() {
         playerEntitySystem = EntitySystem()
         player = Player()
         playerEntitySystem.newEntity(player)
-                .attachUpdateComponent()
                 .attachTransformComponent()
                 .attachSpriteComponent(basicMaterial)
                 .build(scene)
@@ -64,8 +63,8 @@ class HelloRain: Rain() {
         }
 
         tilemap.create(resourceFactory, tilemapMaterial, 16, 16, 32.0f, 32.0f, mapIndices)
-        tilemap.getTransform().position.set(0.0f, 0.0f, 0.0f)
-        tilemap.getTransform().scale.set(1.0f, 1.0f)
+        tilemap.getTransform().setPosition(0.0f, 0.0f, 0.0f)
+        tilemap.getTransform().setScale(1.0f, 1.0f)
         scene.addTilemap(tilemap)
 
         camera = Camera()

@@ -97,8 +97,8 @@ class Level {
             backTilemap.update(resourceFactory, backIndices)
             frontTilemap.update(resourceFactory, frontIndices)
 
-            backTilemap.getTransform().position.set(0.0f, 0.0f, 1.0f)
-            frontTilemap.getTransform().position.set(0.0f, 0.0f, 10.0f)
+            backTilemap.getTransform().setPosition(0.0f, 0.0f, 1.0f)
+            frontTilemap.getTransform().setPosition(0.0f, 0.0f, 10.0f)
             firstBuild = false
         }
         else {
@@ -519,15 +519,14 @@ class Level {
 
     private fun generateEnemies(scene: Scene) {
         val random = Random()
-        for (i in 0 until 1000) {
+        for (i in 0 until 10000) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
-                    .attachUpdateComponent()
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
                     .build(scene)
 
-            val room = rooms[random.nextInt(rooms.size)]
+            val room = rooms[0]
             val p = room.tiles[random.nextInt(room.tiles.size)]
             kracGuy.setPosition(enemySystem, Vector2i(p.x*64, p.y*64))
             enemies.add(kracGuy)

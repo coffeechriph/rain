@@ -2,7 +2,6 @@ package rain.api
 
 open class Entity {
     private var id: Long = -1L
-        private set
 
     internal fun setId(id: Long) {
         this.id = id

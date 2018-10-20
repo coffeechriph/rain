@@ -45,11 +45,12 @@ class Scene {
         }
 
         for (system in entitySystems) {
-            for (update in system.updateIterator()) {
-                update.update(this, input, system, deltaTime)
+            for (i in 0 until system.getEntityList().size) {
+                system.getEntityList().get(i).update(this, input, system, deltaTime)
             }
 
-            for (sprite in system.spriteIterator()) {
+            for (i in 0 until system.getSpriteList().size) {
+                val sprite = system.getSpriteList().get(i)
                 if (!sprite.visible) {
                     continue
                 }
@@ -65,10 +66,6 @@ class Scene {
                         sprite.animationIndex = 0
                     }
                 }
-                val transform = system.findTransformComponent(sprite.entity)!!
-                sprite.transform.position = transform.position
-                sprite.transform.scale = transform.scale
-                sprite.transform.rotation = transform.rotation
                 renderer.submitDraw(sprite, quadVertexBuffer)
             }
         }

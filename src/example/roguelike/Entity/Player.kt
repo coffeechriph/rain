@@ -25,8 +25,8 @@ class Player : Entity() {
 
     fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
         val transform = system.findTransformComponent(getId())!!
-        transform.position.x = pos.x.toFloat()%1280
-        transform.position.y = pos.y.toFloat()%720
+        transform.x = pos.x.toFloat()%1280
+        transform.y = pos.y.toFloat()%720
         cellX = pos.x / 1280
         cellY = pos.y / 720
         playerMovedCell = true
@@ -35,8 +35,8 @@ class Player : Entity() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
         val sprite = system.findSpriteComponent(getId())!!
-        transform.position.set(1200.0f,600.0f, 2.0f)
-        transform.scale.set(96.0f,96.0f)
+        transform.setPosition(1200.0f,600.0f, 2.0f)
+        transform.setScale(96.0f,96.0f)
 
         sprite.addAnimation("idle", 0, 0, 3, 0.0f)
         sprite.addAnimation("walk_left", 0, 4, 0, 4.0f)
@@ -49,34 +49,34 @@ class Player : Entity() {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val sprite = system.findSpriteComponent(getId())!!
         val transform = system.findTransformComponent(getId())!!
-        transform.position.z = 2.0f + transform.position.y * 0.001f
+        transform.z = 2.0f + transform.y * 0.001f
 
         setDirectionBasedOnInput(input)
 
         if (ydir != Direction.NONE || xdir != Direction.NONE) {
             vel = 200.0f * deltaTime * Math.max(sprite.animationTime, 0.5f)
 
-            val pxl = transform.position.x - playerWidth
-            val pxr = transform.position.x + playerWidth
+            val pxl = transform.x - playerWidth
+            val pxr = transform.x + playerWidth
 
-            val pyl = transform.position.y - playerHeight
-            val pyr = transform.position.y
+            val pyl = transform.y - playerHeight
+            val pyr = transform.y
             when (xdir) {
                 Direction.LEFT -> {
-                    if (cellX > 0 || transform.position.x - vel > 0) {
+                    if (cellX > 0 || transform.x - vel > 0) {
                         if (!willCollide((pxl-vel).toInt(), pyl.toInt(), map) &&
                             !willCollide((pxl-vel).toInt(), pyr.toInt(), map)) {
-                            transform.position.x -= vel
+                            transform.x -= vel
                         }
                         sprite.startAnimation("walk_left")
                     }
                 }
                 Direction.RIGHT -> {
                     // TODO: Constant window width
-                    if (cellX < 1024 || transform.position.x + vel < 1280) {
+                    if (cellX < 1024 || transform.x + vel < 1280) {
                         if (!willCollide((pxr+vel).toInt(), pyl.toInt(), map) &&
                             !willCollide((pxr+vel).toInt(), pyr.toInt(), map)) {
-                            transform.position.x += vel
+                            transform.x += vel
                         }
                         sprite.startAnimation("walk_right")
                     }
@@ -85,20 +85,20 @@ class Player : Entity() {
 
             when (ydir) {
                 Direction.UP -> {
-                    if (cellY > 0 || transform.position.y - vel > 0) {
+                    if (cellY > 0 || transform.y - vel > 0) {
                         if (!willCollide(pxl.toInt(), (pyl - vel).toInt(), map) &&
                             !willCollide(pxr.toInt(), (pyl - vel).toInt(), map)) {
-                            transform.position.y -= vel
+                            transform.y -= vel
                         }
                         sprite.startAnimation("walk_up")
                     }
                 }
                 Direction.DOWN -> {
                     // TODO: Constant window height
-                    if (cellY < 1024 || transform.position.y + vel < 720) {
+                    if (cellY < 1024 || transform.y + vel < 720) {
                         if (!willCollide(pxl.toInt(), (pyr + vel).toInt(), map) &&
                             !willCollide(pxr.toInt(), (pyr + vel).toInt(), map)) {
-                            transform.position.y += vel
+                            transform.y += vel
                         }
                         sprite.startAnimation("walk_down")
                     }
@@ -151,33 +151,33 @@ class Player : Entity() {
 
     // TODO: This method uses constant window dimensions
     private fun keepPlayerWithinBorder(transform: Transform) {
-        if (transform.position.x < 0) {
+        if (transform.x < 0) {
             if (cellX > 0) {
-                transform.position.x = 1280.0f
+                transform.x = 1280.0f
                 playerMovedCell = true
                 cellX -= 1
             }
         }
-        else if (transform.position.x > 1280.0f) {
+        else if (transform.x > 1280.0f) {
             // TODO: Make this a variable that can be randomly picked depending on level size
             if (cellX < 1024) {
-                transform.position.x = 0.0f
+                transform.x = 0.0f
                 playerMovedCell = true
                 cellX += 1
             }
         }
 
-        if (transform.position.y < 0) {
+        if (transform.y < 0) {
             if (cellY > 0) {
-                transform.position.y = 720.0f
+                transform.y = 720.0f
                 playerMovedCell = true
                 cellY -= 1
             }
         }
-        else if (transform.position.y > 720.0f) {
+        else if (transform.y > 720.0f) {
             // TODO: Make this a variable that can be randomly picked depending on level size
             if (cellY < 1024) {
-                transform.position.y = 0.0f
+                transform.y = 0.0f
                 playerMovedCell = true
                 cellY += 1
             }

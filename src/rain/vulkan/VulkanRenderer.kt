@@ -226,12 +226,12 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
     private fun issueDrawingCommands() {
         // Sort the order of rendering so alpha tests are correct
-        val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().position.z }
+        val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().z }
         for (draw in sortedListOfDraw) {
             val mat = draw.drawable.getMaterial() as VulkanMaterial
             var found = false
             for (pipeline in pipelines) {
-                if (pipeline.vertexBuffer == draw.buffer && pipeline.material == mat) {
+                if (pipeline.vertexBuffer.id == draw.buffer.id && pipeline.material.id == mat.id) {
                     pipeline.submitDrawInstance(draw.drawable)
                     found = true
                 }

@@ -13,7 +13,7 @@ import java.nio.LongBuffer
 internal class VulkanVertexBuffer: VertexBuffer {
     internal class Buffer(var buffer: Long, var bufferMemory: Long, var bufferSize: Long)
 
-    private val id: Long
+    val id: Long
     var buffer: Long = 0
         private set
     var bufferSize: Long = 0
@@ -194,26 +194,4 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
         return desc
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as VulkanVertexBuffer
-
-        return other.id == id
-    }
-
-    override fun hashCode(): Int {
-        var result = buffer.hashCode()
-        result = 31 * result + bufferSize.hashCode()
-        result = 31 * result + vertexCount
-        result = 31 * result + vertexPipelineVertexInputStateCreateInfo.hashCode()
-        result = 31 * result + bufferState.hashCode()
-        result = 31 * result + vk.hashCode()
-        result = 31 * result + commandPool.hashCode()
-        return result
-    }
-
-
 }

@@ -34,10 +34,6 @@ internal class Pipeline {
         nextFrameDrawQueue.add(drawable)
     }
 
-    fun matchesShaderPair(vertexId: Long, fragmentId: Long): Boolean {
-        return vertesShaderId == vertexId && fragmentShaderId == fragmentId
-    }
-
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, material: VulkanMaterial, descriptorPool: DescriptorPool) {
         var err: Int
         // Vertex input state

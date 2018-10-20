@@ -21,7 +21,6 @@ class Roguelike: Rain() {
         mobMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture, Vector3f(1.0f, 1.0f, 1.0f))
         player = Player()
         playerSystem.newEntity(player)
-                .attachUpdateComponent()
                 .attachTransformComponent()
                 .attachSpriteComponent(mobMaterial)
                 .build(scene)

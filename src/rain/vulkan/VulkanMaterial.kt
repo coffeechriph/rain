@@ -16,25 +16,6 @@ internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderMod
         return texture2d
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as VulkanMaterial
-        return other.id == this.id
-    }
-
-    override fun hashCode(): Int {
-        var result = vertexShader.hashCode()
-        result = 31 * result + fragmentShader.hashCode()
-        result = 31 * result + texture2d.hashCode()
-        result = 31 * result + color.hashCode()
-        result = 31 * result + descriptorPool.hashCode()
-        result = 31 * result + textureDataUBO.hashCode()
-        result = 31 * result + sceneData.hashCode()
-        return result
-    }
-
     init {
         val textureDataBuffer = memAlloc(2 * 4)
         val textureDataBufferF = textureDataBuffer.asFloatBuffer()

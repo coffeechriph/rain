@@ -3,10 +3,14 @@ package rain.api
 import org.joml.Matrix4f
 import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAlloc
 import java.nio.ByteBuffer
 
 data class SpriteComponent internal constructor(val entity: Long, val material: Material, val transform: Transform, val textureTileOffset: Vector2i): Drawable
 () {
+    private val modelMatrixBuffer = memAlloc(18*4)
+    private val modelMatrix = Matrix4f()
+
     override fun getMaterial(): Material {
         return material
     }
@@ -16,18 +20,18 @@ data class SpriteComponent internal constructor(val entity: Long, val material: 
     }
 
     override fun getStreamedUniformData(): ByteBuffer {
-        val modelMatrix = Matrix4f()
-        modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
-        modelMatrix.translate(transform.position.x, transform.position.y, transform.position.z)
-        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
+        if (transform.updated) {
+            modelMatrix.identity()
+            modelMatrix.rotateZ(transform.rot)
+            modelMatrix.translate(transform.x, transform.y, transform.z)
+            modelMatrix.scale(transform.sx, transform.sy, 0.0f)
+        }
 
-        // TODO: We're reallocating this every frame
-        val byteBuffer = MemoryUtil.memAlloc(18 * 4)
-        val buffer = modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+        val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
         val ibuf = buffer.asFloatBuffer()
         ibuf.put(16, textureTileOffset.x.toFloat())
         ibuf.put(17, textureTileOffset.y.toFloat())
-        return byteBuffer
+        return modelMatrixBuffer
     }
 
     internal var animationTime = 0.0f
