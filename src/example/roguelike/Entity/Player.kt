@@ -22,6 +22,7 @@ class Player : Entity() {
     var maxCellY = 0
     private val playerWidth = 12.0f
     private val playerHeight = 4.0f
+    val attack = Attack()
 
     fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
         val transform = system.findTransformComponent(getId())!!
@@ -30,6 +31,7 @@ class Player : Entity() {
         cellX = pos.x / 1280
         cellY = pos.y / 720
         playerMovedCell = true
+        attack.parentTransform = transform
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {

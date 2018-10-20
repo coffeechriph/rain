@@ -23,6 +23,7 @@ class EntitySystem<T: Entity> {
     }
 
     class Builder<T: Entity> internal constructor(private var entityId: Long, private val entity: T, private var system: EntitySystem<T>) {
+        // TODO: Take in a parent transform that this transform will follow
         fun attachTransformComponent(): Builder<T> {
             val c = TransformComponent(entityId)
             system.transformComponents.add(c)

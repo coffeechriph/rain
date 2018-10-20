@@ -1,16 +1,18 @@
 package example.roguelike
 
+import example.roguelike.Entity.Attack
 import example.roguelike.Entity.Player
 import example.roguelike.Level.Level
 import org.joml.Vector3f
-import rain.Api
 import rain.Rain
 import rain.api.*
 
 class Roguelike: Rain() {
+    private lateinit var attackMaterial: Material
     private lateinit var mobMaterial: Material
     private lateinit var mobTexture: Texture2d
     private var playerSystem = EntitySystem<Player>()
+    private var attackSystem = EntitySystem<Attack>()
     private var player = Player()
     private var camera = Camera()
     private var level = Level()
@@ -25,6 +27,18 @@ class Roguelike: Rain() {
                 .attachSpriteComponent(mobMaterial)
                 .build(scene)
         scene.addSystem(playerSystem)
+
+        val attackTexture = resourceFactory.createTexture2d("./data/textures/attack.png", TextureFilter.NEAREST)
+        attackTexture.setTiledTexture(16,16)
+        attackMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", attackTexture, Vector3f(1.0f, 1.0f,
+                1.0f))
+
+        attackSystem = EntitySystem()
+        attackSystem.newEntity(player.attack)
+                .attachTransformComponent()
+                .attachSpriteComponent(attackMaterial)
+                .build(scene)
+        scene.addSystem(attackSystem)
 
         // TODO: Constant window dimensions
         level.create(resourceFactory, scene, 8960 / 64, 5040/64, 1280 / 64, 720 / 64 + 1)

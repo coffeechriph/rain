@@ -519,14 +519,14 @@ class Level {
 
     private fun generateEnemies(scene: Scene) {
         val random = Random()
-        for (i in 0 until 10000) {
+        for (i in 0 until 50) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
                     .build(scene)
 
-            val room = rooms[0]
+            val room = rooms[random.nextInt(rooms.size)]
             val p = room.tiles[random.nextInt(room.tiles.size)]
             kracGuy.setPosition(enemySystem, Vector2i(p.x*64, p.y*64))
             enemies.add(kracGuy)

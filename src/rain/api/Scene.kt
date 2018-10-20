@@ -55,7 +55,6 @@ class Scene {
                     continue
                 }
 
-                sprite.animationTime += deltaTime * sprite.animation.speed
                 if (sprite.animationTime >= 1.0f) {
                     sprite.animationTime = 0.0f
                     sprite.animationIndex += 1
@@ -66,6 +65,7 @@ class Scene {
                         sprite.animationIndex = 0
                     }
                 }
+                sprite.animationTime += deltaTime * sprite.animation.speed
                 renderer.submitDraw(sprite, quadVertexBuffer)
             }
         }
