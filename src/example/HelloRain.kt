@@ -14,10 +14,10 @@ class Player : Entity() {
     }
 
     override fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        val transformComponent = system.findTransformComponent(getId())!!
+        val transform = system.findTransformComponent(getId())!!
 
-        transformComponent.transform.position.set(512.0f, 256.0f, 0.0f)
-        transformComponent.transform.scale.set(64.0f, 64.0f)
+        transform.position.set(512.0f, 256.0f, 0.0f)
+        transform.scale.set(64.0f, 64.0f)
 
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
             println("Left was pressed!")

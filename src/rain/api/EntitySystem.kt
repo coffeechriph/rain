@@ -45,10 +45,10 @@ class EntitySystem<T: Entity> {
         }
     }
 
-    fun findTransformComponent(entityId: Long): TransformComponent? {
+    fun findTransformComponent(entityId: Long): Transform? {
         for (e in transformComponents) {
             if (e.entity == entityId) {
-                return e
+                return e.transform
             }
         }
 

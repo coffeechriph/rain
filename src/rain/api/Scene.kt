@@ -66,9 +66,9 @@ class Scene {
                     }
                 }
                 val transform = system.findTransformComponent(sprite.entity)!!
-                sprite.transform.transform.position = transform.transform.position
-                sprite.transform.transform.scale = transform.transform.scale
-                sprite.transform.transform.rotation = transform.transform.rotation
+                sprite.transform.position = transform.position
+                sprite.transform.scale = transform.scale
+                sprite.transform.rotation = transform.rotation
                 renderer.submitDraw(sprite, quadVertexBuffer)
             }
         }

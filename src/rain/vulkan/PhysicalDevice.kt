@@ -76,10 +76,10 @@ internal class PhysicalDevice {
     private fun checkDeviceExtensionSupport(device: VkPhysicalDevice): Boolean {
         return MemoryStack.stackPush().use {
             val count = it.mallocInt(1)
-            vkEnumerateDeviceExtensionProperties(device, null as? ByteBuffer, count, null)
+            vkEnumerateDeviceExtensionProperties(device, null as? ByteBuffer?, count, null)
 
             val availableExtensions = VkExtensionProperties.callocStack(count[0])
-            vkEnumerateDeviceExtensionProperties(device, null as? ByteBuffer, count, availableExtensions)
+            vkEnumerateDeviceExtensionProperties(device, null as? ByteBuffer?, count, availableExtensions)
 
             val requiredExtensions = mutableListOf(*deviceExtensions)
             availableExtensions.forEach {

@@ -61,9 +61,9 @@ internal class Instance {
     private fun checkExtensions() {
         MemoryStack.stackPush().use {
             val countBuffer = it.mallocInt(1)
-            vkEnumerateInstanceExtensionProperties(null as? ByteBuffer, countBuffer, null)
+            vkEnumerateInstanceExtensionProperties(null as? ByteBuffer?, countBuffer, null)
             val extensions = VkExtensionProperties.calloc(countBuffer[0])
-            vkEnumerateInstanceExtensionProperties(null as? ByteBuffer, countBuffer, extensions)
+            vkEnumerateInstanceExtensionProperties(null as? ByteBuffer?, countBuffer, extensions)
 
             extensions.forEach { extension ->
                 log("Found extension ${extension.extensionNameString()}")

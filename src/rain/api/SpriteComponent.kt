@@ -5,20 +5,21 @@ import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
 
-data class SpriteComponent internal constructor(val entity: Long, val material: Material, val transform: TransformComponent, val textureTileOffset: Vector2i): Drawable() {
+data class SpriteComponent internal constructor(val entity: Long, val material: Material, val transform: Transform, val textureTileOffset: Vector2i): Drawable
+() {
     override fun getMaterial(): Material {
         return material
     }
 
     override fun getTransform(): Transform {
-        return transform.transform
+        return transform
     }
 
     override fun getStreamedUniformData(): ByteBuffer {
         val modelMatrix = Matrix4f()
-        modelMatrix.rotate(transform.transform.rotation, 0.0f, 0.0f, 1.0f)
-        modelMatrix.translate(transform.transform.position.x, transform.transform.position.y, transform.transform.position.z)
-        modelMatrix.scale(transform.transform.scale.x, transform.transform.scale.y, 0.0f)
+        modelMatrix.rotate(transform.rotation, 0.0f, 0.0f, 1.0f)
+        modelMatrix.translate(transform.position.x, transform.position.y, transform.position.z)
+        modelMatrix.scale(transform.scale.x, transform.scale.y, 0.0f)
 
         // TODO: We're reallocating this every frame
         val byteBuffer = MemoryUtil.memAlloc(18 * 4)

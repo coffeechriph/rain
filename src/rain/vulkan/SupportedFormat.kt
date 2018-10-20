@@ -15,19 +15,17 @@ internal fun hasStencilComponent(format: Int): Boolean {
 }
 
 internal fun findSupportedFormat(physicalDevice: PhysicalDevice, formats: IntArray, tiling: Int, features: Int): Int {
-    return VK_FORMAT_D32_SFLOAT
-    /*for (format in formats) {
+    for (format in formats) {
         val props = VkFormatProperties.calloc()
         vkGetPhysicalDeviceFormatProperties(physicalDevice.device, format, props)
 
-        println("$tiling, ${props.optimalTilingFeatures()}, $features")
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures() or features) == features) {
+        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures() and features) == features) {
             return format
         }
-        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures() or features) == features) {
+        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures() and features) == features) {
             return format;
         }
     }
 
-    throw AssertionError("Failed to find supported format!")*/
+    throw AssertionError("Failed to find supported format!")
 }
