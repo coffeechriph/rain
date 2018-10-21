@@ -46,6 +46,7 @@ class Attack : Entity() {
         val sprite = system.findSpriteComponent(getId())!!
 
         if (active) {
+            system.findBoxColliderComponent(getId())!!.active = true
             val transform = system.findTransformComponent(getId())!!
 
             when(direction) {
@@ -71,6 +72,8 @@ class Attack : Entity() {
             activeTime++
             if (activeTime > 10) {
                 active = false
+                val collider = system.findBoxColliderComponent(getId())!!
+                collider.active = false
                 activeTime = 0
             }
         }

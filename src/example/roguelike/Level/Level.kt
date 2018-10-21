@@ -45,13 +45,14 @@ class Level {
     private var enemySystem = EntitySystem<Enemy>()
     private lateinit var enemyMaterial: Material
 
-    fun update(player: Player, attackSystem: EntitySystem<Attack>, healthBarSystem: EntitySystem<HealthBar>) {
-        val attackTransform = attackSystem.findTransformComponent(player.attack.getId())!!
+    fun update(player: Player, healthBarSystem: EntitySystem<HealthBar>) {
         for (enemy in enemies) {
             val sprite = enemySystem.findSpriteComponent(enemy.getId())!!
             sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
             val healthBar = healthBarSystem.findSpriteComponent(enemy.healthBar.getId())!!
             healthBar.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
+            val collider = enemySystem.findBoxColliderComponent(enemy.getId())!!
+            collider.active = sprite.visible
 
             if (!sprite.visible) {
                 continue
@@ -59,14 +60,6 @@ class Level {
 
             val healthBarTransform = healthBarSystem.findTransformComponent(enemy.healthBar.getId())!!
             healthBarTransform.sx = enemy.health / 2.0f
-
-            if (player.attack.isActive()) {
-                val tr = enemySystem.findTransformComponent(enemy.getId())!!
-                if (attackTransform.x >= tr.x - 32.0f && attackTransform.x < tr.x + 32.0f &&
-                        attackTransform.y >= tr.y - 32.0f && attackTransform.y < tr.y + 32.0f) {
-                    enemy.damage(10)
-                }
-            }
         }
     }
 
@@ -551,6 +544,7 @@ class Level {
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
+                    .attachBoxColliderComponent(64.0f, 64.0f, "enemy")
                     .build(scene)
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!

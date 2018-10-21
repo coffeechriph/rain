@@ -13,4 +13,5 @@ open class Entity {
 
     open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}
     open fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float){}
+    open fun onCollision(other: BoxColliderComponent) {}
 }

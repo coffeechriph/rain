@@ -1,13 +1,17 @@
 package example.roguelike.Entity
 
-import rain.api.Entity
-import rain.api.EntitySystem
-import rain.api.Input
-import rain.api.Scene
+import rain.api.*
 import java.util.*
 
 class Krac: Enemy() {
     private var idleDir = 0
+
+    override fun onCollision(other: BoxColliderComponent) {
+        if (other.tag == "playerAttack") {
+            damage(Random().nextInt(99))
+        }
+    }
+
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val sprite = system.findSpriteComponent(getId())!!
 

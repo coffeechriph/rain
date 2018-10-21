@@ -42,6 +42,7 @@ class Roguelike: Rain() {
         attackSystem.newEntity(player.attack)
                 .attachTransformComponent()
                 .attachSpriteComponent(attackMaterial)
+                .attachBoxColliderComponent(32.0f, 32.0f, "playerAttack")
                 .build(scene)
         scene.addSystem(attackSystem)
 
@@ -80,7 +81,7 @@ class Roguelike: Rain() {
     }
 
     override fun update() {
-        level.update(player, attackSystem, healthBarSystem)
+        level.update(player, healthBarSystem)
 
         if (player.playerMovedCell) {
             level.switchCell(resourceFactory, player.cellX, player.cellY)
