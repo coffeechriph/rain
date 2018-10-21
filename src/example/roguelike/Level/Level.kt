@@ -32,6 +32,7 @@ class Level {
         private set
     var frontTilemap = Tilemap()
         private set
+    var minimapTilemap = Tilemap()
 
     private lateinit var material: Material
     private lateinit var texture: Texture2d
@@ -47,9 +48,15 @@ class Level {
     fun update(player: Player, attackSystem: EntitySystem<Attack>, healthBarSystem: EntitySystem<HealthBar>) {
         val attackTransform = attackSystem.findTransformComponent(player.attack.getId())!!
         for (enemy in enemies) {
-            enemySystem.findSpriteComponent(enemy.getId())!!.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
+            val sprite = enemySystem.findSpriteComponent(enemy.getId())!!
+            sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
             val healthBar = healthBarSystem.findSpriteComponent(enemy.healthBar.getId())!!
             healthBar.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
+
+            if (!sprite.visible) {
+                continue
+            }
+
             val healthBarTransform = healthBarSystem.findTransformComponent(enemy.healthBar.getId())!!
             healthBarTransform.sx = enemy.health / 2.0f
 
@@ -107,9 +114,9 @@ class Level {
             frontTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, frontIndices)
             backTilemap.update(resourceFactory, backIndices)
             frontTilemap.update(resourceFactory, frontIndices)
-
             backTilemap.getTransform().setPosition(0.0f, 0.0f, 1.0f)
             frontTilemap.getTransform().setPosition(0.0f, 0.0f, 10.0f)
+            minimapTilemap.getTransform().setPosition(0.0f, 0.0f, 11.0f)
             firstBuild = false
         }
         else {
@@ -129,6 +136,15 @@ class Level {
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
         generateEnemies(scene, healthBarMaterial, healthBarSystem)
+
+        val minimapIndices = Array(mapWidth*mapHeight){ TileIndex(2,1) }
+        for (i in 0 until rooms.size) {
+            for (j in 0 until rooms[i].tiles.size) {
+                minimapIndices[rooms[i].tiles[j].x + rooms[i].tiles[j].y * mapWidth] = TileIndex(0, rooms[i].type.ordinal)
+            }
+        }
+        minimapTilemap.create(resourceFactory, material, mapWidth, mapHeight, 2.0f, 2.0f, minimapIndices)
+        minimapTilemap.update(resourceFactory, minimapIndices)
     }
 
     private fun populateTilemap() {

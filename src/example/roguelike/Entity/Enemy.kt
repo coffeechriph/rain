@@ -39,7 +39,7 @@ open class Enemy : Entity() {
     protected fun handleDamage(transform: Transform) {
         if (wasAttacked) {
             transform.y = transform.y + sin(attackAnimation * 100.0f) * 2.0f
-            attackAnimation += 0.05f
+            attackAnimation += 0.075f
 
             if (attackAnimation >= 1.0f) {
                 wasAttacked = false

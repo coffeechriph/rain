@@ -7,6 +7,7 @@ import example.roguelike.Level.Level
 import org.joml.Vector3f
 import rain.Rain
 import rain.api.*
+import rain.vulkan.transitionImageLayout
 
 class Roguelike: Rain() {
     private lateinit var attackMaterial: Material
@@ -17,6 +18,7 @@ class Roguelike: Rain() {
     private var attackSystem = EntitySystem<Attack>()
     private var healthBarSystem = EntitySystem<HealthBar>()
     private var player = Player()
+    private var miniPlayer = HealthBar()
     private var camera = Camera()
     private var level = Level()
 
@@ -54,6 +56,7 @@ class Roguelike: Rain() {
         level.build(resourceFactory, scene, 0, healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
+        scene.addTilemap(level.minimapTilemap)
 
         camera = Camera()
         scene.setActiveCamera(camera)
@@ -67,6 +70,13 @@ class Roguelike: Rain() {
         player.maxCellY = level.maxCellY
         player.tileWidth = 64
         player.setPosition(playerSystem, level.getFirstTilePos())
+
+        healthBarSystem.newEntity(miniPlayer)
+                .attachTransformComponent()
+                .attachSpriteComponent(healthMaterial)
+                .build(scene)
+        val mpt = healthBarSystem.findTransformComponent(miniPlayer.getId())!!
+        mpt.setScale(4.0f, 4.0f)
     }
 
     override fun update() {
@@ -76,5 +86,14 @@ class Roguelike: Rain() {
             level.switchCell(resourceFactory, player.cellX, player.cellY)
             player.playerMovedCell = false
         }
+
+        val mpt = healthBarSystem.findTransformComponent(miniPlayer.getId())!!
+        val playerTransform = playerSystem.findTransformComponent(player.getId())!!
+        // We need to divide by 32 as each tile on minimap is 2px in size while the actual tiles are 64
+        // to adjust the player position according to the minimap
+        // We then take the cell index multiplied by the number of tiles per cell * 2 to adjust to minimap tile size
+        val tx = playerTransform.x / 32 + player.cellX * level.width * 2
+        val ty = playerTransform.y / 32 + player.cellY * level.height * 2
+        mpt.setPosition(tx, ty, 12.0f)
     }
 }
