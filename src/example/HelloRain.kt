@@ -48,12 +48,12 @@ class HelloRain: Rain() {
         basicMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", basicTexture, Vector3f(1.0f,1.0f,1.0f))
         tilemapMaterial = resourceFactory.createMaterial("./data/shaders/backTilemap.vert.spv", "./data/shaders/basic.frag.spv", tilemapTexture, Vector3f(1.0f,1.0f,1.0f))
 
-        playerEntitySystem = EntitySystem()
+        playerEntitySystem = EntitySystem(scene)
         player = Player()
         playerEntitySystem.newEntity(player)
                 .attachTransformComponent()
                 .attachSpriteComponent(basicMaterial)
-                .build(scene)
+                .build()
 
         scene.addSystem(playerEntitySystem)
 

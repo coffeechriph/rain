@@ -37,8 +37,8 @@ open class Rain {
 
     fun run() {
         startLog()
-        init()
         scene.init(resourceFactory)
+        init()
 
         while (context.pollEvents()) {
             timer.update()

@@ -20,10 +20,10 @@ open class Enemy : Entity() {
     // TODO: Constant window size
     fun setPosition(system: EntitySystem<Enemy>, pos: Vector2i) {
         val transform = system.findTransformComponent(getId())!!
-        transform.x = pos.x.toFloat()%1280
-        transform.y = pos.y.toFloat()%720
         transform.z = 2.0f + transform.y * 0.001f
         transform.setScale(96.0f, 96.0f)
+        val body = system.findBodyComponent(getId())!!
+        body.setTransform(pos.x.toFloat()%1280, pos.y.toFloat()%720, 0.0f)
         cellX = pos.x / 1280
         cellY = pos.y / 720
     }

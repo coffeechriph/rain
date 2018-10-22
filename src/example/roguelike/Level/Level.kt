@@ -1,5 +1,6 @@
 package example.roguelike.Level
 
+import com.badlogic.gdx.physics.box2d.BodyDef
 import example.roguelike.Entity.*
 import org.joml.Vector2i
 import org.joml.Vector3f
@@ -42,8 +43,9 @@ class Level {
     private var mapFrontIndices = Array(0){TileIndex(0,0)}
     private var rooms = ArrayList<Room>()
     private var enemies = ArrayList<Enemy>()
-    private var enemySystem = EntitySystem<Enemy>()
+    private lateinit var enemySystem: EntitySystem<Enemy>
     private lateinit var enemyMaterial: Material
+    private lateinit var collisionSystem: EntitySystem<Entity>
 
     fun update(player: Player, healthBarSystem: EntitySystem<HealthBar>) {
         for (enemy in enemies) {
@@ -51,8 +53,8 @@ class Level {
             sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
             val healthBar = healthBarSystem.findSpriteComponent(enemy.healthBar.getId())!!
             healthBar.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
-            val collider = enemySystem.findBoxColliderComponent(enemy.getId())!!
-            collider.active = sprite.visible
+            val co = enemySystem.findBodyComponent(enemy.getId())!!
+            co.isActive = sprite.visible
 
             if (!sprite.visible) {
                 continue
@@ -64,7 +66,7 @@ class Level {
     }
 
     fun getFirstTilePos(): Vector2i {
-        return Vector2i(rooms[0].tiles[0].x * 64, rooms[0].tiles[0].y * 64)
+        return Vector2i(rooms[0].tiles[7].x * 64 + 32, rooms[0].tiles[7].y * 64 + 32)
     }
 
     fun create(resourceFactory: ResourceFactory, scene: Scene, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
@@ -83,7 +85,11 @@ class Level {
         val enemyTexture = resourceFactory.createTexture2d("./data/textures/krac.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(32,32)
         enemyMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        enemySystem = EntitySystem(scene)
         scene.addSystem(enemySystem)
+
+        collisionSystem = EntitySystem(scene)
+        scene.addSystem(collisionSystem)
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -91,14 +97,40 @@ class Level {
         val frontIndices = Array(width*height){ TileIndexNone }
         var sx = cellX * width
         var sy = cellY * height
+
+        var cx = 0.0f
+        var cy = 0.0f
+        collisionSystem.clear()
         for (i in 0 until width*height) {
             backIndices[i] = mapBackIndices[sx + sy*mapWidth]
             frontIndices[i] = mapFrontIndices[sx + sy*mapWidth]
+
+            if (map[sx + sy*mapWidth] == 1) {
+                val e = Entity()
+                collisionSystem.newEntity(e)
+                        .attachTransformComponent()
+                        //.attachSpriteComponent(enemyMaterial)
+                        .attachBoxColliderComponent(cx + 32.0f, cy + 32.0f, 64.0f, 64.0f, 2.0f, 1.0f, 0.0f, BodyDef.BodyType.StaticBody)
+                        .build()
+                val tr = collisionSystem.findTransformComponent(e.getId())
+                /*val sp = collisionSystem.findSpriteComponent(e.getId())
+                sp!!.addAnimation("l", 0, 0, 2, 0.0f)
+                sp!!.startAnimation("l")*/
+                tr!!.sx = 64.0f
+                tr.sy = 64.0f
+                tr.z = 13.0f
+            }
 
             sx += 1
             if (sx >= cellX * width + width) {
                 sx = cellX * width
                 sy += 1
+            }
+
+            cx += 64.0f
+            if (cx >= width * 64.0f) {
+                cx = 0.0f
+                cy += 64.0f
             }
         }
 
@@ -539,13 +571,13 @@ class Level {
 
     private fun generateEnemies(scene: Scene, healthBarMaterial: Material, healthBarSystem: EntitySystem<HealthBar>) {
         val random = Random()
-        for (i in 0 until 1000) {
+        for (i in 0 until 300) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
-                    .attachBoxColliderComponent(64.0f, 64.0f, "enemy")
-                    .build(scene)
+                    .attachBoxColliderComponent(width = 24.0f, height = 32.0f, friction = 100.0f, linearDamping = 100.0f)
+                    .build()
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
             kracGuy.healthBar.parentTransform = et
@@ -553,7 +585,7 @@ class Level {
             healthBarSystem.newEntity(kracGuy.healthBar)
                     .attachTransformComponent()
                     .attachSpriteComponent(healthBarMaterial)
-                    .build(scene)
+                    .build()
 
             val tr = healthBarSystem.findTransformComponent(kracGuy.healthBar.getId())!!
             tr.sx = 60.0f

@@ -1,10 +1,16 @@
 package rain.api
 
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.physics.box2d.*
+
 class Scene {
     private lateinit var quadVertexBuffer: VertexBuffer
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
+    lateinit var physicWorld: World
+        private set
+    private var physicsContactListener = PhysicsContactListener()
 
     private var camera = Camera()
 
@@ -35,9 +41,15 @@ class Scene {
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
+
+        Box2D.init()
+        physicWorld = World(Vector2(0.0f, 0.0f), true)
+        physicWorld.setContactListener(physicsContactListener)
     }
 
     internal fun update(renderer: Renderer, input: Input, deltaTime: Float) {
+        physicWorld.step(1.0f / 60.0f, 6, 2)
+
         renderer.setActiveCamera(camera)
 
         for (tilemap in tilemaps) {
@@ -46,45 +58,11 @@ class Scene {
 
         for (system in entitySystems) {
             for (i in 0 until system.getEntityList().size) {
-                system.getEntityList()[i].update(this, input, system, deltaTime)
-            }
-
-            // TODO: Performance!
-            // We're currently checking every collider in every system every other collider in every system...
-            // We could flatten the list of colliders but for this we need a way to identify which system a entityId is part of
-            // This could be done by storing the index of the system in the first 16 bits of the entityId
-            // This means we can have 65535 different entity systems and way enough entities per system
-            // The next thing to do is to divide the colliders up into quad trees so we never have to even think about colliders
-            // that are too far away
-            for (i in 0 until system.getColliderList().size) {
-                val collider1 = system.getColliderList()[i]
-                if (!collider1.active) {
-                    continue
-                }
-
-                val transform1 = system.findTransformComponent(collider1.entityId)!!
-                collider1.x = transform1.x
-                collider1.y = transform1.y
-
-                for (system2 in entitySystems) {
-                    for (j in 0 until system2.getColliderList().size) {
-                        val collider2 = system2.getColliderList()[j]
-                        if (collider1 != collider2 && !collider2.active) {
-                            continue
-                        }
-
-                        val transform2 = system2.findTransformComponent(collider2.entityId)!!
-                        collider2.x = transform2.x
-                        collider2.y = transform2.y
-                        if (collider1.collides(collider2)) {
-                            system.findEntity(collider1.entityId)!!.onCollision(collider2)
-                        }
-                    }
-                }
+                system.getEntityList()[i]!!.update(this, input, system, deltaTime)
             }
 
             for (i in 0 until system.getSpriteList().size) {
-                val sprite = system.getSpriteList().get(i)
+                val sprite = system.getSpriteList().get(i)!!
                 if (!sprite.visible) {
                     continue
                 }
@@ -99,8 +77,17 @@ class Scene {
                         sprite.animationIndex = 0
                     }
                 }
+
                 sprite.animationTime += deltaTime * sprite.animation.speed
                 renderer.submitDraw(sprite, quadVertexBuffer)
+            }
+
+            for (body in system.getBodyList()) {
+                val b = body!!
+                val e = b.userData as Entity
+                val t = system.findTransformComponent(e.getId())!!
+                t.x = b.position.x
+                t.y = b.position.y
             }
         }
     }

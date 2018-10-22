@@ -6,8 +6,8 @@ import java.util.*
 class Krac: Enemy() {
     private var idleDir = 0
 
-    override fun onCollision(other: BoxColliderComponent) {
-        if (other.tag == "playerAttack") {
+    override fun onCollision(entity: Entity) {
+        if (entity is Attack) {
             damage(Random().nextInt(99))
         }
     }
