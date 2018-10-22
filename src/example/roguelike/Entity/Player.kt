@@ -25,8 +25,8 @@ class Player : Entity() {
     val attack = Attack()
 
     fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
-        val body = system.findBodyComponent(getId())!!
-        body.setTransform(pos.x.toFloat()%1280, pos.y.toFloat()%720, 0.0f)
+        val body = system.findColliderComponent(getId())!!
+        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
 
         cellX = pos.x / 1280
         cellY = pos.y / 720
@@ -74,16 +74,16 @@ class Player : Entity() {
             when (xdir) {
                 Direction.LEFT -> {
                     if (cellX > 0 || transform.x - vel > 0) {
-                        val body = system.findBodyComponent(getId())!!
-                        body.setLinearVelocity(-200.0f, body.linearVelocity.y)
+                        val body = system.findColliderComponent(getId())!!
+                        body.setVelocity(-200.0f, body.getVelocity().y)
                         sprite.startAnimation("walk_left")
                     }
                 }
                 Direction.RIGHT -> {
                     // TODO: Constant window width
                     if (cellX < 1024 || transform.x + vel < 1280) {
-                        val body = system.findBodyComponent(getId())!!
-                        body.setLinearVelocity(200.0f, body.linearVelocity.y)
+                        val body = system.findColliderComponent(getId())!!
+                        body.setVelocity(200.0f, body.getVelocity().y)
                         sprite.startAnimation("walk_right")
                     }
                 }
@@ -92,23 +92,23 @@ class Player : Entity() {
             when (ydir) {
                 Direction.UP -> {
                     if (cellY > 0 || transform.y - vel > 0) {
-                        val body = system.findBodyComponent(getId())!!
-                        body.setLinearVelocity(body.linearVelocity.x, -200.0f)
+                        val body = system.findColliderComponent(getId())!!
+                        body.setVelocity(body.getVelocity().x, -200.0f)
                         sprite.startAnimation("walk_up")
                     }
                 }
                 Direction.DOWN -> {
                     // TODO: Constant window height
                     if (cellY < 1024 || transform.y + vel < 720) {
-                        val body = system.findBodyComponent(getId())!!
-                        body.setLinearVelocity(body.linearVelocity.x, 200.0f)
+                        val body = system.findColliderComponent(getId())!!
+                        body.setVelocity(body.getVelocity().x, 200.0f)
                         sprite.startAnimation("walk_down")
                     }
                 }
             }
         }
         else {
-            system.findBodyComponent(getId())!!.setLinearVelocity(0.0f, 0.0f)
+            system.findColliderComponent(getId())!!.setVelocity(0.0f, 0.0f)
             vel = 0.0f
             sprite.startAnimation("idle")
         }
@@ -144,37 +144,37 @@ class Player : Entity() {
 
     // TODO: This method uses constant window dimensions
     private fun <T : Entity> keepPlayerWithinBorder(system: EntitySystem<T>) {
-        val body = system.findBodyComponent(getId())!!
-        if (body.position.x < 0) {
+        val body = system.findColliderComponent(getId())!!
+        if (body.getPosition().x < 0) {
             if (cellX > 0) {
-                body.setTransform(1270.0f, body.position.y,0.0f)
+                body.setPosition(1270.0f, body.getPosition().y)
 
                 playerMovedCell = true
                 cellX -= 1
             }
         }
-        else if (body.position.x > 1280.0f) {
+        else if (body.getPosition().x > 1280.0f) {
             // TODO: Make this a variable that can be randomly picked depending on level size
             if (cellX < 1024) {
-                body.setTransform(10.0f, body.position.y,0.0f)
+                body.setPosition(10.0f, body.getPosition().y)
 
                 playerMovedCell = true
                 cellX += 1
             }
         }
 
-        if (body.position.y < 0) {
+        if (body.getPosition().y < 0) {
             if (cellY > 0) {
-                body.setTransform(body.position.x, 710.0f,0.0f)
+                body.setPosition(body.getPosition().x, 710.0f)
 
                 playerMovedCell = true
                 cellY -= 1
             }
         }
-        else if (body.position.y > 720.0f) {
+        else if (body.getPosition().y > 720.0f) {
             // TODO: Make this a variable that can be randomly picked depending on level size
             if (cellY < 1024) {
-                body.setTransform(body.position.x, 10.0f,0.0f)
+                body.setPosition(body.getPosition().x, 10.0f)
 
                 playerMovedCell = true
                 cellY += 1

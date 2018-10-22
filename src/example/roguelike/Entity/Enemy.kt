@@ -22,8 +22,8 @@ open class Enemy : Entity() {
         val transform = system.findTransformComponent(getId())!!
         transform.z = 2.0f + transform.y * 0.001f
         transform.setScale(96.0f, 96.0f)
-        val body = system.findBodyComponent(getId())!!
-        body.setTransform(pos.x.toFloat()%1280, pos.y.toFloat()%720, 0.0f)
+        val body = system.findColliderComponent(getId())!!
+        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
         cellX = pos.x / 1280
         cellY = pos.y / 720
     }

@@ -46,26 +46,26 @@ class Attack : Entity() {
         val sprite = system.findSpriteComponent(getId())!!
 
         if (active) {
-            val body = system.findBodyComponent(getId())!!
+            val body = system.findColliderComponent(getId())!!
             val transform = system.findTransformComponent(getId())!!
             transform.z = parentTransform.z + 0.01f
-            body.isActive = true
+            body.setActive(true)
 
             when(direction) {
                 Direction.LEFT -> {
-                    body.setTransform(parentTransform.x - 32, parentTransform.y, 0.0f)
+                    body.setPosition(parentTransform.x - 32, parentTransform.y)
                     sprite.startAnimation("left")
                 }
                 Direction.RIGHT -> {
-                    body.setTransform(parentTransform.x + 32, parentTransform.y, 0.0f)
+                    body.setPosition(parentTransform.x + 32, parentTransform.y)
                     sprite.startAnimation("right")
                 }
                 Direction.UP -> {
-                    body.setTransform(parentTransform.x, parentTransform.y - 32, 0.0f)
+                    body.setPosition(parentTransform.x, parentTransform.y - 32)
                     sprite.startAnimation("up")
                 }
                 Direction.DOWN -> {
-                    body.setTransform(parentTransform.x, parentTransform.y + 32, 0.0f)
+                    body.setPosition(parentTransform.x, parentTransform.y + 32)
                     sprite.startAnimation("down")
                 }
             }
@@ -74,7 +74,7 @@ class Attack : Entity() {
             activeTime++
             if (activeTime > 10) {
                 active = false
-                body.isActive = false
+                body.setActive(false)
                 activeTime = 0
             }
         }

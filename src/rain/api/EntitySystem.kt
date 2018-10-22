@@ -1,6 +1,5 @@
 package rain.api
 
-import com.badlogic.gdx.physics.box2d.Body
 import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2i
@@ -14,11 +13,11 @@ class EntitySystem<T: Entity>(val scene: Scene) {
     private var entityWrappers = ArrayList<T?>()
     private var transformComponents = ArrayList<TransformComponent?>()
     private var spriteComponents = ArrayList<SpriteComponent?>()
-    private var bodyComponents = ArrayList<Body?>()
+    private var colliderComponents = ArrayList<Collider?>()
 
     private var spriteComponentsMap = HashMap<Long, SpriteComponent?>()
     private var transformComponentsMap = HashMap<Long, TransformComponent?>()
-    private var bodyComponentsMap = HashMap<Long, Body?>()
+    private var colliderComponentsMap = HashMap<Long, Collider?>()
     private var entityWrappersMap = HashMap<Long, T?>()
 
     fun newEntity(entity: T): Builder<T> {
@@ -40,11 +39,11 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         transformComponentsMap.clear()
         entityWrappersMap.clear()
 
-        for (body in bodyComponents) {
-            scene.physicWorld.destroyBody(body!!)
+        for (collider in colliderComponents) {
+            scene.physicWorld.destroyBody(collider!!.getBody())
         }
-        bodyComponents.clear()
-        bodyComponentsMap.clear()
+        colliderComponents.clear()
+        colliderComponentsMap.clear()
     }
 
     class Builder<T: Entity> internal constructor(private var entityId: Long, private val entity: T, private var system: EntitySystem<T>) {
@@ -65,17 +64,15 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachBoxColliderComponent(x: Float = 0.0f, y: Float = 0.0f, width: Float, height: Float, density: Float = 1.0f, friction: Float = 1.0f,
-                                       linearDamping: Float = 1.0f, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
+        fun attachBoxColliderComponent(width: Float, height: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
             system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
 
-            if (system.bodyComponentsMap.containsKey(entityId)) {
+            if (system.colliderComponentsMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 collider component attached at once!")
             }
 
             val bodyDef = BodyDef()
-            bodyDef.position.set(x, y)
             bodyDef.type = type
             val body = system.scene.physicWorld.createBody(bodyDef)
             val shape = PolygonShape()
@@ -83,15 +80,15 @@ class EntitySystem<T: Entity>(val scene: Scene) {
 
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shape
-            fixtureDef.density = density
-            fixtureDef.friction = friction
+            fixtureDef.friction = 1.0f
+            fixtureDef.density = 1.0f
             fixtureDef.restitution = 0.0f
-            body.linearDamping = linearDamping
             body.createFixture(fixtureDef)
 
             body.userData = entity
-            system.bodyComponents.add(body)
-            system.bodyComponentsMap[entityId] = body
+            val collider = Collider(body)
+            system.colliderComponents.add(collider)
+            system.colliderComponentsMap[entityId] = collider
             return this
         }
 
@@ -114,8 +111,8 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return spriteComponentsMap[entityId]
     }
 
-    fun findBodyComponent(entityId: Long): Body? {
-        return bodyComponentsMap.get(entityId)
+    fun findColliderComponent(entityId: Long): Collider? {
+        return colliderComponentsMap[entityId]
     }
 
     internal fun findEntity(entityId: Long): T? {
@@ -130,8 +127,8 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return entityWrappers
     }
 
-    internal fun getBodyList(): List<Body?> {
-        return bodyComponents
+    internal fun getColliderList(): List<Collider?> {
+        return colliderComponents
     }
 
     private fun uniqueId(): Long {

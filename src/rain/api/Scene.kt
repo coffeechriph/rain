@@ -82,8 +82,8 @@ class Scene {
                 renderer.submitDraw(sprite, quadVertexBuffer)
             }
 
-            for (body in system.getBodyList()) {
-                val b = body!!
+            for (collider in system.getColliderList()) {
+                val b = collider!!.getBody()
                 val e = b.userData as Entity
                 val t = system.findTransformComponent(e.getId())!!
                 t.x = b.position.x

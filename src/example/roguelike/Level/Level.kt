@@ -53,8 +53,8 @@ class Level {
             sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
             val healthBar = healthBarSystem.findSpriteComponent(enemy.healthBar.getId())!!
             healthBar.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
-            val co = enemySystem.findBodyComponent(enemy.getId())!!
-            co.isActive = sprite.visible
+            val co = enemySystem.findColliderComponent(enemy.getId())!!
+            co.setActive(sprite.visible)
 
             if (!sprite.visible) {
                 continue
@@ -110,12 +110,11 @@ class Level {
                 collisionSystem.newEntity(e)
                         .attachTransformComponent()
                         //.attachSpriteComponent(enemyMaterial)
-                        .attachBoxColliderComponent(cx + 32.0f, cy + 32.0f, 64.0f, 64.0f, 2.0f, 1.0f, 0.0f, BodyDef.BodyType.StaticBody)
+                        .attachBoxColliderComponent(64.0f, 64.0f, BodyDef.BodyType.StaticBody)
                         .build()
                 val tr = collisionSystem.findTransformComponent(e.getId())
-                /*val sp = collisionSystem.findSpriteComponent(e.getId())
-                sp!!.addAnimation("l", 0, 0, 2, 0.0f)
-                sp!!.startAnimation("l")*/
+                val cl = collisionSystem.findColliderComponent(e.getId())!!
+                cl.setPosition(cx + 32.0f, cy + 32.0f)
                 tr!!.sx = 64.0f
                 tr.sy = 64.0f
                 tr.z = 13.0f
@@ -576,10 +575,13 @@ class Level {
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
-                    .attachBoxColliderComponent(width = 24.0f, height = 32.0f, friction = 100.0f, linearDamping = 100.0f)
+                    .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
                     .build()
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
+            val cl = enemySystem.findColliderComponent(kracGuy.getId())!!
+            cl.setDamping(100.0f)
+            cl.setFriction(0.0f)
             kracGuy.healthBar.parentTransform = et
 
             healthBarSystem.newEntity(kracGuy.healthBar)

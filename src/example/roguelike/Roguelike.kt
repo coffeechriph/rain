@@ -44,7 +44,7 @@ class Roguelike: Rain() {
         attackSystem.newEntity(player.attack)
                 .attachTransformComponent()
                 .attachSpriteComponent(attackMaterial)
-                .attachBoxColliderComponent(0.0f, 0.0f, 32.0f, 32.0f)
+                .attachBoxColliderComponent(32.0f, 32.0f)
                 .build()
         scene.addSystem(attackSystem)
 
