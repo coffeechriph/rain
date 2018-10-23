@@ -4,7 +4,6 @@ import org.joml.Vector2i
 import rain.api.*
 
 class Player : Entity() {
-    private var vel = 0.0f
     private var xdir = Direction.NONE
     private var ydir = Direction.NONE
     var playerMovedCell = true
@@ -20,8 +19,6 @@ class Player : Entity() {
     var tileWidth: Int = 0
     var maxCellX = 0
     var maxCellY = 0
-    private val playerWidth = 12.0f
-    private val playerHeight = 4.0f
     val attack = Attack()
 
     fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
@@ -69,11 +66,9 @@ class Player : Entity() {
         // TODO: Take in input as queue where we use the latest key pressed
         // TODO: The current way of handling input fucks up the animation and feels clunky
         if (ydir != Direction.NONE || xdir != Direction.NONE) {
-            vel = 200.0f * deltaTime * Math.max(sprite.animationTime, 0.5f)
-
             when (xdir) {
                 Direction.LEFT -> {
-                    if (cellX > 0 || transform.x - vel > 0) {
+                    if (cellX > 0) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(-200.0f, body.getVelocity().y)
                         sprite.startAnimation("walk_left")
@@ -81,7 +76,7 @@ class Player : Entity() {
                 }
                 Direction.RIGHT -> {
                     // TODO: Constant window width
-                    if (cellX < 1024 || transform.x + vel < 1280) {
+                    if (cellX < 1024) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(200.0f, body.getVelocity().y)
                         sprite.startAnimation("walk_right")
@@ -91,7 +86,7 @@ class Player : Entity() {
 
             when (ydir) {
                 Direction.UP -> {
-                    if (cellY > 0 || transform.y - vel > 0) {
+                    if (cellY > 0) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(body.getVelocity().x, -200.0f)
                         sprite.startAnimation("walk_up")
@@ -99,7 +94,7 @@ class Player : Entity() {
                 }
                 Direction.DOWN -> {
                     // TODO: Constant window height
-                    if (cellY < 1024 || transform.y + vel < 720) {
+                    if (cellY < 1024) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(body.getVelocity().x, 200.0f)
                         sprite.startAnimation("walk_down")
@@ -109,7 +104,6 @@ class Player : Entity() {
         }
         else {
             system.findColliderComponent(getId())!!.setVelocity(0.0f, 0.0f)
-            vel = 0.0f
             sprite.startAnimation("idle")
         }
 

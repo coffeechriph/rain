@@ -1,11 +1,13 @@
 package rain.api
 
 import com.badlogic.gdx.physics.box2d.BodyDef
+import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2i
 import rain.assertion
 import kotlin.IllegalStateException
 import com.badlogic.gdx.physics.box2d.FixtureDef
+import org.joml.Vector2f
 
 class EntitySystem<T: Entity>(val scene: Scene) {
     private var entityId: Long = 0
@@ -74,13 +76,72 @@ class EntitySystem<T: Entity>(val scene: Scene) {
 
             val bodyDef = BodyDef()
             bodyDef.type = type
+            bodyDef.fixedRotation = true
             val body = system.scene.physicWorld.createBody(bodyDef)
             val shape = PolygonShape()
             shape.setAsBox(width / 2.0f, height / 2.0f)
 
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shape
-            fixtureDef.friction = 1.0f
+            fixtureDef.friction = 0.75f
+            fixtureDef.density = 1.0f
+            fixtureDef.restitution = 0.0f
+            body.createFixture(fixtureDef)
+
+            body.userData = entity
+            val collider = Collider(body)
+            system.colliderComponents.add(collider)
+            system.colliderComponentsMap[entityId] = collider
+            return this
+        }
+
+        fun attachCircleColliderComponent(radius: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
+            system.findTransformComponent(entityId)
+                    ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
+
+            if (system.colliderComponentsMap.containsKey(entityId)) {
+                assertion("A entity may only have 1 collider component attached at once!")
+            }
+
+            val bodyDef = BodyDef()
+            bodyDef.type = type
+            bodyDef.fixedRotation = true
+            val body = system.scene.physicWorld.createBody(bodyDef)
+            val shape = CircleShape()
+            shape.radius = radius
+
+            val fixtureDef = FixtureDef()
+            fixtureDef.shape = shape
+            fixtureDef.friction = 0.75f
+            fixtureDef.density = 1.0f
+            fixtureDef.restitution = 0.0f
+            body.createFixture(fixtureDef)
+
+            body.userData = entity
+            val collider = Collider(body)
+            system.colliderComponents.add(collider)
+            system.colliderComponentsMap[entityId] = collider
+            return this
+        }
+
+        fun attachPolygonColliderComponent(vertices: FloatArray, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
+            system.findTransformComponent(entityId)
+                    ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
+
+            if (system.colliderComponentsMap.containsKey(entityId)) {
+                assertion("A entity may only have 1 collider component attached at once!")
+            }
+
+            val bodyDef = BodyDef()
+            bodyDef.type = type
+            bodyDef.fixedRotation = true
+            val body = system.scene.physicWorld.createBody(bodyDef)
+            val shape = PolygonShape()
+            shape.set(vertices)
+
+            val fixtureDef = FixtureDef()
+            fixtureDef.shape = shape
+            fixtureDef.friction = 0.75f
             fixtureDef.density = 1.0f
             fixtureDef.restitution = 0.0f
             body.createFixture(fixtureDef)

@@ -46,6 +46,8 @@ class Level {
     private lateinit var enemySystem: EntitySystem<Enemy>
     private lateinit var enemyMaterial: Material
     private lateinit var collisionSystem: EntitySystem<Entity>
+    var startPosition = Vector2i()
+    var exitPosition = Vector2i()
 
     fun update(player: Player, healthBarSystem: EntitySystem<HealthBar>) {
         for (enemy in enemies) {
@@ -66,7 +68,7 @@ class Level {
     }
 
     fun getFirstTilePos(): Vector2i {
-        return Vector2i(rooms[0].tiles[7].x * 64 + 32, rooms[0].tiles[7].y * 64 + 32)
+        return Vector2i(startPosition.x * 64, startPosition.y * 64)
     }
 
     fun create(resourceFactory: ResourceFactory, scene: Scene, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
@@ -102,6 +104,10 @@ class Level {
         var cy = 0.0f
         collisionSystem.clear()
         for (i in 0 until width*height) {
+            if (sx + sy*mapWidth >= map.size) {
+                break
+            }
+
             backIndices[i] = mapBackIndices[sx + sy*mapWidth]
             frontIndices[i] = mapFrontIndices[sx + sy*mapWidth]
 
@@ -115,6 +121,7 @@ class Level {
                 val tr = collisionSystem.findTransformComponent(e.getId())
                 val cl = collisionSystem.findColliderComponent(e.getId())!!
                 cl.setPosition(cx + 32.0f, cy + 32.0f)
+                cl.setFriction(0.5f)
                 tr!!.sx = 64.0f
                 tr.sy = 64.0f
                 tr.z = 13.0f
@@ -157,6 +164,14 @@ class Level {
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         populateTilemap()
 
+        // Set position of start and exit
+        val startRoom = rooms[0]
+        val endRoom = rooms[rooms.size-1]
+        startPosition = startRoom.tiles[startRoom.tiles.size/2]
+        exitPosition = endRoom.tiles[endRoom.tiles.size/2]
+
+        mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2,2)
+
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
         generateEnemies(scene, healthBarMaterial, healthBarSystem)
@@ -164,9 +179,10 @@ class Level {
         val minimapIndices = Array(mapWidth*mapHeight){ TileIndex(2,1) }
         for (i in 0 until rooms.size) {
             for (j in 0 until rooms[i].tiles.size) {
-                minimapIndices[rooms[i].tiles[j].x + rooms[i].tiles[j].y * mapWidth] = TileIndex(0, rooms[i].type.ordinal)
+                minimapIndices[rooms[i].tiles[j].x + rooms[i].tiles[j].y * mapWidth] = TileIndex(7, rooms[i].type.ordinal)
             }
         }
+        minimapIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2,2)
         minimapTilemap.create(resourceFactory, material, mapWidth, mapHeight, 2.0f, 2.0f, minimapIndices)
         minimapTilemap.update(resourceFactory, minimapIndices)
     }
@@ -187,33 +203,10 @@ class Level {
                             if (map[tile.x + (tile.y-2)*mapWidth] == 1) {
                                 mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
                             }
-                        }
-                    }
-                }
-
-                if (tile.y < mapHeight - 1) {
-                    if (map[tile.x + (tile.y+1)*mapWidth] == 1) {
-                        if(tile.y < mapHeight - 2 && map[tile.x + (tile.y+2)*mapWidth] == 1) {
-                            mapFrontIndices[tile.x + (tile.y + 1) * mapWidth] = TileIndex(2, 1)
-                        }
-                        else {
-                            map[tile.x + tile.y * mapWidth] = 1
-                            mapFrontIndices[tile.x + tile.y * mapWidth] = TileIndex(2, 1)
-                            mapBackIndices[tile.x + (tile.y + 1) * mapWidth] = TileIndex(3, tileY)
-                        }
-                    }
-
-                    if (tile.x > 0) {
-                        if (map[(tile.x - 1) + tile.y*mapWidth] == 1 &&
-                            map[(tile.x - 1) + (tile.y+1)*mapWidth] == 1) {
-                            mapFrontIndices[(tile.x-1) + tile.y*mapWidth] = TileIndex(2,1)
-                        }
-                    }
-
-                    if (tile.x < mapWidth - 1) {
-                        if (map[(tile.x + 1) + tile.y*mapWidth] == 1 &&
-                                map[(tile.x + 1) + (tile.y+1)*mapWidth] == 1) {
-                            mapFrontIndices[(tile.x+1) + tile.y*mapWidth] = TileIndex(2,1)
+                            else {
+                                mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
+                                map[tile.x + (tile.y - 2) * mapWidth] = 1
+                            }
                         }
                     }
                 }

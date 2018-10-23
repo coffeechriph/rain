@@ -90,6 +90,14 @@ class Roguelike: Rain() {
             player.playerMovedCell = false
         }
 
+        val tr = playerSystem.findTransformComponent(player.getId())!!
+        if (tr.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && tr.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
+            tr.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && tr.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
+            level.build(resourceFactory, scene, System.currentTimeMillis(), healthBarSystem, healthMaterial)
+            level.switchCell(resourceFactory, 0, 0)
+            player.setPosition(playerSystem, level.getFirstTilePos())
+        }
+
         val mpt = healthBarSystem.findTransformComponent(miniPlayer.getId())!!
         val playerTransform = playerSystem.findTransformComponent(player.getId())!!
         // We need to divide by 32 as each tile on minimap is 2px in size while the actual tiles are 64
