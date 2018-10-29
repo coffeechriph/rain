@@ -35,6 +35,15 @@ class Collider internal constructor(private val body: Body) {
         }
     }
 
+    fun setDensity(density: Float) {
+        if (body.fixtureList.size == 1) {
+            body.fixtureList[0].density = density
+        }
+        else {
+            assertion("Colliders must have 1 fixture! Zero or multiple are not supported")
+        }
+    }
+
     fun setDamping(damping: Float) {
        body.linearDamping = damping
     }

@@ -36,6 +36,7 @@ class Level {
     var minimapTilemap = Tilemap()
 
     private lateinit var material: Material
+    private lateinit var itemMaterial: Material
     private lateinit var texture: Texture2d
     private var firstBuild = true
 
@@ -43,9 +44,13 @@ class Level {
     private var mapFrontIndices = Array(0){TileIndex(0,0)}
     private var rooms = ArrayList<Room>()
     private var enemies = ArrayList<Enemy>()
+    private var random = Random()
     private lateinit var enemySystem: EntitySystem<Enemy>
     private lateinit var enemyMaterial: Material
     private lateinit var collisionSystem: EntitySystem<Entity>
+    private lateinit var containerSystem: EntitySystem<Container>
+    private lateinit var levelItemSystem: EntitySystem<Item>
+    private var containers = ArrayList<Container>()
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
 
@@ -65,6 +70,53 @@ class Level {
             val healthBarTransform = healthBarSystem.findTransformComponent(enemy.healthBar.getId())!!
             healthBarTransform.sx = enemy.health / 2.0f
         }
+
+        for (container in containers) {
+            val sp = containerSystem.findSpriteComponent(container.getId())!!
+            val cl = containerSystem.findColliderComponent(container.getId())!!
+            sp.visible = container.cellX == player.cellX && container.cellY == player.cellY
+            cl.setActive(sp.visible)
+
+            if (container.open && !container.looted) {
+                container.looted = true
+
+                for (i in 0 until random.nextInt(10)) {
+                    val item = Item(ItemType.MELEE)
+                    levelItemSystem.newEntity(item)
+                            .attachTransformComponent()
+                            .attachSpriteComponent(itemMaterial)
+                            .attachBoxColliderComponent(64.0f, 64.0f)
+                            .build()
+                    val cot = containerSystem.findColliderComponent(container.getId())!!
+                    item.setPosition(levelItemSystem, Vector2i(cot.getPosition().x.toInt(), cot.getPosition().y.toInt()))
+                    item.cellX = player.cellX
+                    item.cellY = player.cellY
+                    val tr = levelItemSystem.findTransformComponent(item.getId())!!
+                    tr.sx = 64.0f
+                    tr.sy = 64.0f
+                    val sp2 = levelItemSystem.findSpriteComponent(item.getId())!!
+                    sp2.textureTileOffset.x = 3
+                    sp2.textureTileOffset.y = 4 + random.nextInt(2)
+
+                    val collider = levelItemSystem.findColliderComponent(item.getId())!!
+                    collider.setDamping(300.0f)
+                    collider.setFriction(0.0f)
+                    collider.setDensity(0.0f)
+                }
+            }
+        }
+
+        for (item in levelItemSystem.getEntityList()) {
+            val sp = levelItemSystem.findSpriteComponent(item!!.getId())!!
+            val cl = levelItemSystem.findColliderComponent(item.getId())!!
+            sp.visible = item.cellX == player.cellX && item.cellY == player.cellY
+            cl.setActive(sp.visible)
+
+            if (item.pickedUp) {
+                sp.visible = false
+                cl.setActive(false)
+            }
+        }
     }
 
     fun getFirstTilePos(): Vector2i {
@@ -77,7 +129,7 @@ class Level {
         texture = resourceFactory.createTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
         material = resourceFactory.createMaterial("./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f,1.0f, 1.0f))
-
+        itemMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f, 1.0f, 1.0f))
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
         this.width = width
@@ -92,6 +144,12 @@ class Level {
 
         collisionSystem = EntitySystem(scene)
         scene.addSystem(collisionSystem)
+
+        containerSystem = EntitySystem(scene)
+        scene.addSystem(containerSystem)
+
+        levelItemSystem = EntitySystem(scene)
+        scene.addSystem(levelItemSystem)
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -156,8 +214,9 @@ class Level {
         }
     }
 
-    fun build(resourceFactory: ResourceFactory, scene: Scene, seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
-        generate(seed, 7)
+    fun build(resourceFactory: ResourceFactory, seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
+        random = Random(seed)
+        generate(7)
         buildRooms()
 
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
@@ -174,7 +233,8 @@ class Level {
 
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
-        generateEnemies(scene, healthBarMaterial, healthBarSystem)
+        generateEnemies(healthBarMaterial, healthBarSystem)
+        generateContainers()
 
         val minimapIndices = Array(mapWidth*mapHeight){ TileIndex(2,1) }
         for (i in 0 until rooms.size) {
@@ -214,10 +274,9 @@ class Level {
         }
     }
 
-    private fun generate(seed: Long, repeats: Int) {
+    private fun generate(repeats: Int) {
         var x = 0
         var y = 0
-        val random = Random(seed)
         for (i in 0 until map.size) {
             map[i] = random.nextInt(2)
 
@@ -561,8 +620,7 @@ class Level {
         return tiles
     }
 
-    private fun generateEnemies(scene: Scene, healthBarMaterial: Material, healthBarSystem: EntitySystem<HealthBar>) {
-        val random = Random()
+    private fun generateEnemies(healthBarMaterial: Material, healthBarSystem: EntitySystem<HealthBar>) {
         for (i in 0 until 300) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
@@ -590,6 +648,31 @@ class Level {
             val p = room.tiles[random.nextInt(room.tiles.size)]
             kracGuy.setPosition(enemySystem, Vector2i(p.x*64, p.y*64))
             enemies.add(kracGuy)
+        }
+    }
+
+    private fun generateContainers() {
+        for (i in 0 until 100) {
+            val container = Container()
+            containerSystem.newEntity(container)
+                    .attachTransformComponent()
+                    .attachSpriteComponent(itemMaterial)
+                    .attachBoxColliderComponent(32.0f, 32.0f, BodyDef.BodyType.StaticBody)
+                    .build()
+            val r = rooms[random.nextInt(rooms.size)]
+            val t = r.tiles[random.nextInt(r.tiles.size)]
+            container.setPosition(containerSystem, Vector2i(t.x*64, t.y*64))
+
+            val sprite = containerSystem.findSpriteComponent(container.getId())!!
+            sprite.addAnimation("closed", 0, 0, 4, 0.0f)
+            sprite.addAnimation("open", 1, 0, 4, 0.0f)
+            sprite.startAnimation("closed")
+
+            val collider = containerSystem.findColliderComponent(container.getId())!!
+            collider.setDamping(100.0f)
+            collider.setDensity(1000.0f)
+            collider.setFriction(1.0f)
+            containers.add(container)
         }
     }
 

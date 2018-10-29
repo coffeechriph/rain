@@ -56,7 +56,7 @@ class Roguelike: Rain() {
 
         // TODO: Constant window dimensions
         level.create(resourceFactory, scene, 8960 / 64, 5040/64, 1280 / 64, 720 / 64 + 1)
-        level.build(resourceFactory, scene, 0, healthBarSystem, healthMaterial)
+        level.build(resourceFactory, 0, healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
         scene.addTilemap(level.minimapTilemap)
@@ -93,7 +93,7 @@ class Roguelike: Rain() {
         val tr = playerSystem.findTransformComponent(player.getId())!!
         if (tr.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && tr.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
             tr.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && tr.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
-            level.build(resourceFactory, scene, System.currentTimeMillis(), healthBarSystem, healthMaterial)
+            level.build(resourceFactory, System.currentTimeMillis(), healthBarSystem, healthMaterial)
             level.switchCell(resourceFactory, 0, 0)
             player.setPosition(playerSystem, level.getFirstTilePos())
         }
