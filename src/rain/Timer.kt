@@ -8,18 +8,19 @@ class Timer {
         private set
 
     private var frameCounter = 0
-    private var lastTimeInMilliseconds = System.currentTimeMillis()
-    private var lastFrameInMilliseconds = System.currentTimeMillis()
+    private var lastTimeInNanoSeconds = System.nanoTime()
+    private var lastFrameInNanoSeconds = System.nanoTime()
 
     fun update() {
-        if (System.currentTimeMillis() - lastTimeInMilliseconds >= 1000L) {
+        val nanoTime = System.nanoTime()
+        if (nanoTime - lastTimeInNanoSeconds >= 1_000_000_000L) {
             framesPerSecond = frameCounter
             frameCounter = 0
-            lastTimeInMilliseconds = System.currentTimeMillis()
+            lastTimeInNanoSeconds = nanoTime
         }
 
         frameCounter++
-        deltaTime = (System.currentTimeMillis() - lastFrameInMilliseconds) / 1000.0f
-        lastFrameInMilliseconds = System.currentTimeMillis()
+        deltaTime = (nanoTime - lastFrameInNanoSeconds) / 1_000_000_000.0f
+        lastFrameInNanoSeconds = nanoTime
     }
 }
