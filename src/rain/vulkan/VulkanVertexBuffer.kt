@@ -36,6 +36,10 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
     // TODO: Can we optimize this?
     override fun update(vertices: FloatArray) {
+        if (vertices.isEmpty()) {
+            assertion("Unable to create vertex buffer with no vertices!")
+        }
+
         vertexCount = vertices.size / vertexSize
         if (this.buffer > 0L) {
             vkDestroyBuffer(vk.logicalDevice.device, buffer, null)

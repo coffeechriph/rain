@@ -45,9 +45,10 @@ fun readFileAsByteBuffer(filePath: String): ByteBuffer {
     val file = File(filePath)
     if (file.exists()) {
         val fileStream = FileInputStream(file)
-        val buf = BufferUtils.createByteBuffer(4096) // TODO: Overflows easily
+        val data = fileStream.readAllBytes()
+        val buf = BufferUtils.createByteBuffer(data.size)
 
-        buf.put(fileStream.readAllBytes())
+        buf.put(data)
         buf.flip()
         fileStream.close()
         return buf

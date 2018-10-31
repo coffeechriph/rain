@@ -270,6 +270,17 @@ class Level {
                         }
                     }
                 }
+
+                // Add black tiles at the edges where there's atleast 3 walls below a floor tile
+                // The wall closest to the top floor tile will be populated with a black tile
+                if (tile.y < mapHeight - 3) {
+                    if (map[tile.x + (tile.y+1) * mapWidth] == 1 &&
+                        map[tile.x + (tile.y+2) * mapWidth] == 1 &&
+                        map[tile.x + (tile.y+3) * mapWidth] == 1) {
+                        mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2,1)
+                        map[tile.x + (tile.y + 1) * mapWidth] = 1
+                    }
+                }
             }
         }
     }
