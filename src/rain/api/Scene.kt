@@ -57,13 +57,12 @@ class Scene {
         }
 
         for (system in entitySystems) {
-            for (i in 0 until system.getEntityList().size) {
-                system.getEntityList()[i]!!.update(this, input, system, deltaTime)
+            for (entity in system.getEntityList()) {
+                entity!!.update(this, input, system, deltaTime)
             }
 
-            for (i in 0 until system.getSpriteList().size) {
-                val sprite = system.getSpriteList().get(i)!!
-                if (!sprite.visible) {
+            for (sprite in system.getSpriteList()) {
+                if (!sprite!!.visible) {
                     continue
                 }
 
@@ -82,12 +81,10 @@ class Scene {
                 renderer.submitDraw(sprite, quadVertexBuffer)
             }
 
-            for (i in 0 until system.getColliderList().size) {
-                val b = system.getColliderList()[i]!!.getBody()
-                val e = b.userData as Entity
-                val t = system.findTransformComponent(e.getId())!!
-                t.x = b.position.x
-                t.y = b.position.y
+            for (collider in system.getColliderList()) {
+                val b = collider!!.getBody()
+                collider.transform.x = b.position.x
+                collider.transform.y = b.position.y
             }
         }
     }

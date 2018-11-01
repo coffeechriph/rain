@@ -8,6 +8,8 @@ import java.nio.ByteBuffer
 // The Vulkan implementation would use push constants while the OpenGL implementation would use uniforms
 abstract class Drawable {
     internal abstract fun getTransform(): Transform
+    // TODO: We should add verification that the size of the buffer won't exceed the
+    // limit for push constants on the current machine!
     internal abstract fun getStreamedUniformData(): ByteBuffer
     internal abstract fun getMaterial(): Material
 }

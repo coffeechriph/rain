@@ -162,8 +162,6 @@ class Tilemap: Drawable() {
             }
         }
 
-        if (vertices.size > 0) {
-            vertexBuffer.update(vertices.toFloatArray())
-        }
+        vertexBuffer.update(vertices.toFloatArray())
     }
 }

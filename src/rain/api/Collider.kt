@@ -4,7 +4,7 @@ import com.badlogic.gdx.physics.box2d.Body
 import org.joml.Vector2f
 import rain.assertion
 
-class Collider internal constructor(private val body: Body) {
+class Collider internal constructor(private val body: Body, internal val transform: Transform) {
     internal fun getBody(): Body {
         return body
     }

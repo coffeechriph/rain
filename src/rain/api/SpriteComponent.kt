@@ -6,6 +6,9 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import java.nio.ByteBuffer
 
+// TODO: We probably want a Animation component which updates a sprites TextureTileOffset
+// This would remove the overhead of animations for sprites that don't need it.
+// Also make it clearer that you can easily change textureTileOffset if no animation is attached
 data class SpriteComponent internal constructor(val entity: Long, val material: Material, val transform: Transform, val textureTileOffset: Vector2i): Drawable
 () {
     private val modelMatrixBuffer = memAlloc(18*4)
