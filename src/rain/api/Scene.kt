@@ -61,23 +61,30 @@ class Scene {
                 entity!!.update(this, input, system, deltaTime)
             }
 
+            for (animator in system.getAnimatorList()) {
+                if (!animator!!.animating) {
+                    continue
+                }
+
+                animator.textureTileOffset.y = animator.animation.yPos
+                if (animator.animationTime >= 1.0f) {
+                    animator.animationTime = 0.0f
+                    animator.animationIndex += 1
+                    animator.textureTileOffset.x = animator.animation.startFrame + animator.animationIndex
+
+                    if (animator.animationIndex >= animator.animation.endFrame - animator.animation.startFrame) {
+                        animator.animationIndex = 0
+                    }
+                }
+
+                animator.animationTime += deltaTime * animator.animation.speed
+            }
+
             for (sprite in system.getSpriteList()) {
                 if (!sprite!!.visible) {
                     continue
                 }
 
-                if (sprite.animationTime >= 1.0f) {
-                    sprite.animationTime = 0.0f
-                    sprite.animationIndex += 1
-
-                    sprite.textureTileOffset.x = sprite.animation.startFrame + sprite.animationIndex
-
-                    if (sprite.animationIndex >= (sprite.animation.endFrame - sprite.animation.startFrame)) {
-                        sprite.animationIndex = 0
-                    }
-                }
-
-                sprite.animationTime += deltaTime * sprite.animation.speed
                 renderer.submitDraw(sprite, quadVertexBuffer)
             }
 

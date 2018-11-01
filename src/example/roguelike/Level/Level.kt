@@ -637,6 +637,7 @@ class Level {
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
+                    .attachAnimatorComponent()
                     .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
                     .build()
 
@@ -668,16 +669,17 @@ class Level {
             containerSystem.newEntity(container)
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)
+                    .attachAnimatorComponent()
                     .attachBoxColliderComponent(32.0f, 32.0f, BodyDef.BodyType.StaticBody)
                     .build()
             val r = rooms[random.nextInt(rooms.size)]
             val t = r.tiles[random.nextInt(r.tiles.size)]
             container.setPosition(containerSystem, Vector2i(t.x*64, t.y*64))
 
-            val sprite = containerSystem.findSpriteComponent(container.getId())!!
-            sprite.addAnimation("closed", 0, 0, 4, 0.0f)
-            sprite.addAnimation("open", 1, 0, 4, 0.0f)
-            sprite.startAnimation("closed")
+            val animator = containerSystem.findAnimatorComponent(container.getId())!!
+            animator.addAnimation("closed", 0, 0, 4, 0.0f)
+            animator.addAnimation("open", 1, 0, 4, 0.0f)
+            animator.setAnimation("closed")
 
             val collider = containerSystem.findColliderComponent(container.getId())!!
             collider.setDamping(100.0f)

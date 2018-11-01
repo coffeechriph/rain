@@ -31,19 +31,20 @@ class Attack : Entity() {
         transform.setPosition(1200.0f,600.0f, 9.0f)
         transform.setScale(96.0f,96.0f)
 
-        val sprite = system.findSpriteComponent(getId())!!
-        sprite.addAnimation("down", 0, 0, 0, 0.0f)
-        sprite.addAnimation("right", 1, 1, 0, 0.0f)
-        sprite.addAnimation("up", 2, 2, 0, 0.0f)
-        sprite.addAnimation("left", 3, 3, 0, 0.0f)
+        val animator = system.findAnimatorComponent(getId())!!
+        animator.addAnimation("down", 0, 0, 0, 0.0f)
+        animator.addAnimation("right", 1, 1, 0, 0.0f)
+        animator.addAnimation("up", 2, 2, 0, 0.0f)
+        animator.addAnimation("left", 3, 3, 0, 0.0f)
 
         // TODO: A problem here was that I had to add a idle animation for the LEFT
         // animation to actually trigger due to how it works in the SpriteComponent
-        sprite.addAnimation("idle", 0, 0, 0, 0.0f)
+        animator.addAnimation("idle", 0, 0, 0, 0.0f)
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val sprite = system.findSpriteComponent(getId())!!
+        val animator = system.findAnimatorComponent(getId())!!
 
         if (active) {
             val body = system.findColliderComponent(getId())!!
@@ -54,19 +55,19 @@ class Attack : Entity() {
             when(direction) {
                 Direction.LEFT -> {
                     body.setPosition(parentTransform.x - 32, parentTransform.y)
-                    sprite.startAnimation("left")
+                    animator.setAnimation("left")
                 }
                 Direction.RIGHT -> {
                     body.setPosition(parentTransform.x + 32, parentTransform.y)
-                    sprite.startAnimation("right")
+                    animator.setAnimation("right")
                 }
                 Direction.UP -> {
                     body.setPosition(parentTransform.x, parentTransform.y - 32)
-                    sprite.startAnimation("up")
+                    animator.setAnimation("up")
                 }
                 Direction.DOWN -> {
                     body.setPosition(parentTransform.x, parentTransform.y + 32)
-                    sprite.startAnimation("down")
+                    animator.setAnimation("down")
                 }
             }
 

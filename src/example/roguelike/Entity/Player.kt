@@ -33,19 +33,19 @@ class Player : Entity() {
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         val transform = system.findTransformComponent(getId())!!
-        val sprite = system.findSpriteComponent(getId())!!
+        val animator = system.findAnimatorComponent(getId())!!
         transform.setScale(64.0f,64.0f)
 
-        sprite.addAnimation("idle", 0, 0, 0, 0.0f)
-        sprite.addAnimation("walk_down", 0, 4, 0, 4.0f)
-        sprite.addAnimation("walk_right", 0, 4, 1, 4.0f)
-        sprite.addAnimation("walk_left", 0, 4, 2, 4.0f)
-        sprite.addAnimation("walk_up", 0, 4, 3, 4.0f)
-        sprite.startAnimation("idle")
+        animator.addAnimation("idle", 0, 0, 0, 0.0f)
+        animator.addAnimation("walk_down", 0, 4, 0, 4.0f)
+        animator.addAnimation("walk_right", 0, 4, 1, 4.0f)
+        animator.addAnimation("walk_left", 0, 4, 2, 4.0f)
+        animator.addAnimation("walk_up", 0, 4, 3, 4.0f)
+        animator.setAnimation("idle")
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        val sprite = system.findSpriteComponent(getId())!!
+        val animator = system.findAnimatorComponent(getId())!!
         val transform = system.findTransformComponent(getId())!!
         transform.z = 2.0f + transform.y * 0.001f
 
@@ -71,7 +71,7 @@ class Player : Entity() {
                     if (cellX > 0) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(-200.0f, body.getVelocity().y)
-                        sprite.startAnimation("walk_left")
+                        animator.setAnimation("walk_left")
                     }
                 }
                 Direction.RIGHT -> {
@@ -79,7 +79,7 @@ class Player : Entity() {
                     if (cellX < 1024) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(200.0f, body.getVelocity().y)
-                        sprite.startAnimation("walk_right")
+                        animator.setAnimation("walk_right")
                     }
                 }
             }
@@ -89,7 +89,7 @@ class Player : Entity() {
                     if (cellY > 0) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(body.getVelocity().x, -200.0f)
-                        sprite.startAnimation("walk_up")
+                        animator.setAnimation("walk_up")
                     }
                 }
                 Direction.DOWN -> {
@@ -97,14 +97,14 @@ class Player : Entity() {
                     if (cellY < 1024) {
                         val body = system.findColliderComponent(getId())!!
                         body.setVelocity(body.getVelocity().x, 200.0f)
-                        sprite.startAnimation("walk_down")
+                        animator.setAnimation("walk_down")
                     }
                 }
             }
         }
         else {
             system.findColliderComponent(getId())!!.setVelocity(0.0f, 0.0f)
-            sprite.startAnimation("idle")
+            animator.setAnimation("idle")
         }
 
         keepPlayerWithinBorder(system)

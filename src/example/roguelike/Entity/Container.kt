@@ -32,8 +32,8 @@ class Container : Entity() {
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         if (open) {
-            val sprite = system.findSpriteComponent(getId())!!
-            sprite.startAnimation("open")
+            val animator = system.findAnimatorComponent(getId())!!
+            animator.setAnimation("open")
         }
     }
 }

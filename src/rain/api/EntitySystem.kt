@@ -15,11 +15,13 @@ class EntitySystem<T: Entity>(val scene: Scene) {
     private var entityWrappers = ArrayList<T?>()
     private var transformComponents = ArrayList<TransformComponent?>()
     private var spriteComponents = ArrayList<SpriteComponent?>()
+    private var animatorComponents = ArrayList<Animator?>()
     private var colliderComponents = ArrayList<Collider?>()
 
     private var spriteComponentsMap = HashMap<Long, SpriteComponent?>()
     private var transformComponentsMap = HashMap<Long, TransformComponent?>()
     private var colliderComponentsMap = HashMap<Long, Collider?>()
+    private var animatorComponentsMap = HashMap<Long, Animator?>()
     private var entityWrappersMap = HashMap<Long, T?>()
 
     fun newEntity(entity: T): Builder<T> {
@@ -51,6 +53,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
     class Builder<T: Entity> internal constructor(private var entityId: Long, private val entity: T, private var system: EntitySystem<T>) {
         // TODO: Take in a parent transform that this transform will follow
         fun attachTransformComponent(): Builder<T> {
+            if (system.transformComponentsMap.containsKey(entityId)) {
+                assertion("A transform component already exists for entity $entityId!")
+            }
+
             val c = TransformComponent(entityId)
             system.transformComponents.add(c)
             system.transformComponentsMap.put(entityId, c)
@@ -58,11 +64,27 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         }
 
         fun attachSpriteComponent(material: Material): Builder<T> {
+            if (system.spriteComponentsMap.containsKey(entityId)) {
+                assertion("A sprite component already exists for entity $entityId!")
+            }
+
             val tr = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
             val c = SpriteComponent(entityId, material, tr, Vector2i())
             system.spriteComponents.add(c)
             system.spriteComponentsMap.put(entityId, c)
+            return this
+        }
+
+        fun attachAnimatorComponent(): Builder<T> {
+            if (system.animatorComponentsMap.containsKey(entityId)) {
+                assertion("A animator component already exists for entity $entityId!")
+            }
+
+            val spr = system.findSpriteComponent(entityId) ?: throw IllegalStateException("A sprite component must be attached if a animator is used!")
+            val animator = Animator(entityId, spr.textureTileOffset)
+            system.animatorComponents.add(animator)
+            system.animatorComponentsMap.put(entityId, animator)
             return this
         }
 
@@ -172,6 +194,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return spriteComponentsMap[entityId]
     }
 
+    fun findAnimatorComponent(entityId: Long): Animator? {
+        return animatorComponentsMap[entityId]
+    }
+
     fun findColliderComponent(entityId: Long): Collider? {
         return colliderComponentsMap[entityId]
     }
@@ -190,6 +216,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
 
     internal fun getColliderList(): List<Collider?> {
         return colliderComponents
+    }
+
+    internal fun getAnimatorList(): List<Animator?> {
+        return animatorComponents
     }
 
     private fun uniqueId(): Long {
