@@ -1,4 +1,4 @@
-package rain.api
+package rain.api.gfx
 
 interface VertexBuffer {
     fun update(vertices: FloatArray)

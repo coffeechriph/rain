@@ -4,8 +4,8 @@ import org.joml.Vector3f
 import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
-import rain.api.Material
-import rain.api.Texture2d
+import rain.api.gfx.Material
+import rain.api.gfx.Texture2d
 
 internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: VulkanTexture2d, internal val color: Vector3f, logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
     internal val descriptorPool: DescriptorPool

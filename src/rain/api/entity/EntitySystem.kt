@@ -1,25 +1,26 @@
-package rain.api
+package rain.api.entity
 
 import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2i
-import rain.assertion
+import rain.api.assertion
 import kotlin.IllegalStateException
 import com.badlogic.gdx.physics.box2d.FixtureDef
-import org.joml.Vector2f
+import rain.api.gfx.Material
+import rain.api.scene.Scene
 
 class EntitySystem<T: Entity>(val scene: Scene) {
     private var entityId: Long = 0
     private var entities = ArrayList<Long>()
     private var entityWrappers = ArrayList<T?>()
-    private var transformComponents = ArrayList<TransformComponent?>()
-    private var spriteComponents = ArrayList<SpriteComponent?>()
+    private var transformComponents = ArrayList<Transform?>()
+    private var spriteComponents = ArrayList<Sprite?>()
     private var animatorComponents = ArrayList<Animator?>()
     private var colliderComponents = ArrayList<Collider?>()
 
-    private var spriteComponentsMap = HashMap<Long, SpriteComponent?>()
-    private var transformComponentsMap = HashMap<Long, TransformComponent?>()
+    private var spriteComponentsMap = HashMap<Long, Sprite?>()
+    private var transformComponentsMap = HashMap<Long, Transform?>()
     private var colliderComponentsMap = HashMap<Long, Collider?>()
     private var animatorComponentsMap = HashMap<Long, Animator?>()
     private var entityWrappersMap = HashMap<Long, T?>()
@@ -30,7 +31,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         entities.add(id)
         entityWrappers.add(entity)
         entityWrappersMap.put(id, entity)
-        return Builder(id,entity, this)
+        return Builder(id, entity, this)
     }
 
     fun clear() {
@@ -57,7 +58,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
                 assertion("A transform component already exists for entity $entityId!")
             }
 
-            val c = TransformComponent(entityId)
+            val c = Transform()
             system.transformComponents.add(c)
             system.transformComponentsMap.put(entityId, c)
             return this
@@ -70,7 +71,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
 
             val tr = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
-            val c = SpriteComponent(entityId, material, tr, Vector2i())
+            val c = Sprite(entityId, material, tr, Vector2i())
             system.spriteComponents.add(c)
             system.spriteComponentsMap.put(entityId, c)
             return this
@@ -184,13 +185,13 @@ class EntitySystem<T: Entity>(val scene: Scene) {
     fun findTransformComponent(entityId: Long): Transform? {
         val comp = transformComponentsMap[entityId]
         if (comp != null) {
-            return comp.transform
+            return comp
         }
 
         return null
     }
 
-    fun findSpriteComponent(entityId: Long): SpriteComponent? {
+    fun findSpriteComponent(entityId: Long): Sprite? {
         return spriteComponentsMap[entityId]
     }
 
@@ -206,7 +207,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return entityWrappersMap[entityId]
     }
 
-    internal fun getSpriteList(): List<SpriteComponent?> {
+    internal fun getSpriteList(): List<Sprite?> {
         return spriteComponents
     }
 

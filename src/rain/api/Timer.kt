@@ -1,4 +1,4 @@
-package rain
+package rain.api
 
 class Timer {
     var framesPerSecond = -1

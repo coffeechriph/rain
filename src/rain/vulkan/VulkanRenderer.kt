@@ -7,8 +7,11 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.Window
-import rain.api.*
-import rain.assertion
+import rain.api.gfx.Drawable
+import rain.api.gfx.Renderer
+import rain.api.gfx.VertexBuffer
+import rain.api.scene.Camera
+import rain.api.assertion
 import java.util.*
 
 internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {

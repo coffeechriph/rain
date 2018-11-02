@@ -1,4 +1,4 @@
-package rain
+package rain.api
 
 import java.io.BufferedOutputStream
 import java.io.File

@@ -2,7 +2,7 @@ package rain.vulkan
 
 import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
-import rain.api.*
+import rain.api.gfx.*
 
 internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     private var resourceId: Long = 0

@@ -5,8 +5,8 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
-import rain.assertion
-import rain.log
+import rain.api.assertion
+import rain.api.log
 
 internal class Swapchain {
     enum class SwapchainMode(internal val mode: Int) {

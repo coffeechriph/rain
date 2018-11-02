@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkClearValue
 import org.lwjgl.vulkan.VkRect2D
 import org.lwjgl.vulkan.VkRenderPassBeginInfo
 import org.lwjgl.vulkan.VkViewport
-import rain.assertion
+import rain.api.assertion
 
 
 internal class Renderpass {

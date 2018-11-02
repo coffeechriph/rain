@@ -5,7 +5,16 @@ import example.roguelike.Entity.*
 import org.joml.Vector2i
 import org.joml.Vector3f
 import org.joml.Vector4i
-import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.gfx.Material
+import rain.api.gfx.ResourceFactory
+import rain.api.gfx.Texture2d
+import rain.api.gfx.TextureFilter
+import rain.api.scene.Scene
+import rain.api.scene.TileIndex
+import rain.api.scene.TileIndexNone
+import rain.api.scene.Tilemap
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
@@ -40,8 +49,8 @@ class Level {
     private lateinit var texture: Texture2d
     private var firstBuild = true
 
-    private var mapBackIndices = Array(0){ TileIndex(0,0)}
-    private var mapFrontIndices = Array(0){TileIndex(0,0)}
+    private var mapBackIndices = Array(0){ TileIndex(0, 0) }
+    private var mapFrontIndices = Array(0){ TileIndex(0, 0) }
     private var rooms = ArrayList<Room>()
     private var enemies = ArrayList<Enemy>()
     private var random = Random()
@@ -229,20 +238,20 @@ class Level {
         startPosition = startRoom.tiles[startRoom.tiles.size/2]
         exitPosition = endRoom.tiles[endRoom.tiles.size/2]
 
-        mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2,2)
+        mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
 
         saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
         generateEnemies(healthBarMaterial, healthBarSystem)
         generateContainers()
 
-        val minimapIndices = Array(mapWidth*mapHeight){ TileIndex(2,1) }
+        val minimapIndices = Array(mapWidth*mapHeight){ TileIndex(2, 1) }
         for (i in 0 until rooms.size) {
             for (j in 0 until rooms[i].tiles.size) {
                 minimapIndices[rooms[i].tiles[j].x + rooms[i].tiles[j].y * mapWidth] = TileIndex(7, rooms[i].type.ordinal)
             }
         }
-        minimapIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2,2)
+        minimapIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
         minimapTilemap.create(resourceFactory, material, mapWidth, mapHeight, 2.0f, 2.0f, minimapIndices)
         minimapTilemap.update(resourceFactory, minimapIndices)
     }
@@ -261,10 +270,10 @@ class Level {
 
                         if (tile.y > 1) {
                             if (map[tile.x + (tile.y-2)*mapWidth] == 1) {
-                                mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
+                                mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3, tileY)
                             }
                             else {
-                                mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3,tileY)
+                                mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3, tileY)
                                 map[tile.x + (tile.y - 2) * mapWidth] = 1
                             }
                         }
@@ -277,7 +286,7 @@ class Level {
                     if (map[tile.x + (tile.y+1) * mapWidth] == 1 &&
                         map[tile.x + (tile.y+2) * mapWidth] == 1 &&
                         map[tile.x + (tile.y+3) * mapWidth] == 1) {
-                        mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2,1)
+                        mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2, 1)
                         map[tile.x + (tile.y + 1) * mapWidth] = 1
                     }
                 }

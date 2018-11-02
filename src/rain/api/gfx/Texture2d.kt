@@ -1,4 +1,4 @@
-package rain.api
+package rain.api.gfx
 
 interface Texture2d {
     fun getWidth(): Int

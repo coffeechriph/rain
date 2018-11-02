@@ -1,10 +1,10 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.Entity
-import rain.api.EntitySystem
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
 import rain.api.Input
-import rain.api.Scene
+import rain.api.scene.Scene
 
 class Container : Entity() {
     var health = 0

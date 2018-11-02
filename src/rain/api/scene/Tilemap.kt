@@ -1,10 +1,10 @@
-package rain.api
+package rain.api.scene
 
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.memAlloc
-import rain.assertion
-import rain.log
+import rain.api.entity.Transform
+import rain.api.gfx.*
+import rain.api.log
 import java.nio.ByteBuffer
 
 class Tilemap: Drawable() {
@@ -100,7 +100,7 @@ class Tilemap: Drawable() {
             }
         }
 
-        log("Created tilemap mesh with ${vertices.size}/${map.size*4*6} vertices actually allocated.")
+        log("Created tilemap mesh with ${vertices.size}/${map.size * 4 * 6} vertices actually allocated.")
         vertexBuffer = resourceFactory.createVertexBuffer(vertices.toFloatArray(), VertexBufferState.STATIC)
         this.tileNumX = tileNumX
         this.tileNumY = tileNumY

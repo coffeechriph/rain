@@ -1,4 +1,4 @@
-package rain.api
+package rain.api.gfx
 
 import org.joml.Vector3f
 

@@ -1,12 +1,12 @@
-package rain.api
+package rain.api.entity
 
 import org.joml.Vector2i
-import rain.assertion
+import rain.api.assertion
 
 class Animator internal constructor(val entityId: Long, val textureTileOffset: Vector2i) {
     internal var animationTime = 0.0f
     internal var animationIndex = 0
-    internal var animation = Animation(0,0,0,0.0f)
+    internal var animation = Animation(0, 0, 0, 0.0f)
         private set
     private var animations = HashMap<String, Animation>()
     var animating = true

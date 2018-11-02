@@ -2,6 +2,9 @@ package example.roguelike.Entity
 
 import org.joml.Vector2i
 import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.scene.Scene
 
 class Player : Entity() {
     private var xdir = Direction.NONE
@@ -19,7 +22,7 @@ class Player : Entity() {
     var tileWidth: Int = 0
     var maxCellX = 0
     var maxCellY = 0
-    val attack = Attack()
+    lateinit var attack: Attack
 
     fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
         val body = system.findColliderComponent(getId())!!
@@ -28,7 +31,6 @@ class Player : Entity() {
         cellX = pos.x / 1280
         cellY = pos.y / 720
         playerMovedCell = true
-        attack.parentTransform = system.findTransformComponent(getId())!!
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
@@ -42,6 +44,8 @@ class Player : Entity() {
         animator.addAnimation("walk_left", 0, 4, 2, 4.0f)
         animator.addAnimation("walk_up", 0, 4, 3, 4.0f)
         animator.setAnimation("idle")
+
+        attack = Attack(system.findTransformComponent(getId())!!)
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {

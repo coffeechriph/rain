@@ -3,7 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
-import rain.assertion
+import rain.api.assertion
 import java.nio.ByteBuffer
 
 internal class UniformBuffer {

@@ -11,9 +11,8 @@ import org.lwjgl.vulkan.VkApplicationInfo
 import org.lwjgl.vulkan.VkExtensionProperties
 import org.lwjgl.vulkan.VkInstance
 import org.lwjgl.vulkan.VkInstanceCreateInfo
-import org.lwjgl.vulkan.VkLayerProperties
-import rain.assertion
-import rain.log
+import rain.api.assertion
+import rain.api.log
 import java.nio.ByteBuffer
 
 

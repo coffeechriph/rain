@@ -1,9 +1,8 @@
-package rain;
+package rain.api;
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
-import rain.api.Input
 
 internal class Window {
     var windowPointer: Long = -1
@@ -23,6 +22,7 @@ internal class Window {
             log("GLFW initialized properly!")
         }
 
+        // TODO: Should only check if vulkan is supported if we decide to create a vulkan context
         if (!glfwVulkanSupported()) {
             assertion("Vulkan is not supported by GLFW")
         }

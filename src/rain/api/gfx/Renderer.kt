@@ -1,4 +1,6 @@
-package rain.api
+package rain.api.gfx
+
+import rain.api.scene.Camera
 
 interface Renderer {
     fun create()

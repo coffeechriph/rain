@@ -7,13 +7,10 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.Texture2d
-import rain.assertion
+import rain.api.gfx.Texture2d
+import rain.api.assertion
 import java.io.File
 import java.io.FileNotFoundException
-import org.lwjgl.vulkan.VK10.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
-import org.lwjgl.vulkan.VK10.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT
-
 
 
 internal class VulkanTexture2d: Texture2d {

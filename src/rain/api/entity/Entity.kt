@@ -1,4 +1,7 @@
-package rain.api
+package rain.api.entity
+
+import rain.api.Input
+import rain.api.scene.Scene
 
 open class Entity {
     private var id: Long = -1L

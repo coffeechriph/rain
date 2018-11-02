@@ -1,4 +1,4 @@
-package rain.api
+package rain.api.entity
 
 class Transform {
     internal var updated: Boolean = true

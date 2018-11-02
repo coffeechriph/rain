@@ -1,8 +1,8 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.Entity
-import rain.api.EntitySystem
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
 
 enum class ItemType {
     MELEE,

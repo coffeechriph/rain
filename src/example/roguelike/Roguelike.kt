@@ -6,8 +6,11 @@ import example.roguelike.Entity.Player
 import example.roguelike.Level.Level
 import org.joml.Vector3f
 import rain.Rain
-import rain.api.*
-import rain.vulkan.transitionImageLayout
+import rain.api.entity.EntitySystem
+import rain.api.gfx.Material
+import rain.api.gfx.Texture2d
+import rain.api.gfx.TextureFilter
+import rain.api.scene.Camera
 
 class Roguelike: Rain() {
     private lateinit var attackMaterial: Material

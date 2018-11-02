@@ -1,8 +1,8 @@
-package rain.api
+package rain.api.entity
 
 import com.badlogic.gdx.physics.box2d.Body
 import org.joml.Vector2f
-import rain.assertion
+import rain.api.assertion
 
 class Collider internal constructor(private val body: Body, internal val transform: Transform) {
     internal fun getBody(): Body {

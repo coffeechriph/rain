@@ -1,5 +1,6 @@
-package rain.api
+package rain.api.gfx
 
+import rain.api.entity.Transform
 import java.nio.ByteBuffer
 
 // Generic class which gives the Renderer knowledge about

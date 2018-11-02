@@ -1,14 +1,17 @@
 package example.roguelike.Entity
 
 import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.entity.Transform
+import rain.api.scene.Scene
 
 /*
     TODO: Two things that would be nice to support in the engine to make things like these a bit easier.
     1. onCollision method which takes in two entities that collided.
     2. parent entity to allow this entities transform the be linked to the parent
  */
-class Attack : Entity() {
-    var parentTransform = Transform()
+class Attack(val parentTransform: Transform) : Entity() {
     private var active = false
     private var direction = Direction.DOWN
     private var activeTime = 0
@@ -38,7 +41,7 @@ class Attack : Entity() {
         animator.addAnimation("left", 3, 3, 0, 0.0f)
 
         // TODO: A problem here was that I had to add a idle animation for the LEFT
-        // animation to actually trigger due to how it works in the SpriteComponent
+        // animation to actually trigger due to how it works in the Sprite
         animator.addAnimation("idle", 0, 0, 0, 0.0f)
     }
 

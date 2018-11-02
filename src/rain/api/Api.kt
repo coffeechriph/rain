@@ -1,4 +1,4 @@
-package rain
+package rain.api
 
 enum class Api {
     VULKAN,

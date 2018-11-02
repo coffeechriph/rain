@@ -1,4 +1,4 @@
-package rain.api
+package rain.api.gfx
 
 enum class TextureFilter {
     NEAREST,

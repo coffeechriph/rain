@@ -5,7 +5,7 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocPointer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.assertion
+import rain.api.assertion
 import java.nio.ByteBuffer
 
 internal class PhysicalDevice {

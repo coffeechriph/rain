@@ -1,6 +1,10 @@
 package example.roguelike.Entity
 
 import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.entity.Transform
+import rain.api.scene.Scene
 
 class HealthBar: Entity() {
     var parentTransform: Transform? = null

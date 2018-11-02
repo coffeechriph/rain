@@ -1,6 +1,6 @@
 package example.roguelike
 
-import rain.Api
+import rain.api.Api
 
 fun main(args: Array<String>) {
     val app = Roguelike()

@@ -1,9 +1,9 @@
 package rain
 
-import org.joml.Vector3f
 import rain.api.*
+import rain.api.gfx.ResourceFactory
+import rain.api.scene.Scene
 import rain.vulkan.*
-import java.util.concurrent.atomic.AtomicBoolean
 
 open class Rain {
     private val context = Window()
@@ -12,7 +12,6 @@ open class Rain {
     lateinit var resourceFactory: ResourceFactory
         private set
     private lateinit var vulkanRenderer: VulkanRenderer
-        private set
     val scene = Scene()
     private val timer = Timer()
 

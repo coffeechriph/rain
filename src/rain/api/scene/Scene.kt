@@ -1,7 +1,14 @@
-package rain.api
+package rain.api.scene
 
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.*
+import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.gfx.Renderer
+import rain.api.gfx.ResourceFactory
+import rain.api.gfx.VertexBuffer
+import rain.api.gfx.VertexBufferState
 
 class Scene {
     private lateinit var quadVertexBuffer: VertexBuffer

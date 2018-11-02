@@ -1,15 +1,16 @@
-package rain.api
+package rain.api.entity
 
 import org.joml.Matrix4f
 import org.joml.Vector2i
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
+import rain.api.gfx.Drawable
+import rain.api.gfx.Material
 import java.nio.ByteBuffer
 
 // TODO: We probably want a Animation component which updates a sprites TextureTileOffset
 // This would remove the overhead of animations for sprites that don't need it.
 // Also make it clearer that you can easily change textureTileOffset if no animation is attached
-data class SpriteComponent internal constructor(val entity: Long, val material: Material, val transform: Transform, val textureTileOffset: Vector2i): Drawable
+data class Sprite internal constructor(val entity: Long, val material: Material, val transform: Transform, val textureTileOffset: Vector2i): Drawable
 () {
     var visible = true
 

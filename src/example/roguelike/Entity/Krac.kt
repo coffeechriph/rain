@@ -1,6 +1,9 @@
 package example.roguelike.Entity
 
 import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.scene.Scene
 import java.util.*
 
 class Krac: Enemy() {

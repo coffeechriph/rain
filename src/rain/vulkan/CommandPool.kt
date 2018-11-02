@@ -4,7 +4,7 @@ import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.assertion
+import rain.api.assertion
 import java.nio.LongBuffer
 
 internal class CommandPool {

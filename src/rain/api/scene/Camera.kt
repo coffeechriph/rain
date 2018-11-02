@@ -1,9 +1,11 @@
-package rain.api
+package rain.api.scene
 
 import org.joml.Matrix4f
+import rain.api.entity.Transform
 
 class Camera {
-    var transform = Transform()
+    var x: Float = 0.0f
+    var y: Float = 0.0f
     var projection = Matrix4f()
         private set
 

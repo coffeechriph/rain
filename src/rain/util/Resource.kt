@@ -1,4 +1,4 @@
-package rain
+package rain.util
 
 import org.lwjgl.BufferUtils
 import java.io.File

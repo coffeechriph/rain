@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkDeviceCreateInfo
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
 import org.lwjgl.vulkan.VkPhysicalDeviceFeatures
-import rain.assertion
+import rain.api.assertion
 
 internal class LogicalDevice {
     lateinit var device: VkDevice

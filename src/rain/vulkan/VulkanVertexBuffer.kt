@@ -3,11 +3,9 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.VertexBuffer
-import rain.api.VertexBufferState
-import rain.assertion
-import java.nio.IntBuffer
-import java.nio.LongBuffer
+import rain.api.gfx.VertexBuffer
+import rain.api.gfx.VertexBufferState
+import rain.api.assertion
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanVertexBuffer: VertexBuffer {

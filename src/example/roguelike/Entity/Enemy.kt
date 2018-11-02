@@ -2,6 +2,10 @@ package example.roguelike.Entity
 
 import org.joml.Vector2i
 import rain.api.*
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.entity.Transform
+import rain.api.scene.Scene
 import kotlin.math.sin
 
 open class Enemy : Entity() {

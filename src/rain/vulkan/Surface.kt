@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 import org.lwjgl.vulkan.VkSurfaceFormatKHR
-import rain.assertion
+import rain.api.assertion
 
 internal class Surface {
     var surface: Long = 0
