@@ -1,10 +1,10 @@
 package rain.api.gui
 
-class ToggleButton {
-    var x = 0.0f
-    var y = 0.0f
-    var sx = 0.0f
-    var sy = 0.0f
-    var checked = false
+class ToggleButton: GuiC() {
     var text = "ToggleButton"
+
+    override fun trigger(): Boolean {
+        active = !active
+        return true
+    }
 }

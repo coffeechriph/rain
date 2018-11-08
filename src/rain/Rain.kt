@@ -2,7 +2,9 @@ package rain
 
 import rain.api.*
 import rain.api.gfx.ResourceFactory
-import rain.api.gui.Container
+import rain.api.gui.Button
+import rain.api.gui.Gui
+import rain.api.gui.ToggleButton
 import rain.api.scene.Scene
 import rain.vulkan.*
 
@@ -14,7 +16,8 @@ open class Rain {
     internal val input = Input()
     lateinit var resourceFactory: ResourceFactory
         private set
-    private val containers = ArrayList<Container>()
+    lateinit var gui: Gui
+        private set
     val scene = Scene()
 
     fun create(width: Int, height: Int, title: String, api: Api) {
@@ -24,6 +27,22 @@ open class Rain {
             Api.VULKAN -> createVulkanApi()
             Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
         }
+
+        gui = Gui(resourceFactory, vulkanRenderer)
+        val container = gui.newContainer(0.0f, 0.0f, 256.0f, 100.0f)
+        val button = Button()
+        button.x = 10.0f
+        button.y = 10.0f
+        button.w = 100.0f
+        button.h = 40.0f
+        container.addComponent(button)
+
+        val toggleButton = ToggleButton()
+        toggleButton.x = 10.0f
+        toggleButton.y = 60.0f
+        toggleButton.w = 100.0f
+        toggleButton.h = 20.0f
+        container.addComponent(toggleButton)
     }
 
     private fun createVulkanApi() {
@@ -31,10 +50,6 @@ open class Rain {
         resourceFactory = VulkanResourceFactory(vk)
         vulkanRenderer = VulkanRenderer(vk, context)
         vulkanRenderer.create()
-    }
-
-    fun addContainer(container: Container) {
-        containers.add(container)
     }
 
     open fun init() {}
@@ -51,12 +66,10 @@ open class Rain {
             vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
             context.windowDirty = false
 
-            for (container in containers) {
-                container.update(input)
-            }
-
+            gui.update(input)
             scene.update(vulkanRenderer, input, timer.deltaTime)
             update()
+            gui.render()
             vulkanRenderer.render()
 
             input.updateKeyState()
