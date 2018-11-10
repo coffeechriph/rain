@@ -59,8 +59,8 @@ class Tilemap: Drawable() {
             if (map[i] != TileIndexNone) {
                 val tileX = map[i].x
                 val tileY = map[i].y
-                val uvx = material.getTexture2d().getTexCoordWidth()
-                val uvy = material.getTexture2d().getTexCoordHeight()
+                val uvx = material.getTexture2d()[0].getTexCoordWidth()
+                val uvy = material.getTexture2d()[0].getTexCoordHeight()
 
                 vertices.add(x)
                 vertices.add(y)
@@ -121,8 +121,8 @@ class Tilemap: Drawable() {
             if (tileIndices[i] != TileIndexNone) {
                 val tileX = tileIndices[i].x
                 val tileY = tileIndices[i].y
-                val uvx = material.getTexture2d().getTexCoordWidth()
-                val uvy = material.getTexture2d().getTexCoordHeight()
+                val uvx = material.getTexture2d()[0].getTexCoordWidth()
+                val uvy = material.getTexture2d()[0].getTexCoordHeight()
 
                 vertices.add(x)
                 vertices.add(y)

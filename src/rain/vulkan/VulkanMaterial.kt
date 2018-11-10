@@ -7,20 +7,23 @@ import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
 import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
 
-internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: VulkanTexture2d, internal val color: Vector3f, logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
+internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: Array<Texture2d>, internal val color: Vector3f, logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer()
     internal val sceneData = UniformBuffer()
 
-    override fun getTexture2d(): Texture2d {
+    override fun getTexture2d(): Array<Texture2d> {
         return texture2d
     }
 
     init {
-        val textureDataBuffer = memAlloc(2 * 4)
+        val textureDataBuffer = memAlloc(2 * texture2d.size * 4)
         val textureDataBufferF = textureDataBuffer.asFloatBuffer()
-        textureDataBufferF.put(0, texture2d.texCoordWidth)
-        textureDataBufferF.put(1, texture2d.texCoordHeight)
+
+        for (i in 0 until texture2d.size) {
+            textureDataBufferF.put(0, texture2d[i].getTexCoordWidth())
+            textureDataBufferF.put(1, texture2d[i].getTexCoordHeight())
+        }
         textureDataUBO.create(logicalDevice, memoryProperties, BufferMode.SINGLE_BUFFER, textureDataBuffer.remaining().toLong())
         textureDataUBO.update(logicalDevice, textureDataBuffer, 0)
 
@@ -35,9 +38,13 @@ internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderMod
         sceneData.update(logicalDevice, sceneDataBuffer, 0)
         sceneData.update(logicalDevice, sceneDataBuffer, 1)
         descriptorPool = DescriptorPool()
-                .withTexture(texture2d, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
-                .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_VERTEX_BIT)
-                .withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
-                .build(logicalDevice)
+        for (i in 0 until texture2d.size) {
+            descriptorPool.withTexture(texture2d[i] as VulkanTexture2d, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+        }
+
+        descriptorPool
+            .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_VERTEX_BIT)
+            .withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+            .build(logicalDevice)
     }
 }

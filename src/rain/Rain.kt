@@ -3,6 +3,7 @@ package rain
 import rain.api.*
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Button
+import rain.api.gui.Font
 import rain.api.gui.Gui
 import rain.api.gui.ToggleButton
 import rain.api.scene.Scene
@@ -19,6 +20,7 @@ open class Rain {
     lateinit var gui: Gui
         private set
     val scene = Scene()
+    lateinit var testFont: Font
 
     fun create(width: Int, height: Int, title: String, api: Api) {
         context.create(width, height, title, input)
@@ -43,6 +45,8 @@ open class Rain {
         toggleButton.w = 100.0f
         toggleButton.h = 20.0f
         container.addComponent(toggleButton)
+
+        container.addText("Hello World!", 10.0f, 40.0f, null)
     }
 
     private fun createVulkanApi() {

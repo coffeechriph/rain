@@ -8,13 +8,16 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
     private val containers = ArrayList<Container>()
     private val material: Material
 
+    var font: Font
     init {
-        val guiSkin = resourceFactory.createTexture2d("./data/textures/skin.png", TextureFilter.NEAREST)
-        material = resourceFactory.createMaterial("./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", guiSkin, Vector3f(1.0f, 1.0f, 1.0f))
+        val guiSkin = resourceFactory.loadTexture2d("./data/textures/skin.png", TextureFilter.NEAREST)
+        font = Font("./data/fonts/FreeSans.ttf")
+        font.buildBitmap(resourceFactory, 512, 512, 32.0f)
+        material = resourceFactory.createMaterial("./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", arrayOf(guiSkin, font.texture), Vector3f(1.0f, 1.0f, 1.0f))
     }
 
     fun newContainer(x: Float, y: Float, w: Float, h: Float): Container {
-        val c = Container(material, resourceFactory)
+        val c = Container(material, resourceFactory, font)
         c.transform.x = x
         c.transform.y = y
         c.transform.sx = w

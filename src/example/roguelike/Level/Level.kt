@@ -135,7 +135,7 @@ class Level {
     fun create(resourceFactory: ResourceFactory, scene: Scene, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
-        texture = resourceFactory.createTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)
+        texture = resourceFactory.loadTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
         material = resourceFactory.createMaterial("./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f,1.0f, 1.0f))
         itemMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f, 1.0f, 1.0f))
@@ -145,7 +145,7 @@ class Level {
         this.height = height
         map = IntArray(mapWidth*mapHeight)
 
-        val enemyTexture = resourceFactory.createTexture2d("./data/textures/krac.png", TextureFilter.NEAREST)
+        val enemyTexture = resourceFactory.loadTexture2d("./data/textures/krac.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(32,32)
         enemyMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture, Vector3f(1.0f, 1.0f, 1.0f))
         enemySystem = EntitySystem(scene)

@@ -1,5 +1,5 @@
 package rain.api.gfx
 
 interface Material {
-    fun getTexture2d(): Texture2d
+    fun getTexture2d(): Array<Texture2d>
 }

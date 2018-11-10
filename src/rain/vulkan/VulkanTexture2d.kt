@@ -11,6 +11,8 @@ import rain.api.gfx.Texture2d
 import rain.api.assertion
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.ByteBuffer
+import java.nio.IntBuffer
 
 
 internal class VulkanTexture2d: Texture2d {
@@ -60,7 +62,12 @@ internal class VulkanTexture2d: Texture2d {
             throw RuntimeException("Failed to load image $filePath")
         }
 
-        val buffer = createBuffer(logicalDevice, (width.get(0)*height.get(0)*channels.get(0)).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
+        createImage(logicalDevice, memoryProperties, commandPool, queue, imageData, width.get(0), height.get(0), channels.get(0))
+    }
+
+    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, imageData: ByteBuffer, width: Int, height: Int, channels: Int) {
+        val format = findTextureFormat(channels)
+        val buffer = createBuffer(logicalDevice, (width*height*channels).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
 
         val imageDataBuffer = MemoryUtil.memAlloc(imageData.remaining())
         imageDataBuffer.put(imageData)
@@ -85,7 +92,7 @@ internal class VulkanTexture2d: Texture2d {
                     .imageType(VK_IMAGE_TYPE_2D)
                     .mipLevels(1)
                     .arrayLayers(1)
-                    .format(VK_FORMAT_R8G8B8A8_UNORM)
+                    .format(format)
                     .tiling(VK_IMAGE_TILING_OPTIMAL)
                     .initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
                     .samples(VK_SAMPLE_COUNT_1_BIT)
@@ -94,8 +101,8 @@ internal class VulkanTexture2d: Texture2d {
             val extent = imageCreateInfo
                     .extent()
 
-            extent.width(width.get(0))
-                    .height(height.get(0))
+            extent.width(width)
+                    .height(height)
 
             val textureImage = memAllocLong(1)
             vkCreateImage(logicalDevice.device, imageCreateInfo, null, textureImage)
@@ -119,17 +126,17 @@ internal class VulkanTexture2d: Texture2d {
 
             vkBindImageMemory(logicalDevice.device, textureImage.get(0), textureImageMemory.get(0), 0)
 
-            transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-            copyBufferToImage(logicalDevice, commandPool, queue, buffer.buffer, textureImage.get(0), width.get(0), height.get(0))
-            transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+            transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+            copyBufferToImage(logicalDevice, commandPool, queue, buffer.buffer, textureImage.get(0), width, height)
+            transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 
             texture = textureImage.get(0)
 
             val textureImageView = ImageView()
-            textureImageView.create(logicalDevice, texture, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_VIEW_TYPE_2D, VK10.VK_IMAGE_ASPECT_COLOR_BIT)
+            textureImageView.create(logicalDevice, texture, format, VK_IMAGE_VIEW_TYPE_2D, VK10.VK_IMAGE_ASPECT_COLOR_BIT)
             textureView = textureImageView.imageView
-            this.width = width[0]
-            this.height = height[0]
+            this.width = width
+            this.height = height
 
             // Create the texture sampler
             val samplerCreateInfo = VkSamplerCreateInfo.calloc()
@@ -156,6 +163,16 @@ internal class VulkanTexture2d: Texture2d {
                 assertion("Unable to create texture sampler " + VulkanResult(err))
             }
             this.textureSampler = sampler.get(0)
+        }
+    }
+
+    private fun findTextureFormat(channels: Int): Int {
+        when(channels) {
+            1 -> return VK_FORMAT_R8_UNORM
+            2 -> return VK_FORMAT_R8G8_UNORM
+            3 -> return VK_FORMAT_R8G8B8_UNORM
+            4 -> return VK_FORMAT_R8G8B8A8_UNORM
+            else -> throw AssertionError("Unsupported number of channels for texture $channels")
         }
     }
 

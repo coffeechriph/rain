@@ -3,6 +3,7 @@ package rain.vulkan
 import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
 import rain.api.gfx.*
+import java.nio.ByteBuffer
 
 internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     private var resourceId: Long = 0
@@ -49,7 +50,25 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         shaders.put(vertex.id, vertex)
         shaders.put(fragment.id, fragment)
 
-        val material = VulkanMaterial(uniqueId(), vertex, fragment, texture2d as VulkanTexture2d, color, logicalDevice, physicalDevice.memoryProperties)
+        val material = VulkanMaterial(uniqueId(), vertex, fragment, Array(1){i -> texture2d}, color, logicalDevice, physicalDevice.memoryProperties)
+        materials.add(material)
+
+        return material
+    }
+
+    override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, color: Vector3f): Material {
+        val vertex = ShaderModule(uniqueId())
+        val fragment = ShaderModule(uniqueId())
+
+        // TODO: We should be able to actually load the shaders at a later time on the main thread
+        // In order to make this method thread-safe
+        vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
+        fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+
+        shaders.put(vertex.id, vertex)
+        shaders.put(fragment.id, fragment)
+
+        val material = VulkanMaterial(uniqueId(), vertex, fragment, texture2d, color, logicalDevice, physicalDevice.memoryProperties)
         materials.add(material)
 
         return material
@@ -57,9 +76,15 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
 
     // TODO: We should be able to actually load the texture at a later time on the main thread
     // In order to make this method thread-safe
-    override fun createTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
+    override fun loadTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
         texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile)
+        return texture2d
+    }
+
+    override fun createTexture2d(imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
+        val texture2d = VulkanTexture2d()
+        texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels)
         return texture2d
     }
 

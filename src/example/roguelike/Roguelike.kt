@@ -26,7 +26,7 @@ class Roguelike: Rain() {
     private var level = Level()
 
     override fun init() {
-        mobTexture = resourceFactory.createTexture2d("./data/textures/dwarf.png", TextureFilter.NEAREST)
+        mobTexture = resourceFactory.loadTexture2d("./data/textures/dwarf.png", TextureFilter.NEAREST)
         mobTexture.setTiledTexture(16,16)
         mobMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture, Vector3f(1.0f, 1.0f, 1.0f))
         player = Player()
@@ -39,7 +39,7 @@ class Roguelike: Rain() {
                 .build()
         scene.addSystem(playerSystem)
 
-        val attackTexture = resourceFactory.createTexture2d("./data/textures/attack.png", TextureFilter.NEAREST)
+        val attackTexture = resourceFactory.loadTexture2d("./data/textures/attack.png", TextureFilter.NEAREST)
         attackTexture.setTiledTexture(16,16)
         attackMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", attackTexture, Vector3f(1.0f, 1.0f,
                 1.0f))
@@ -53,7 +53,7 @@ class Roguelike: Rain() {
                 .build()
         scene.addSystem(attackSystem)
 
-        val healthTexture = resourceFactory.createTexture2d("./data/textures/health.png", TextureFilter.NEAREST)
+        val healthTexture = resourceFactory.loadTexture2d("./data/textures/health.png", TextureFilter.NEAREST)
         healthMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", healthTexture, Vector3f(1.0f, 1.0f,
                 1.0f))
         healthBarSystem = EntitySystem(scene)
