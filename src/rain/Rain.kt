@@ -46,7 +46,7 @@ open class Rain {
         toggleButton.h = 20.0f
         container.addComponent(toggleButton)
 
-        container.addText("Hello World!", 10.0f, 40.0f, null)
+        container.addText("This is a long line of text that doesn't give any valuable information.\nNow we're on another line... Weird. Why did we end up here?\nOh no not again! Let's get out of here", 10.0f, 40.0f, null)
     }
 
     private fun createVulkanApi() {

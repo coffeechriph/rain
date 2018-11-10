@@ -78,13 +78,13 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     // In order to make this method thread-safe
     override fun loadTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
-        texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile)
+        texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile, filter)
         return texture2d
     }
 
     override fun createTexture2d(imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
-        texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels)
+        texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels, filter)
         return texture2d
     }
 

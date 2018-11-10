@@ -3,12 +3,16 @@ package rain.api.gui
 import org.joml.Vector2i
 import org.joml.Vector4i
 import org.lwjgl.stb.STBTTAlignedQuad
+import org.lwjgl.stb.STBTruetype.stbtt_GetCodepointKernAdvance
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.entity.Transform
 import rain.api.gfx.*
 import java.nio.ByteBuffer
+import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
+
+
 
 class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font): Drawable() {
     val transform = Transform()
@@ -107,6 +111,8 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     private fun buildTextVertices() {
+        val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
+
         val list = ArrayList<Float>()
         for (text in textfields) {
             val tx = text.x
@@ -118,24 +124,40 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                 val y = stack.floats(0.0f)
                 val quad = STBTTAlignedQuad.mallocStack(stack)
 
-                for (c in text.string) {
-                    font.getBakedQuad(c, quad, x, y)
-                    val cx1 = tx + quad.x0()
-                    val cx2 = tx + quad.x1()
-                    val cy1 = ty + quad.y0()
-                    val cy2 = ty + quad.y1()
-                    val ux1 = quad.s0()
-                    val ux2 = quad.s1()
-                    val uy1 = quad.t0()
-                    val uy2 = quad.t1()
-                    list.addAll(listOf(
-                        cx1, cy1, ux1, uy1,
-                        cx1, cy2, ux1, uy2,
-                        cx2, cy2, ux2, uy2,
-                        cx2, cy2, ux2, uy2,
-                        cx2, cy1, ux2, uy1,
-                        cx1, cy1, ux1, uy1
-                    ))
+                var index = 0
+                while(index < text.string.length) {
+                    index += font.getCodePoint(text.string, text.string.length, index, codePoint)
+                    val cp = codePoint.get(0)
+
+                    if (cp == '\n'.toInt()) {
+                        y.put(0, y.get(0) + (font.ascent - font.descent + font.lineGap) * scale)
+                        x.put(0, 0.0f)
+                    }
+                    else {
+                        font.getBakedQuad(cp, quad, x, y)
+                        if (font.useKerning && index + 1 < text.string.length) {
+                            font.getCodePoint(text.string, text.string.length, index, codePoint)
+                            x.put(0, x.get(0) + stbtt_GetCodepointKernAdvance(font.fontInfo, cp, codePoint.get(0)) * scale)
+                        }
+
+                        val cx1 = tx + quad.x0()
+                        val cx2 = tx + quad.x1()
+                        val cy1 = ty + quad.y0()
+                        val cy2 = ty + quad.y1()
+                        val ux1 = quad.s0()
+                        val ux2 = quad.s1()
+                        val uy1 = quad.t0()
+                        val uy2 = quad.t1()
+
+                        list.addAll(listOf(
+                                cx1, cy1, ux1, uy1,
+                                cx1, cy2, ux1, uy2,
+                                cx2, cy2, ux2, uy2,
+                                cx2, cy2, ux2, uy2,
+                                cx2, cy1, ux2, uy1,
+                                cx1, cy1, ux1, uy1
+                        ))
+                    }
                 }
             }
         }

@@ -21,12 +21,9 @@ void main() {
       }
       else {
         color = vec4(texture(textSampler, Uv).r);
-        if (color.a <= 0.0) {
-          discard;
-        }
       }
 
-      if (color.w < 0.01f) {
+      if (color.a < 0.01f) {
           discard;
       }
     }

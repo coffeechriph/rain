@@ -24,10 +24,11 @@ class Font(ttfFile: String) {
     lateinit var texture: Texture2d
         private set
 
+    var ascent: Int
+    var descent: Int
+    var lineGap: Int
+
     private val ttf: ByteBuffer
-    private var ascent: Int
-    private var descent: Int
-    private var lineGap: Int
     private var bitmapWidth = 0
     private var bitmapHeight = 0
     private lateinit var cdata: STBTTBakedChar.Buffer
@@ -59,20 +60,20 @@ class Font(ttfFile: String) {
     }
 
     fun buildBitmap(resourceFactory: ResourceFactory, width: Int, height: Int, pixelHeight: Float) {
-        cdata = STBTTBakedChar.malloc(600)
+        cdata = STBTTBakedChar.malloc(1024)
 
         val bitmap = memAlloc(width*height)
         stbtt_BakeFontBitmap(ttf, pixelHeight, bitmap, width, height, 32, cdata)
 
-        stbi_write_png("font.png", width, height, 1, bitmap, width)
-        texture = resourceFactory.createTexture2d(bitmap, width, height, 1, TextureFilter.NEAREST)
+        stbi_write_png("font.png", width, height, 4, bitmap, width)
+        texture = resourceFactory.createTexture2d(bitmap, width, height, 1, TextureFilter.LINEAR)
         fontHeight = pixelHeight
         bitmapWidth = width
         bitmapHeight = height
     }
 
-    fun getBakedQuad(c: Char, quad: STBTTAlignedQuad, x: FloatBuffer, y: FloatBuffer) {
-        stbtt_GetBakedQuad(cdata, bitmapWidth, bitmapHeight, c.toInt() - 32, x, y, quad, true)
+    fun getBakedQuad(c: Int, quad: STBTTAlignedQuad, x: FloatBuffer, y: FloatBuffer) {
+        stbtt_GetBakedQuad(cdata, bitmapWidth, bitmapHeight, c - 32, x, y, quad, true)
     }
 
     fun getStringWidth(text: String, from: Int, to: Int): Float {

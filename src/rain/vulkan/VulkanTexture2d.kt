@@ -9,6 +9,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.gfx.Texture2d
 import rain.api.assertion
+import rain.api.gfx.TextureFilter
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
@@ -48,7 +49,7 @@ internal class VulkanTexture2d: Texture2d {
         texCoordHeight = (tileHeight.toFloat() / height.toFloat())
     }
 
-    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String) {
+    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String, filter: TextureFilter) {
         if (!File(filePath).exists()) {
             throw FileNotFoundException("File $filePath was not found!")
         }
@@ -62,11 +63,17 @@ internal class VulkanTexture2d: Texture2d {
             throw RuntimeException("Failed to load image $filePath")
         }
 
-        createImage(logicalDevice, memoryProperties, commandPool, queue, imageData, width.get(0), height.get(0), channels.get(0))
+        createImage(logicalDevice, memoryProperties, commandPool, queue, imageData, width.get(0), height.get(0), channels.get(0), filter)
     }
 
-    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, imageData: ByteBuffer, width: Int, height: Int, channels: Int) {
+    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
         val format = findTextureFormat(channels)
+        val textureFilter = when(filter) {
+            TextureFilter.NEAREST -> VK_FILTER_NEAREST
+            TextureFilter.LINEAR -> VK_FILTER_LINEAR
+            else -> throw AssertionError("Unsupported texture filter $filter")
+        }
+
         val buffer = createBuffer(logicalDevice, (width*height*channels).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
 
         val imageDataBuffer = MemoryUtil.memAlloc(imageData.remaining())
@@ -141,8 +148,8 @@ internal class VulkanTexture2d: Texture2d {
             // Create the texture sampler
             val samplerCreateInfo = VkSamplerCreateInfo.calloc()
                     .sType(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO)
-                    .magFilter(VK_FILTER_NEAREST)
-                    .minFilter(VK_FILTER_NEAREST)
+                    .magFilter(textureFilter)
+                    .minFilter(textureFilter)
                     .addressModeU(VK_SAMPLER_ADDRESS_MODE_REPEAT)
                     .addressModeV(VK_SAMPLER_ADDRESS_MODE_REPEAT)
                     .addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT)
