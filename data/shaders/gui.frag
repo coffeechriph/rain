@@ -20,7 +20,8 @@ void main() {
         color = texture(texSampler, Uv);
       }
       else {
-        color = vec4(texture(textSampler, Uv).r);
+        color.a = texture(textSampler, Uv).r;
+        color.rgb = vec3(1.0);
       }
 
       if (color.a < 0.01f) {

@@ -15,7 +15,6 @@ import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
 import java.nio.FloatBuffer
 
-
 class Font(ttfFile: String) {
     var useKerning = true
     var fontHeight: Float
@@ -65,15 +64,14 @@ class Font(ttfFile: String) {
         val bitmap = memAlloc(width*height)
         stbtt_BakeFontBitmap(ttf, pixelHeight, bitmap, width, height, 32, cdata)
 
-        stbi_write_png("font.png", width, height, 4, bitmap, width)
-        texture = resourceFactory.createTexture2d(bitmap, width, height, 1, TextureFilter.LINEAR)
+        texture = resourceFactory.createTexture2d(bitmap, width, height, 1, TextureFilter.NEAREST)
         fontHeight = pixelHeight
         bitmapWidth = width
         bitmapHeight = height
     }
 
     fun getBakedQuad(c: Int, quad: STBTTAlignedQuad, x: FloatBuffer, y: FloatBuffer) {
-        stbtt_GetBakedQuad(cdata, bitmapWidth, bitmapHeight, c - 32, x, y, quad, true)
+        stbtt_GetBakedQuad(cdata, bitmapWidth, bitmapHeight, c - 32, x, y, quad, false)
     }
 
     fun getStringWidth(text: String, from: Int, to: Int): Float {

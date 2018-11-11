@@ -60,7 +60,7 @@ class Scene {
         renderer.setActiveCamera(camera)
 
         for (tilemap in tilemaps) {
-            //renderer.submitDraw(tilemap, tilemap.vertexBuffer)
+            renderer.submitDraw(tilemap, tilemap.vertexBuffer)
         }
 
         for (system in entitySystems) {

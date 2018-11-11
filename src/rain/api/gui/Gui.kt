@@ -12,7 +12,7 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
     init {
         val guiSkin = resourceFactory.loadTexture2d("./data/textures/skin.png", TextureFilter.NEAREST)
         font = Font("./data/fonts/FreeSans.ttf")
-        font.buildBitmap(resourceFactory, 512, 512, 32.0f)
+        font.buildBitmap(resourceFactory, 512, 512, 48.0f)
         material = resourceFactory.createMaterial("./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", arrayOf(guiSkin, font.texture), Vector3f(1.0f, 1.0f, 1.0f))
     }
 

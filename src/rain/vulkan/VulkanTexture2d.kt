@@ -155,7 +155,7 @@ internal class VulkanTexture2d: Texture2d {
                     .addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT)
                     .anisotropyEnable(false)
                     .maxAnisotropy(0.0f)
-                    .borderColor(VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK)
+                    .borderColor(VK_BORDER_COLOR_INT_TRANSPARENT_BLACK)
                     .unnormalizedCoordinates(false)
                     .compareEnable(false)
                     .compareOp(VK_COMPARE_OP_ALWAYS)

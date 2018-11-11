@@ -31,7 +31,7 @@ open class Rain {
         }
 
         gui = Gui(resourceFactory, vulkanRenderer)
-        val container = gui.newContainer(0.0f, 0.0f, 256.0f, 100.0f)
+        val container = gui.newContainer(0.0f, 0.0f, 500.0f, 300.0f)
         val button = Button()
         button.x = 10.0f
         button.y = 10.0f
