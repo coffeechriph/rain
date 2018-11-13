@@ -71,7 +71,6 @@ internal class VulkanTexture2d: Texture2d {
         val textureFilter = when(filter) {
             TextureFilter.NEAREST -> VK_FILTER_NEAREST
             TextureFilter.LINEAR -> VK_FILTER_LINEAR
-            else -> throw AssertionError("Unsupported texture filter $filter")
         }
 
         val buffer = createBuffer(logicalDevice, (width*height*channels).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)

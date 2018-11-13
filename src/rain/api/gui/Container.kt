@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
 import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
 import rain.vulkan.VertexAttribute
 
-class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font): Drawable() {
+class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font) {
     val transform = Transform()
     var isDirty = true
 
@@ -22,37 +22,19 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     private var lastTriggeredComponent: GuiC? = null
     private lateinit var componentBuffer: VertexBuffer
     private lateinit var textBuffer: VertexBuffer
-    private var currentTextureIndex = 0
 
-    override fun getTransform(): Transform {
-        return transform
-    }
-
-    override fun getStreamedUniformData(): ByteBuffer {
+    private fun getUniformData(textureIndex: Int): ByteBuffer {
         val uniformData = memAlloc(18 * 4)
         val f = uniformData.asFloatBuffer()
         f.put(transform.x)
         f.put(transform.y)
         f.put(transform.sx)
         f.put(transform.sy)
-        f.put(currentTextureIndex.toFloat())
+        f.put(textureIndex.toFloat())
         f.put(floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f))
         f.flip()
 
-        // TODO: Ugly hack to flip between skin & font texture
-        // This could be solved by allowing drawables to better modify their streamed uniform data
-        if (currentTextureIndex == 0) {
-            currentTextureIndex = 1
-        }
-        else {
-            currentTextureIndex = 0
-        }
-
         return uniformData
-    }
-
-    override fun getMaterial(): Material {
-        return material
     }
 
     fun addComponent(component: GuiC) {
@@ -264,12 +246,9 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     fun render(renderer: Renderer) {
-        // TODO: In order for these to render in a correct order
-        // and with the correct alpha blending a hack is done in the shaders..
-        // We should be able to specify model matrices between submit draw calls
-        renderer.submitDraw(this, componentBuffer)
+        renderer.submitDraw(transform, material, getUniformData(0), componentBuffer)
         if (::textBuffer.isInitialized) {
-            renderer.submitDraw(this, textBuffer)
+            renderer.submitDraw(transform, material, getUniformData(1), textBuffer)
         }
     }
 }

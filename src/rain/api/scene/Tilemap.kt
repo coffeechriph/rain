@@ -7,18 +7,10 @@ import rain.api.gfx.*
 import rain.api.log
 import java.nio.ByteBuffer
 
-class Tilemap: Drawable() {
+class Tilemap {
     private val modelMatrix = Matrix4f()
 
-    override fun getMaterial(): Material {
-        return material
-    }
-
-    override fun getTransform(): Transform {
-        return transform
-    }
-
-    override fun getStreamedUniformData(): ByteBuffer {
+    fun getUniformData(): ByteBuffer {
         if (transform.updated) {
             modelMatrix.identity()
             modelMatrix.rotateZ(transform.rot)
@@ -42,8 +34,10 @@ class Tilemap: Drawable() {
 
     internal lateinit var vertexBuffer: VertexBuffer
         private set
-    private lateinit var material: Material
-    private var transform = Transform()
+    lateinit var material: Material
+        private set
+    var transform = Transform()
+        private set
 
     private lateinit var vertices: ArrayList<Float>
 
@@ -110,7 +104,7 @@ class Tilemap: Drawable() {
     }
 
     // TODO: Add a check to make sure that the vertexBuffer has already been created
-    fun update(resourceFactory: ResourceFactory, tileIndices: Array<TileIndex>) {
+    fun update(tileIndices: Array<TileIndex>) {
         assert(tileIndices.size == tileNumX * tileNumY)
 
         var x = 0.0f

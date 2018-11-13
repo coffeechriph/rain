@@ -210,16 +210,16 @@ class Level {
         if (firstBuild) {
             backTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, backIndices)
             frontTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, frontIndices)
-            backTilemap.update(resourceFactory, backIndices)
-            frontTilemap.update(resourceFactory, frontIndices)
-            backTilemap.getTransform().setPosition(0.0f, 0.0f, 1.0f)
-            frontTilemap.getTransform().setPosition(0.0f, 0.0f, 10.0f)
-            minimapTilemap.getTransform().setPosition(0.0f, 0.0f, 11.0f)
+            backTilemap.update(backIndices)
+            frontTilemap.update(frontIndices)
+            backTilemap.transform.setPosition(0.0f, 0.0f, 1.0f)
+            frontTilemap.transform.setPosition(0.0f, 0.0f, 10.0f)
+            minimapTilemap.transform.setPosition(0.0f, 0.0f, 11.0f)
             firstBuild = false
         }
         else {
-            backTilemap.update(resourceFactory, backIndices)
-            frontTilemap.update(resourceFactory, frontIndices)
+            backTilemap.update(backIndices)
+            frontTilemap.update(frontIndices)
         }
     }
 
@@ -253,7 +253,7 @@ class Level {
         }
         minimapIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
         minimapTilemap.create(resourceFactory, material, mapWidth, mapHeight, 2.0f, 2.0f, minimapIndices)
-        minimapTilemap.update(resourceFactory, minimapIndices)
+        minimapTilemap.update(minimapIndices)
     }
 
     private fun populateTilemap() {

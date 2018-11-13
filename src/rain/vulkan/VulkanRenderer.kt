@@ -13,12 +13,15 @@ import rain.api.gfx.Renderer
 import rain.api.gfx.VertexBuffer
 import rain.api.scene.Camera
 import rain.api.assertion
+import rain.api.entity.Transform
+import rain.api.gfx.Material
+import java.nio.ByteBuffer
 import java.util.*
 
 internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
-    private data class DrawOp(val drawable: Drawable, val buffer: VulkanVertexBuffer): Comparable<DrawOp> {
+    private data class DrawOp(val transform: Transform, val material: Material, val uniformData: ByteBuffer, val buffer: VulkanVertexBuffer): Comparable<DrawOp> {
         override fun compareTo(other: DrawOp): Int {
-            return (drawable.getTransform().z - other.drawable.getTransform().z).toInt()
+            return (transform.z - other.transform.z).toInt()
         }
     }
 
@@ -74,8 +77,8 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         this.camera = camera
     }
 
-    override fun submitDraw(drawable: Drawable, vertexBuffer: VertexBuffer) {
-        drawOpsQueue.add(DrawOp(drawable, vertexBuffer as VulkanVertexBuffer))
+    override fun submitDraw(transform: Transform, material: Material, uniformData: ByteBuffer, vertexBuffer: VertexBuffer) {
+        drawOpsQueue.add(DrawOp(transform, material, uniformData, vertexBuffer as VulkanVertexBuffer))
     }
 
     override fun getDepthRange(): Vector2f {
@@ -238,20 +241,19 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
     private fun issueDrawingCommands() {
         for (draw in drawOpsQueue) {
-            val mat = draw.drawable.getMaterial() as VulkanMaterial
+            val mat = draw.material as VulkanMaterial
             var found = false
             for (pipeline in pipelines) {
                 if (pipeline.vertexBuffer.id == draw.buffer.id && pipeline.material.id == mat.id) {
-                    pipeline.submitDrawInstance(draw.drawable)
+                    pipeline.submitDrawInstance(draw.transform, draw.material, draw.uniformData)
                     found = true
                 }
             }
 
             if (!found) {
-                val material = draw.drawable.getMaterial() as VulkanMaterial
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, draw.buffer, material, material.descriptorPool)
-                pipeline.submitDrawInstance(draw.drawable)
+                pipeline.create(logicalDevice, renderpass, draw.buffer, mat, mat.descriptorPool)
+                pipeline.submitDrawInstance(draw.transform, draw.material, draw.uniformData)
                 pipelines.add(pipeline)
             }
         }
