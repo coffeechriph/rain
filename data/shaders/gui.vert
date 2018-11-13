@@ -1,6 +1,6 @@
 #version 420 core
 
-layout(location = 0) in vec2 pos;
+layout(location = 0) in vec3 pos;
 layout(location = 1) in vec2 uv;
 
 layout(location = 0) out vec2 Uv;
@@ -22,8 +22,7 @@ void main() {
     vec2 csize = vec2(container.bounds.z, container.bounds.w);
     currentTextureIndex = container.textureIndex;
 
-    gl_Position = sceneData.projectionMatrix * vec4(cpos.x + pos.x, cpos.y + pos.y, 1.0, 1.0);
-    gl_Position.z = 0.1 - container.textureIndex / 10.0;
+    gl_Position = sceneData.projectionMatrix * vec4(cpos.x + pos.x, cpos.y + pos.y, pos.z, 1.0);
     Uv = uv;
     containerData = vec4(cpos.x, cpos.y, csize.x, csize.y);
     fpos = vec2(pos.x, pos.y);

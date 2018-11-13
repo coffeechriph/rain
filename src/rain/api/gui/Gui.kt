@@ -36,7 +36,7 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
                 continue
             }
 
-            container.build()
+            container.build(renderer)
         }
     }
 

@@ -4,6 +4,7 @@ import example.roguelike.Entity.Attack
 import example.roguelike.Entity.HealthBar
 import example.roguelike.Entity.Player
 import example.roguelike.Level.Level
+import org.joml.Vector2f
 import org.joml.Vector3f
 import rain.Rain
 import rain.api.entity.EntitySystem
@@ -22,7 +23,9 @@ class Roguelike: Rain() {
     private lateinit var healthBarSystem: EntitySystem<HealthBar>
     private var player = Player()
     private var miniPlayer = HealthBar()
-    private var camera = Camera()
+    // TODO: The depth range is aquired from the renderer
+    // TODO: Create a method in scene to create a new camera which auto-injects the depth range
+    private var camera = Camera(Vector2f(0.0f, 20.0f))
     private var level = Level()
 
     override fun init() {
@@ -66,7 +69,7 @@ class Roguelike: Rain() {
         scene.addTilemap(level.frontTilemap)
         scene.addTilemap(level.minimapTilemap)
 
-        camera = Camera()
+        camera = Camera(Vector2f(0.0f, 20.0f))
         scene.setActiveCamera(camera)
 
         player.map = level.map

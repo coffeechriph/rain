@@ -1,5 +1,6 @@
 package rain.vulkan
 
+import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW.glfwGetFramebufferSize
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.*
@@ -75,6 +76,10 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
     override fun submitDraw(drawable: Drawable, vertexBuffer: VertexBuffer) {
         drawOpsQueue.add(DrawOp(drawable, vertexBuffer as VulkanVertexBuffer))
+    }
+
+    override fun getDepthRange(): Vector2f {
+        return Vector2f(0.0f, 20.0f)
     }
 
     override fun create() {

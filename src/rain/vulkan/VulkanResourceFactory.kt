@@ -14,7 +14,6 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     internal val materials: MutableList<VulkanMaterial>
     private val textures: MutableMap<Long, VulkanTexture2d>
     private val shaders: MutableMap<Long, ShaderModule>
-    private val attributes = arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2))
 
     init {
         this.materials = ArrayList()
@@ -31,7 +30,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         return shaders.get(id)
     }
 
-    override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState): VulkanVertexBuffer {
+    override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
         val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
         return buffer

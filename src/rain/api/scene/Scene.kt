@@ -2,6 +2,7 @@ package rain.api.scene
 
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.*
+import org.joml.Vector2f
 import rain.api.*
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -16,7 +17,7 @@ class Scene {
         private set
     private var physicsContactListener = PhysicsContactListener()
 
-    private var camera = Camera()
+    private var camera = Camera(Vector2f(0.0f, 20.0f))
 
     fun<T: Entity> addSystem(system: EntitySystem<T>) {
         entitySystems.add(system as EntitySystem<Entity>)

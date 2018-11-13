@@ -11,6 +11,7 @@ import rain.api.entity.Transform
 import rain.api.gfx.*
 import java.nio.ByteBuffer
 import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
+import rain.vulkan.VertexAttribute
 
 class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font): Drawable() {
     val transform = Transform()
@@ -78,14 +79,15 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         isDirty = true
     }
 
-    fun build() {
+    fun build(renderer: Renderer) {
         isDirty = false
 
-        buildComponentVertices()
-        buildTextVertices()
+        buildComponentVertices(renderer)
+        buildTextVertices(renderer)
     }
 
-    private fun buildComponentVertices() {
+    private fun buildComponentVertices(renderer: Renderer) {
+        val depth = renderer.getDepthRange().y - 0.1f
         val list = ArrayList<Float>()
         for (component in components) {
             val x = component.x
@@ -101,23 +103,24 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                 }
 
                 list.addAll(listOf(
-                        x, y, px, 0.0f,
-                        x, y + h, px, 0.5f,
-                        x + w, y + h, px + 0.25f, 0.5f,
-                        x + w, y + h, px + 0.25f, 0.5f,
-                        x + w, y, px + 0.25f, 0.0f,
-                        x, y, px, 0.0f))
+                        x, y, depth, px, 0.0f,
+                        x, y + h, depth, px, 0.5f,
+                        x + w, y + h, depth, px + 0.25f, 0.5f,
+                        x + w, y + h, depth, px + 0.25f, 0.5f,
+                        x + w, y, depth, px + 0.25f, 0.0f,
+                        x, y, depth, px, 0.0f))
             }
         }
 
         if (!::componentBuffer.isInitialized) {
-            componentBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC)
+            componentBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
         }
 
         componentBuffer.update(list.toFloatArray())
     }
 
-    private fun buildTextVertices() {
+    private fun buildTextVertices(renderer: Renderer) {
+        val depth = renderer.getDepthRange().y
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
         val list = ArrayList<Float>()
@@ -184,19 +187,19 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                     val uy2 = vertList[i*8+7]
 
                     list.addAll(listOf(
-                            cx1, cy1, ux1, uy1,
-                            cx1, cy2, ux1, uy2,
-                            cx2, cy2, ux2, uy2,
-                            cx2, cy2, ux2, uy2,
-                            cx2, cy1, ux2, uy1,
-                            cx1, cy1, ux1, uy1
+                            cx1, cy1, depth, ux1, uy1,
+                            cx1, cy2, depth, ux1, uy2,
+                            cx2, cy2, depth, ux2, uy2,
+                            cx2, cy2, depth, ux2, uy2,
+                            cx2, cy1, depth, ux2, uy1,
+                            cx1, cy1, depth, ux1, uy1
                     ))
                 }
             }
         }
 
         if (!::textBuffer.isInitialized) {
-            textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC)
+            textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
         }
 
         textBuffer.update(list.toFloatArray())
