@@ -16,7 +16,7 @@ class Krac: Enemy() {
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
-        val animator = system.findAnimatorComponent(getId())!!
+        super.init(scene, system)
 
         // TODO: Should be able to animate on the Y axis as well
         animator.addAnimation("idle_up", 0, 0, 1, 1.0f)
@@ -27,10 +27,8 @@ class Krac: Enemy() {
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        val transform = system.findTransformComponent(getId())!!
         transform.z = 1.0f + transform.y * 0.001f
 
-        val animator = system.findAnimatorComponent(getId())!!
         if (animator.animationTime >= 1.0f) {
             idleDir = Random().nextInt(3)
 
@@ -42,6 +40,6 @@ class Krac: Enemy() {
             }
         }
 
-        handleDamage(system.findTransformComponent(getId())!!)
+        handleDamage(transform)
     }
 }

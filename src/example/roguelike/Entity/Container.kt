@@ -1,9 +1,8 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
 import rain.api.Input
+import rain.api.entity.*
 import rain.api.scene.Scene
 
 class Container : Entity() {
@@ -13,13 +12,15 @@ class Container : Entity() {
     var cellX = 0
     var cellY = 0
 
+    lateinit var transform: Transform
+    lateinit var sprite: Sprite
+    lateinit var collider: Collider
+
     // TODO: Constant window size
-    fun setPosition(system: EntitySystem<Container>, pos: Vector2i) {
-        val transform = system.findTransformComponent(getId())!!
+    fun setPosition(pos: Vector2i) {
         transform.z = 2.0f + transform.y * 0.001f
         transform.setScale(64.0f, 64.0f)
-        val body = system.findColliderComponent(getId())!!
-        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
+        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
         cellX = pos.x / 1280
         cellY = pos.y / 720
     }
@@ -30,14 +31,18 @@ class Container : Entity() {
         }
     }
 
+    override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
+        transform = system.findTransformComponent(getId())!!
+        sprite = system.findSpriteComponent(getId())!!
+        collider = system.findColliderComponent(getId())!!
+    }
+
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         if (open) {
-            val sprite = system.findSpriteComponent(getId())!!
             sprite.textureTileOffset.x = 1
             sprite.textureTileOffset.y = 4
         }
         else {
-            val sprite = system.findSpriteComponent(getId())!!
             sprite.textureTileOffset.x = 0
             sprite.textureTileOffset.y = 4
         }

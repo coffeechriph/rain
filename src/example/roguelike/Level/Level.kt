@@ -63,28 +63,22 @@ class Level {
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
 
-    fun update(player: Player, healthBarSystem: EntitySystem<HealthBar>) {
+    fun update(player: Player) {
         for (enemy in enemies) {
-            val sprite = enemySystem.findSpriteComponent(enemy.getId())!!
-            sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
-            val healthBar = healthBarSystem.findSpriteComponent(enemy.healthBar.getId())!!
-            healthBar.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
-            val co = enemySystem.findColliderComponent(enemy.getId())!!
-            co.setActive(sprite.visible)
+            enemy.sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
+            enemy.healthBar.sprite.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
+            enemy.collider.setActive(enemy.sprite.visible)
 
-            if (!sprite.visible) {
+            if (!enemy.sprite.visible) {
                 continue
             }
 
-            val healthBarTransform = healthBarSystem.findTransformComponent(enemy.healthBar.getId())!!
-            healthBarTransform.sx = enemy.health / 2.0f
+            enemy.healthBar.transform.sx = enemy.health / 2.0f
         }
 
         for (container in containers) {
-            val sp = containerSystem.findSpriteComponent(container.getId())!!
-            val cl = containerSystem.findColliderComponent(container.getId())!!
-            sp.visible = container.cellX == player.cellX && container.cellY == player.cellY
-            cl.setActive(sp.visible)
+            container.sprite.visible = container.cellX == player.cellX && container.cellY == player.cellY
+            container.collider.setActive(container.sprite.visible)
 
             if (container.open && !container.looted) {
                 container.looted = true
@@ -96,34 +90,28 @@ class Level {
                             .attachSpriteComponent(itemMaterial)
                             .attachBoxColliderComponent(64.0f, 64.0f)
                             .build()
-                    val cot = containerSystem.findColliderComponent(container.getId())!!
-                    item.setPosition(levelItemSystem, Vector2i(cot.getPosition().x.toInt(), cot.getPosition().y.toInt()))
+                    item.setPosition(levelItemSystem, Vector2i(container.collider.getPosition().x.toInt(), container.collider.getPosition().y.toInt()))
                     item.cellX = player.cellX
                     item.cellY = player.cellY
-                    val tr = levelItemSystem.findTransformComponent(item.getId())!!
-                    tr.sx = 64.0f
-                    tr.sy = 64.0f
-                    val sp2 = levelItemSystem.findSpriteComponent(item.getId())!!
-                    sp2.textureTileOffset.x = 3
-                    sp2.textureTileOffset.y = 4 + random.nextInt(2)
+                    item.transform.sx = 64.0f
+                    item.transform.sy = 64.0f
+                    item.sprite.textureTileOffset.x = 3
+                    item.sprite.textureTileOffset.y = 4 + random.nextInt(2)
 
-                    val collider = levelItemSystem.findColliderComponent(item.getId())!!
-                    collider.setDamping(300.0f)
-                    collider.setFriction(0.0f)
-                    collider.setDensity(0.0f)
+                    item.collider.setDamping(300.0f)
+                    item.collider.setFriction(0.0f)
+                    item.collider.setDensity(0.0f)
                 }
             }
         }
 
         for (item in levelItemSystem.getEntityList()) {
-            val sp = levelItemSystem.findSpriteComponent(item!!.getId())!!
-            val cl = levelItemSystem.findColliderComponent(item.getId())!!
-            sp.visible = item.cellX == player.cellX && item.cellY == player.cellY
-            cl.setActive(sp.visible)
+            item!!.sprite.visible = item.cellX == player.cellX && item.cellY == player.cellY
+            item.collider.setActive(item.sprite.visible)
 
             if (item.pickedUp) {
-                sp.visible = false
-                cl.setActive(false)
+                item.sprite.visible = false
+                item.collider.setActive(false)
             }
         }
     }
@@ -182,7 +170,6 @@ class Level {
                 val e = Entity()
                 collisionSystem.newEntity(e)
                         .attachTransformComponent()
-                        //.attachSpriteComponent(enemyMaterial)
                         .attachBoxColliderComponent(64.0f, 64.0f, BodyDef.BodyType.StaticBody)
                         .build()
                 val tr = collisionSystem.findTransformComponent(e.getId())
@@ -651,9 +638,8 @@ class Level {
                     .build()
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
-            val cl = enemySystem.findColliderComponent(kracGuy.getId())!!
-            cl.setDamping(100.0f)
-            cl.setFriction(0.0f)
+            kracGuy.collider.setDamping(100.0f)
+            kracGuy.collider.setFriction(0.0f)
             kracGuy.healthBar.parentTransform = et
 
             healthBarSystem.newEntity(kracGuy.healthBar)
@@ -661,13 +647,12 @@ class Level {
                     .attachSpriteComponent(healthBarMaterial)
                     .build()
 
-            val tr = healthBarSystem.findTransformComponent(kracGuy.healthBar.getId())!!
-            tr.sx = 60.0f
-            tr.sy = 7.0f
+            kracGuy.healthBar.transform.sx = 60.0f
+            kracGuy.healthBar.transform.sy = 7.0f
 
             val room = rooms[random.nextInt(rooms.size)]
             val p = room.tiles[random.nextInt(room.tiles.size)]
-            kracGuy.setPosition(enemySystem, Vector2i(p.x*64, p.y*64))
+            kracGuy.setPosition(Vector2i(p.x*64, p.y*64))
             enemies.add(kracGuy)
         }
     }
@@ -682,12 +667,11 @@ class Level {
                     .build()
             val r = rooms[random.nextInt(rooms.size)]
             val t = r.tiles[random.nextInt(r.tiles.size)]
-            container.setPosition(containerSystem, Vector2i(t.x*64, t.y*64))
 
-            val collider = containerSystem.findColliderComponent(container.getId())!!
-            collider.setDamping(100.0f)
-            collider.setDensity(1000.0f)
-            collider.setFriction(1.0f)
+            container.setPosition(Vector2i(t.x*64, t.y*64))
+            container.collider.setDamping(100.0f)
+            container.collider.setDensity(1000.0f)
+            container.collider.setFriction(1.0f)
             containers.add(container)
         }
     }

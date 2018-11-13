@@ -2,8 +2,7 @@ package example.roguelike.Entity
 
 import org.joml.Vector2i
 import rain.api.*
-import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
+import rain.api.entity.*
 import rain.api.scene.Scene
 
 class Player : Entity() {
@@ -24,10 +23,13 @@ class Player : Entity() {
     var maxCellY = 0
     lateinit var inventory: Inventory
     lateinit var attack: Attack
+    lateinit var transform: Transform
+    lateinit var sprite: Sprite
+    lateinit var animator: Animator
+    lateinit var collider: Collider
 
-    fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
-        val body = system.findColliderComponent(getId())!!
-        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
+    fun setPosition(pos: Vector2i) {
+        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
 
         cellX = pos.x / 1280
         cellY = pos.y / 720
@@ -35,8 +37,10 @@ class Player : Entity() {
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
-        val transform = system.findTransformComponent(getId())!!
-        val animator = system.findAnimatorComponent(getId())!!
+        sprite = system.findSpriteComponent(getId())!!
+        transform = system.findTransformComponent(getId())!!
+        animator = system.findAnimatorComponent(getId())!!
+        collider = system.findColliderComponent(getId())!!
         transform.setScale(64.0f,64.0f)
 
         animator.addAnimation("idle", 0, 0, 0, 0.0f)
@@ -46,12 +50,10 @@ class Player : Entity() {
         animator.addAnimation("walk_up", 0, 4, 3, 4.0f)
         animator.setAnimation("idle")
 
-        attack = Attack(system.findTransformComponent(getId())!!)
+        attack = Attack(transform)
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        val animator = system.findAnimatorComponent(getId())!!
-        val transform = system.findTransformComponent(getId())!!
         transform.z = 1.0f + transform.y * 0.001f
 
         setDirectionBasedOnInput(input)
@@ -74,16 +76,14 @@ class Player : Entity() {
             when (xdir) {
                 Direction.LEFT -> {
                     if (cellX > 0) {
-                        val body = system.findColliderComponent(getId())!!
-                        body.setVelocity(-200.0f, body.getVelocity().y)
+                        collider.setVelocity(-200.0f, collider.getVelocity().y)
                         animator.setAnimation("walk_left")
                     }
                 }
                 Direction.RIGHT -> {
                     // TODO: Constant window width
                     if (cellX < 1024) {
-                        val body = system.findColliderComponent(getId())!!
-                        body.setVelocity(200.0f, body.getVelocity().y)
+                        collider.setVelocity(200.0f, collider.getVelocity().y)
                         animator.setAnimation("walk_right")
                     }
                 }
@@ -92,23 +92,21 @@ class Player : Entity() {
             when (ydir) {
                 Direction.UP -> {
                     if (cellY > 0) {
-                        val body = system.findColliderComponent(getId())!!
-                        body.setVelocity(body.getVelocity().x, -200.0f)
+                        collider.setVelocity(collider.getVelocity().x, -200.0f)
                         animator.setAnimation("walk_up")
                     }
                 }
                 Direction.DOWN -> {
                     // TODO: Constant window height
                     if (cellY < 1024) {
-                        val body = system.findColliderComponent(getId())!!
-                        body.setVelocity(body.getVelocity().x, 200.0f)
+                        collider.setVelocity(collider.getVelocity().x, 200.0f)
                         animator.setAnimation("walk_down")
                     }
                 }
             }
         }
         else {
-            system.findColliderComponent(getId())!!.setVelocity(0.0f, 0.0f)
+            collider.setVelocity(0.0f, 0.0f)
             animator.setAnimation("idle")
         }
 
@@ -143,37 +141,36 @@ class Player : Entity() {
 
     // TODO: This method uses constant window dimensions
     private fun <T : Entity> keepPlayerWithinBorder(system: EntitySystem<T>) {
-        val body = system.findColliderComponent(getId())!!
-        if (body.getPosition().x < 0) {
+        if (collider.getPosition().x < 0) {
             if (cellX > 0) {
-                body.setPosition(1270.0f, body.getPosition().y)
+                collider.setPosition(1270.0f, collider.getPosition().y)
 
                 playerMovedCell = true
                 cellX -= 1
             }
         }
-        else if (body.getPosition().x > 1280.0f) {
+        else if (collider.getPosition().x > 1280.0f) {
             // TODO: Make this a variable that can be randomly picked depending on level size
             if (cellX < 1024) {
-                body.setPosition(10.0f, body.getPosition().y)
+                collider.setPosition(10.0f, collider.getPosition().y)
 
                 playerMovedCell = true
                 cellX += 1
             }
         }
 
-        if (body.getPosition().y < 0) {
+        if (collider.getPosition().y < 0) {
             if (cellY > 0) {
-                body.setPosition(body.getPosition().x, 710.0f)
+                collider.setPosition(collider.getPosition().x, 710.0f)
 
                 playerMovedCell = true
                 cellY -= 1
             }
         }
-        else if (body.getPosition().y > 720.0f) {
+        else if (collider.getPosition().y > 720.0f) {
             // TODO: Make this a variable that can be randomly picked depending on level size
             if (cellY < 1024) {
-                body.setPosition(body.getPosition().x, 10.0f)
+                collider.setPosition(collider.getPosition().x, 10.0f)
 
                 playerMovedCell = true
                 cellY += 1

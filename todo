@@ -1,0 +1,3 @@
+* Pain points in using api
+No way to get window dimensions
+Having no callbacks for gui makes it hard to know which component was triggered last

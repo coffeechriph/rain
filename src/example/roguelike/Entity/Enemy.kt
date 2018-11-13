@@ -2,9 +2,7 @@ package example.roguelike.Entity
 
 import org.joml.Vector2i
 import rain.api.*
-import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
-import rain.api.entity.Transform
+import rain.api.entity.*
 import rain.api.scene.Scene
 import kotlin.math.sin
 
@@ -20,20 +18,22 @@ open class Enemy : Entity() {
     var health = 100
         private set
     var healthBar = HealthBar()
+    lateinit var transform: Transform
+    lateinit var collider: Collider
+    lateinit var sprite: Sprite
+    lateinit var animator: Animator
 
     // TODO: Constant window size
-    fun setPosition(system: EntitySystem<Enemy>, pos: Vector2i) {
-        val transform = system.findTransformComponent(getId())!!
+    fun setPosition(pos: Vector2i) {
+        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
         transform.setScale(96.0f, 96.0f)
-        val body = system.findColliderComponent(getId())!!
-        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
         transform.z = 1.0f + pos.y%720 * 0.001f
         cellX = pos.x / 1280
         cellY = pos.y / 720
     }
 
     fun damage(dmg: Int) {
-        if (wasAttacked == false) {
+        if (!wasAttacked) {
             wasAttacked = true
             attackAnimation = 0.0f
             health -= dmg
@@ -53,7 +53,10 @@ open class Enemy : Entity() {
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
-
+        transform = system.findTransformComponent(getId())!!
+        collider = system.findColliderComponent(getId())!!
+        sprite = system.findSpriteComponent(getId())!!
+        animator = system.findAnimatorComponent(getId())!!
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {

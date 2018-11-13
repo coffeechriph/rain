@@ -1,8 +1,8 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
+import rain.api.entity.*
+import rain.api.scene.Scene
 import kotlin.random.Random
 
 enum class ItemType {
@@ -22,6 +22,9 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
     var cellX = 0
     var cellY = 0
     var pickedUp = false
+    lateinit var transform: Transform
+    lateinit var sprite: Sprite
+    lateinit var collider: Collider
 
     // TODO: Constant window size
     fun setPosition(system: EntitySystem<Item>, pos: Vector2i) {
@@ -32,6 +35,12 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
         body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
         cellX = pos.x / 1280
         cellY = pos.y / 720
+    }
+
+    override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
+        transform = system.findTransformComponent(getId())!!
+        sprite = system.findSpriteComponent(getId())!!
+        collider = system.findColliderComponent(getId())!!
     }
 
     // TODO: Problematic that we can't access the system from here....

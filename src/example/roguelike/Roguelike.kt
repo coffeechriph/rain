@@ -82,21 +82,21 @@ class Roguelike: Rain() {
         player.maxCellX = level.maxCellX
         player.maxCellY = level.maxCellY
         player.tileWidth = 64
-        player.setPosition(playerSystem, level.getFirstTilePos())
+        player.setPosition(level.getFirstTilePos())
 
         healthBarSystem.newEntity(miniPlayer)
                 .attachTransformComponent()
                 .attachSpriteComponent(healthMaterial)
                 .build()
-        val mpt = healthBarSystem.findTransformComponent(miniPlayer.getId())!!
-        mpt.setScale(4.0f, 4.0f)
+        miniPlayer.transform.setScale(4.0f, 4.0f)
+        miniPlayer.transform.z = 12.0f
 
         inventory = Inventory(gui, player)
         player.inventory = inventory
     }
 
     override fun update() {
-        level.update(player, healthBarSystem)
+        level.update(player)
 
         if (player.playerMovedCell) {
             level.switchCell(resourceFactory, player.cellX, player.cellY)
@@ -105,21 +105,19 @@ class Roguelike: Rain() {
 
         inventory.update()
 
-        val tr = playerSystem.findTransformComponent(player.getId())!!
-        if (tr.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && tr.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
-            tr.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && tr.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
+        if (player.transform.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && player.transform.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
+                player.transform.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && player.transform.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
             level.build(resourceFactory, System.currentTimeMillis(), healthBarSystem, healthMaterial)
             level.switchCell(resourceFactory, 0, 0)
-            player.setPosition(playerSystem, level.getFirstTilePos())
+            player.setPosition(level.getFirstTilePos())
         }
 
-        val mpt = healthBarSystem.findTransformComponent(miniPlayer.getId())!!
-        val playerTransform = playerSystem.findTransformComponent(player.getId())!!
         // We need to divide by 32 as each tile on minimap is 2px in size while the actual tiles are 64
         // to adjust the player position according to the minimap
         // We then take the cell index multiplied by the number of tiles per cell * 2 to adjust to minimap tile size
-        val tx = playerTransform.x / 32 + player.cellX * level.width * 2
-        val ty = playerTransform.y / 32 + player.cellY * level.height * 2
-        mpt.setPosition(tx, ty, 12.0f)
+        val tx = player.transform.x / 32 + player.cellX * level.width * 2
+        val ty = player.transform.y / 32 + player.cellY * level.height * 2
+        miniPlayer.transform.x = tx
+        miniPlayer.transform.y = ty
     }
 }
