@@ -2,6 +2,7 @@ package example.roguelike
 
 import example.roguelike.Entity.Attack
 import example.roguelike.Entity.HealthBar
+import example.roguelike.Entity.Inventory
 import example.roguelike.Entity.Player
 import example.roguelike.Level.Level
 import org.joml.Vector2f
@@ -22,6 +23,7 @@ class Roguelike: Rain() {
     private lateinit var attackSystem: EntitySystem<Attack>
     private lateinit var healthBarSystem: EntitySystem<HealthBar>
     private var player = Player()
+    private lateinit var inventory: Inventory
     private var miniPlayer = HealthBar()
     // TODO: The depth range is aquired from the renderer
     // TODO: Create a method in scene to create a new camera which auto-injects the depth range
@@ -88,6 +90,9 @@ class Roguelike: Rain() {
                 .build()
         val mpt = healthBarSystem.findTransformComponent(miniPlayer.getId())!!
         mpt.setScale(4.0f, 4.0f)
+
+        inventory = Inventory(gui, player)
+        player.inventory = inventory
     }
 
     override fun update() {
@@ -97,6 +102,8 @@ class Roguelike: Rain() {
             level.switchCell(resourceFactory, player.cellX, player.cellY)
             player.playerMovedCell = false
         }
+
+        inventory.update()
 
         val tr = playerSystem.findTransformComponent(player.getId())!!
         if (tr.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && tr.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&

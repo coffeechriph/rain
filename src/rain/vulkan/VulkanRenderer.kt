@@ -19,12 +19,6 @@ import java.nio.ByteBuffer
 import java.util.*
 
 internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
-    private data class DrawOp(val transform: Transform, val material: Material, val uniformData: ByteBuffer, val buffer: VulkanVertexBuffer): Comparable<DrawOp> {
-        override fun compareTo(other: DrawOp): Int {
-            return (transform.z - other.transform.z).toInt()
-        }
-    }
-
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
     private val logicalDevice: LogicalDevice = vk.logicalDevice
@@ -49,7 +43,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     private val pRenderCompleteSemaphore = MemoryUtil.memAllocLong(1)
     private val pImageIndex = MemoryUtil.memAllocInt(1)
 
-    private val drawOpsQueue = ArrayDeque<DrawOp>()
+    private val drawOpsQueue = ArrayDeque<Drawable>()
 
     var swapchainIsDirty = true
     var frameIndex = 0
@@ -77,8 +71,8 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         this.camera = camera
     }
 
-    override fun submitDraw(transform: Transform, material: Material, uniformData: ByteBuffer, vertexBuffer: VertexBuffer) {
-        drawOpsQueue.add(DrawOp(transform, material, uniformData, vertexBuffer as VulkanVertexBuffer))
+    override fun submitDraw(drawable: Drawable) {
+        drawOpsQueue.add(drawable)
     }
 
     override fun getDepthRange(): Vector2f {
@@ -242,18 +236,19 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     private fun issueDrawingCommands() {
         for (draw in drawOpsQueue) {
             val mat = draw.material as VulkanMaterial
+            val buffer = draw.vertexBuffer as VulkanVertexBuffer
             var found = false
             for (pipeline in pipelines) {
-                if (pipeline.vertexBuffer.id == draw.buffer.id && pipeline.material.id == mat.id) {
-                    pipeline.submitDrawInstance(draw.transform, draw.material, draw.uniformData)
+                if (pipeline.vertexBuffer.id == buffer.id && pipeline.material.id == mat.id) {
+                    pipeline.submitDrawInstance(draw)
                     found = true
                 }
             }
 
             if (!found) {
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, draw.buffer, mat, mat.descriptorPool)
-                pipeline.submitDrawInstance(draw.transform, draw.material, draw.uniformData)
+                pipeline.create(logicalDevice, renderpass, buffer, mat, mat.descriptorPool)
+                pipeline.submitDrawInstance(draw)
                 pipelines.add(pipeline)
             }
         }

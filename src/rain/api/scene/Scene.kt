@@ -57,9 +57,9 @@ class Scene {
 
         renderer.setActiveCamera(camera)
 
-        val submitListSorted = ArrayList<Pair<Drawable, VertexBuffer>>()
+        val submitListSorted = ArrayList<Drawable>()
         for (tilemap in tilemaps) {
-            submitListSorted.add(Pair(Drawable(tilemap.transform, tilemap.material, tilemap.getUniformData()), tilemap.vertexBuffer))
+            submitListSorted.add(Drawable(tilemap.transform, tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer))
         }
 
         for (system in entitySystems) {
@@ -91,7 +91,7 @@ class Scene {
                     continue
                 }
 
-                submitListSorted.add(Pair(Drawable(sprite.transform, sprite.material, sprite.getUniformData()), quadVertexBuffer))
+                submitListSorted.add(Drawable(sprite.transform, sprite.material, sprite.getUniformData(), quadVertexBuffer))
             }
 
             for (collider in system.getColliderList()) {
@@ -101,10 +101,9 @@ class Scene {
             }
         }
 
-        submitListSorted.sortBy { drawable -> drawable.first.transform.z }
+        submitListSorted.sortBy { drawable -> drawable.transform.z }
         for (drawable in submitListSorted) {
-            val first = drawable.first
-            renderer.submitDraw(first.transform, first.material, first.uniformData, drawable.second)
+            renderer.submitDraw(drawable)
         }
     }
 }

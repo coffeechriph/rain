@@ -5,9 +5,6 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.gfx.Drawable
 import rain.api.assertion
-import rain.api.entity.Transform
-import rain.api.gfx.Material
-import java.nio.ByteBuffer
 import java.nio.LongBuffer
 import java.util.*
 
@@ -30,8 +27,8 @@ internal class Pipeline {
 
     private val nextFrameDrawQueue = ArrayDeque<Drawable>()
 
-    fun submitDrawInstance(transform: Transform, material: Material, uniformData: ByteBuffer) {
-        nextFrameDrawQueue.add(Drawable(transform, material, uniformData))
+    fun submitDrawInstance(draw: Drawable) {
+        nextFrameDrawQueue.add(draw)
     }
 
     fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, material: VulkanMaterial, descriptorPool: DescriptorPool) {

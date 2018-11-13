@@ -25,5 +25,5 @@ void main() {
     gl_Position = sceneData.projectionMatrix * vec4(cpos.x + pos.x, cpos.y + pos.y, pos.z, 1.0);
     Uv = uv;
     containerData = vec4(cpos.x, cpos.y, csize.x, csize.y);
-    fpos = vec2(pos.x, pos.y);
+    fpos = vec2(container.bounds.x + pos.x, container.bounds.y + pos.y);
 }

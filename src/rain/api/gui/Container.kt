@@ -15,7 +15,7 @@ import rain.vulkan.VertexAttribute
 
 class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font) {
     val transform = Transform()
-    var isDirty = true
+    var isDirty = false
 
     private val components = ArrayList<GuiC>()
     private val textfields = ArrayList<Text>()
@@ -38,6 +38,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     fun addComponent(component: GuiC) {
+        component.parent = this
         components.add(component)
 
         val text = Text(component.text, component)
@@ -49,7 +50,21 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         isDirty = true
     }
 
-    fun addText(text: String, x: Float, y: Float, parent: GuiC? = null) {
+    fun removeComponent(component: GuiC) {
+        components.remove(component)
+
+        // TODO: Components could store their text object for faster removal
+        for (text in textfields) {
+            if (text.parent == component) {
+                textfields.remove(text)
+                break
+            }
+        }
+
+        isDirty = true
+    }
+
+    fun addText(text: String, x: Float, y: Float, parent: GuiC? = null): Text {
         val width = font.getStringWidth(text, 0, text.length)
         val height = font.fontHeight
         val txt = Text(text, parent)
@@ -58,6 +73,12 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         txt.w = width
         txt.h = height
         textfields.add(txt)
+        isDirty = true
+        return txt
+    }
+
+    fun removeText(text: Text) {
+        textfields.remove(text)
         isDirty = true
     }
 
@@ -106,8 +127,8 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
         val list = ArrayList<Float>()
-        var boundsW = transform.sx
         for (text in textfields) {
+            var boundsW = Float.MAX_VALUE
             if (text.parent != null) {
                 text.string = text.parent.text
                 boundsW = text.parent.w
@@ -155,8 +176,11 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
 
                 text.w = font.getStringWidth(displayString, 0, displayString.length)
                 text.h = font.fontHeight
-                text.x = text.parent!!.x + text.parent.w/2 - text.w/2
-                text.y = text.parent.y + text.parent.h/2 + text.h/4
+
+                if (text.parent != null) {
+                    text.x = text.parent.x + text.parent.w / 2 - text.w / 2
+                    text.y = text.parent.y + text.parent.h / 2 + text.h / 4
+                }
 
                 for (i in 0 until vertList.size/8) {
                     val cx1 = text.x + vertList[i*8]
@@ -202,7 +226,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         val mouseDown = input.mouseState(Input.Button.MOUSE_BUTTON_1) == Input.InputState.PRESSED
 
         if (mouseDown) {
-            val mp = input.mousePosition
+            val mp = Vector2i(input.mousePosition.x, input.mousePosition.y)
             if (isInside(mp, Vector4i(transform.x.toInt(), transform.y.toInt(), transform.sx.toInt(), transform.sy.toInt()))) {
                 mp.x -= transform.x.toInt()
                 mp.y -= transform.y.toInt()
@@ -246,9 +270,12 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     fun render(renderer: Renderer) {
-        renderer.submitDraw(transform, material, getUniformData(0), componentBuffer)
+        if (::componentBuffer.isInitialized) {
+            renderer.submitDraw(Drawable(transform, material, getUniformData(0), componentBuffer))
+        }
+
         if (::textBuffer.isInitialized) {
-            renderer.submitDraw(transform, material, getUniformData(1), textBuffer)
+            renderer.submitDraw(Drawable(transform, material, getUniformData(1), textBuffer))
         }
     }
 }

@@ -30,22 +30,6 @@ open class Rain {
         }
 
         gui = Gui(resourceFactory, vulkanRenderer)
-        val container = gui.newContainer(0.0f, 0.0f, 500.0f, 300.0f)
-        val button = Button()
-        button.x = 10.0f
-        button.y = 10.0f
-        button.w = 100.0f
-        button.h = 40.0f
-        button.text = "Spawn Enemy"
-        container.addComponent(button)
-
-        val toggleButton = ToggleButton()
-        toggleButton.x = 10.0f
-        toggleButton.y = 60.0f
-        toggleButton.w = 100.0f
-        toggleButton.h = 20.0f
-        toggleButton.text = "God Mode"
-        container.addComponent(toggleButton)
     }
 
     private fun createVulkanApi() {

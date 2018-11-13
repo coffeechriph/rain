@@ -9,6 +9,6 @@ interface Renderer {
     fun create()
     fun render()
     fun setActiveCamera(camera: Camera)
-    fun submitDraw(transform: Transform, material: Material, uniformData: ByteBuffer, vertexBuffer: VertexBuffer)
+    fun submitDraw(drawable: Drawable)
     fun getDepthRange(): Vector2f
 }

@@ -22,6 +22,7 @@ class Player : Entity() {
     var tileWidth: Int = 0
     var maxCellX = 0
     var maxCellY = 0
+    lateinit var inventory: Inventory
     lateinit var attack: Attack
 
     fun setPosition(system: EntitySystem<Player>, pos: Vector2i) {
