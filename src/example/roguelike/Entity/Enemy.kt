@@ -24,10 +24,10 @@ open class Enemy : Entity() {
     // TODO: Constant window size
     fun setPosition(system: EntitySystem<Enemy>, pos: Vector2i) {
         val transform = system.findTransformComponent(getId())!!
-        transform.z = 2.0f + transform.y * 0.001f
         transform.setScale(96.0f, 96.0f)
         val body = system.findColliderComponent(getId())!!
         body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
+        transform.z = 1.0f + pos.y%720 * 0.001f
         cellX = pos.x / 1280
         cellY = pos.y / 720
     }
@@ -57,6 +57,5 @@ open class Enemy : Entity() {
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-
     }
 }

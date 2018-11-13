@@ -5,10 +5,7 @@ import com.badlogic.gdx.physics.box2d.*
 import rain.api.*
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
-import rain.api.gfx.Renderer
-import rain.api.gfx.ResourceFactory
-import rain.api.gfx.VertexBuffer
-import rain.api.gfx.VertexBufferState
+import rain.api.gfx.*
 
 class Scene {
     private lateinit var quadVertexBuffer: VertexBuffer
@@ -59,8 +56,9 @@ class Scene {
 
         renderer.setActiveCamera(camera)
 
+        val submitListSorted = ArrayList<Pair<Drawable, VertexBuffer>>()
         for (tilemap in tilemaps) {
-            renderer.submitDraw(tilemap, tilemap.vertexBuffer)
+            submitListSorted.add(Pair(tilemap, tilemap.vertexBuffer))
         }
 
         for (system in entitySystems) {
@@ -92,7 +90,7 @@ class Scene {
                     continue
                 }
 
-                renderer.submitDraw(sprite, quadVertexBuffer)
+                submitListSorted.add(Pair(sprite, quadVertexBuffer))
             }
 
             for (collider in system.getColliderList()) {
@@ -100,6 +98,11 @@ class Scene {
                 collider.transform.x = b.position.x
                 collider.transform.y = b.position.y
             }
+        }
+
+        submitListSorted.sortBy { drawable -> drawable.first.getTransform().z }
+        for (drawable in submitListSorted) {
+            renderer.submitDraw(drawable.first, drawable.second)
         }
     }
 }

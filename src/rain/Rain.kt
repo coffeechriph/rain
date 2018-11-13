@@ -20,7 +20,6 @@ open class Rain {
     lateinit var gui: Gui
         private set
     val scene = Scene()
-    lateinit var testFont: Font
 
     fun create(width: Int, height: Int, title: String, api: Api) {
         context.create(width, height, title, input)
@@ -37,6 +36,7 @@ open class Rain {
         button.y = 10.0f
         button.w = 100.0f
         button.h = 40.0f
+        button.text = "Spawn Enemy"
         container.addComponent(button)
 
         val toggleButton = ToggleButton()
@@ -44,9 +44,8 @@ open class Rain {
         toggleButton.y = 60.0f
         toggleButton.w = 100.0f
         toggleButton.h = 20.0f
+        toggleButton.text = "God Mode"
         container.addComponent(toggleButton)
-
-        container.addText("This is a long line of text that doesn't give any valuable information.\nNow we're on another line... Weird. Why did we end up here?\nOh no not again! Let's get out of here", 10.0f, 40.0f, null)
     }
 
     private fun createVulkanApi() {

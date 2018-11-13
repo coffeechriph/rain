@@ -51,7 +51,7 @@ class Player : Entity() {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         val animator = system.findAnimatorComponent(getId())!!
         val transform = system.findTransformComponent(getId())!!
-        transform.z = 2.0f + transform.y * 0.001f
+        transform.z = 1.0f + transform.y * 0.001f
 
         setDirectionBasedOnInput(input)
 

@@ -15,7 +15,11 @@ import rain.api.assertion
 import java.util.*
 
 internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
-    private data class DrawOp(val drawable: Drawable, val buffer: VulkanVertexBuffer)
+    private data class DrawOp(val drawable: Drawable, val buffer: VulkanVertexBuffer): Comparable<DrawOp> {
+        override fun compareTo(other: DrawOp): Int {
+            return (drawable.getTransform().z - other.drawable.getTransform().z).toInt()
+        }
+    }
 
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
@@ -228,9 +232,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     }
 
     private fun issueDrawingCommands() {
-        // Sort the order of rendering so alpha tests are correct
-        val sortedListOfDraw = drawOpsQueue.sortedBy { it.drawable.getTransform().z }
-        for (draw in sortedListOfDraw) {
+        for (draw in drawOpsQueue) {
             val mat = draw.drawable.getMaterial() as VulkanMaterial
             var found = false
             for (pipeline in pipelines) {

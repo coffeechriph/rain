@@ -6,6 +6,7 @@ open class GuiC {
     var w = 0.0f
     var h = 0.0f
     var active = false
+    var text = "Nothing"
 
     open fun trigger(): Boolean{return true}
 }

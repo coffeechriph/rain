@@ -12,8 +12,6 @@ import rain.api.gfx.*
 import java.nio.ByteBuffer
 import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
 
-
-
 class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font): Drawable() {
     val transform = Transform()
     var isDirty = true
@@ -23,7 +21,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     private var lastTriggeredComponent: GuiC? = null
     private lateinit var componentBuffer: VertexBuffer
     private lateinit var textBuffer: VertexBuffer
-    private var currentTextureIndex = 1
+    private var currentTextureIndex = 0
 
     override fun getTransform(): Transform {
         return transform
@@ -58,15 +56,24 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
 
     fun addComponent(component: GuiC) {
         components.add(component)
+
+        val text = Text(component.text, component)
+        text.w = font.getStringWidth(text.string, 0, text.string.length)
+        text.h = font.fontHeight
+        text.x = component.x + component.w/2 - text.w/2
+        text.y = component.y + component.h/2 + text.h/4
+        textfields.add(text)
         isDirty = true
     }
 
     fun addText(text: String, x: Float, y: Float, parent: GuiC? = null) {
         val width = font.getStringWidth(text, 0, text.length)
         val height = font.fontHeight
-        val txt = Text(text, width, height, parent)
+        val txt = Text(text, parent)
         txt.x = x
         txt.y = y
+        txt.w = width
+        txt.h = height
         textfields.add(txt)
         isDirty = true
     }
@@ -114,9 +121,12 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
         val list = ArrayList<Float>()
+        var boundsW = transform.sx
         for (text in textfields) {
-            val tx = text.x
-            val ty = text.y
+            if (text.parent != null) {
+                text.string = text.parent.text
+                boundsW = text.parent.w
+            }
 
             MemoryStack.stackPush().use { stack ->
                 val codePoint = stack.mallocInt(1)
@@ -125,7 +135,14 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                 val quad = STBTTAlignedQuad.mallocStack(stack)
 
                 var index = 0
+                var displayString = ""
+                val vertList = ArrayList<Float>()
                 while(index < text.string.length) {
+                    if (x.get(0) >= boundsW * 0.9) {
+                        break
+                    }
+
+                    displayString += text.string[index]
                     index += font.getCodePoint(text.string, text.string.length, index, codePoint)
                     val cp = codePoint.get(0)
 
@@ -134,30 +151,46 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                         x.put(0, 0.0f)
                     }
                     else {
-                        font.getBakedQuad(cp, quad, x, y)
+                        font.getPackedQuad(cp, quad, x, y)
                         if (font.useKerning && index + 1 < text.string.length) {
                             font.getCodePoint(text.string, text.string.length, index, codePoint)
                             x.put(0, x.get(0) + stbtt_GetCodepointKernAdvance(font.fontInfo, cp, codePoint.get(0)) * scale)
                         }
 
-                        val cx1 = tx + quad.x0()
-                        val cx2 = tx + quad.x1()
-                        val cy1 = ty + quad.y0()
-                        val cy2 = ty + quad.y1()
-                        val ux1 = quad.s0()
-                        val ux2 = quad.s1()
-                        val uy1 = quad.t0()
-                        val uy2 = quad.t1()
-
-                        list.addAll(listOf(
-                                cx1, cy1, ux1, uy1,
-                                cx1, cy2, ux1, uy2,
-                                cx2, cy2, ux2, uy2,
-                                cx2, cy2, ux2, uy2,
-                                cx2, cy1, ux2, uy1,
-                                cx1, cy1, ux1, uy1
-                        ))
+                        vertList.add(quad.x0())
+                        vertList.add(quad.x1())
+                        vertList.add(quad.y0())
+                        vertList.add(quad.y1())
+                        vertList.add(quad.s0())
+                        vertList.add(quad.s1())
+                        vertList.add(quad.t0())
+                        vertList.add(quad.t1())
                     }
+                }
+
+                text.w = font.getStringWidth(displayString, 0, displayString.length)
+                text.h = font.fontHeight
+                text.x = text.parent!!.x + text.parent.w/2 - text.w/2
+                text.y = text.parent.y + text.parent.h/2 + text.h/4
+
+                for (i in 0 until vertList.size/8) {
+                    val cx1 = text.x + vertList[i*8]
+                    val cx2 = text.x + vertList[i*8+1]
+                    val cy1 = text.y + vertList[i*8+2]
+                    val cy2 = text.y + vertList[i*8+3]
+                    val ux1 = vertList[i*8+4]
+                    val ux2 = vertList[i*8+5]
+                    val uy1 = vertList[i*8+6]
+                    val uy2 = vertList[i*8+7]
+
+                    list.addAll(listOf(
+                            cx1, cy1, ux1, uy1,
+                            cx1, cy2, ux1, uy2,
+                            cx2, cy2, ux2, uy2,
+                            cx2, cy2, ux2, uy2,
+                            cx2, cy1, ux2, uy1,
+                            cx1, cy1, ux1, uy1
+                    ))
                 }
             }
         }
@@ -228,9 +261,12 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     fun render(renderer: Renderer) {
+        // TODO: In order for these to render in a correct order
+        // and with the correct alpha blending a hack is done in the shaders..
+        // We should be able to specify model matrices between submit draw calls
+        renderer.submitDraw(this, componentBuffer)
         if (::textBuffer.isInitialized) {
             renderer.submitDraw(this, textBuffer)
         }
-        renderer.submitDraw(this, componentBuffer)
     }
 }

@@ -23,7 +23,7 @@ void main() {
     currentTextureIndex = container.textureIndex;
 
     gl_Position = sceneData.projectionMatrix * vec4(cpos.x + pos.x, cpos.y + pos.y, 1.0, 1.0);
-    gl_Position.z = 0.0;
+    gl_Position.z = 0.1 - container.textureIndex / 10.0;
     Uv = uv;
     containerData = vec4(cpos.x, cpos.y, csize.x, csize.y);
     fpos = vec2(pos.x, pos.y);
