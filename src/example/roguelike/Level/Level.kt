@@ -227,7 +227,6 @@ class Level {
 
         mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
 
-        saveMapAsImage("map.png")
         switchCell(resourceFactory, 0, 0)
         generateEnemies(healthBarMaterial, healthBarSystem)
         generateContainers()
@@ -674,18 +673,5 @@ class Level {
             container.collider.setFriction(1.0f)
             containers.add(container)
         }
-    }
-
-    private fun saveMapAsImage(filename: String) {
-        val image = BufferedImage(mapWidth, mapHeight, BufferedImage.TYPE_3BYTE_BGR)
-
-        for (r in rooms) {
-            val color = Math.min(0xffffff, Random().nextInt(0xffffff) + 128)
-            for (t in r.tiles) {
-                image.setRGB(t.x, t.y, color)
-            }
-        }
-
-        ImageIO.write(image, "png", File("./data/" + filename))
     }
 }

@@ -91,7 +91,6 @@ class Font(ttfFile: String) {
 
         stbtt_PackEnd(pc)
 
-        stbi_write_png("font.png", width, height, 1, bitmap, width)
         texture = resourceFactory.createTexture2d(bitmap, width, height, 1, TextureFilter.NEAREST)
         fontHeight = pixelHeight
         bitmapWidth = width
