@@ -60,6 +60,7 @@ class Inventory(val gui: Gui, val player: Player) {
                 val item = items[index]
                 if (::itemDescName.isInitialized) {
                     container.removeText(itemDescName)
+                    container.removeText(itemDescType)
                     container.removeText(itemDescStamina)
                     container.removeText(itemDescStrength)
                     container.removeText(itemDescAgility)
@@ -67,10 +68,11 @@ class Inventory(val gui: Gui, val player: Player) {
                 }
 
                 itemDescName = container.addText("Name: ${item.name}", 0.0f, 20.0f, background = true)
-                itemDescStamina = container.addText("Stamina: ${item.stamina}", 0.0f, 40.0f, background = true)
-                itemDescStrength = container.addText("Strength: ${item.strength}", 0.0f, 60.0f, background = true)
-                itemDescAgility = container.addText("Agility: ${item.agility}", 0.0f, 80.0f, background = true)
-                itemDescLuck = container.addText("Luck: ${item.luck}", 0.0f, 100.0f, background = true)
+                itemDescType = container.addText("Type: ${item.type.name}", 0.0f, 40.0f, background = true)
+                itemDescStamina = container.addText("Stamina: ${item.stamina}", 0.0f, 60.0f, background = true)
+                itemDescStrength = container.addText("Strength: ${item.strength}", 0.0f, 80.0f, background = true)
+                itemDescAgility = container.addText("Agility: ${item.agility}", 0.0f, 100.0f, background = true)
+                itemDescLuck = container.addText("Luck: ${item.luck}", 0.0f, 120.0f, background = true)
             }
         }
     }

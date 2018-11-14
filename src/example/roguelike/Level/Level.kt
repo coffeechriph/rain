@@ -84,7 +84,7 @@ class Level {
                 container.looted = true
 
                 for (i in 0 until random.nextInt(10)) {
-                    val item = Item(ItemType.MELEE, ITEM_NAMES[random.nextInt(ITEM_NAMES.size)], random.nextInt(10), random.nextInt(10), random.nextInt(10), random.nextInt(10))
+                    val item = Item(ItemType.values()[random.nextInt(ItemType.values().size)], ITEM_NAMES[random.nextInt(ITEM_NAMES.size)], random.nextInt(10), random.nextInt(10), random.nextInt(10), random.nextInt(10))
                     levelItemSystem.newEntity(item)
                             .attachTransformComponent()
                             .attachSpriteComponent(itemMaterial)
