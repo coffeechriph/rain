@@ -64,7 +64,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         isDirty = true
     }
 
-    fun addText(text: String, x: Float, y: Float, parent: GuiC? = null): Text {
+    fun addText(text: String, x: Float, y: Float, parent: GuiC? = null, background: Boolean = false): Text {
         val width = font.getStringWidth(text, 0, text.length)
         val height = font.fontHeight
         val txt = Text(text, parent)
@@ -72,6 +72,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         txt.y = y
         txt.w = width
         txt.h = height
+        txt.background = background
         textfields.add(txt)
         isDirty = true
         return txt
@@ -112,6 +113,30 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                         x + w, y + h, depth, px + 0.25f, 0.5f,
                         x + w, y, depth, px + 0.25f, 0.0f,
                         x, y, depth, px, 0.0f))
+            }
+        }
+
+        // Add optional background for text
+        val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
+        for (text in textfields) {
+            if (text.background) {
+                var w = text.w
+                if (text.parent != null) {
+                    text.string = text.parent.text
+                    w = text.parent.w
+                }
+
+                val x = text.x
+                val y = text.y - (font.ascent) * scale
+                val h = text.h
+                // TODO: Support different styled backgrounds
+                list.addAll(listOf(
+                        x, y, depth, 0.0f, 0.0f,
+                        x, y + h, depth, 0.0f, 0.5f,
+                        x + w, y + h, depth, 0.25f, 0.5f,
+                        x + w, y + h, depth, 0.25f, 0.5f,
+                        x + w, y, depth, 0.25f, 0.0f,
+                        x, y, depth, 0.0f, 0.0f))
             }
         }
 

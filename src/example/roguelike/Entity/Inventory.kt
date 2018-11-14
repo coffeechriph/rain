@@ -19,7 +19,7 @@ class Inventory(val gui: Gui, val player: Player) {
     private lateinit var itemDescStamina: Text
     private lateinit var itemDescStrength: Text
     private lateinit var itemDescLuck: Text
-    private val startX = 900
+    private val startX = 800
     private val startY = 0
     private var container: Container
     private var lastButtonClicked: ToggleButton? = null
@@ -31,9 +31,9 @@ class Inventory(val gui: Gui, val player: Player) {
     fun addItem(item: Item) {
         val button = ToggleButton()
         button.text = item.name
-        button.x = 200.0f
+        button.x = 250.0f
         button.y = (itemButtons.size*25).toFloat()
-        button.w = 170.0f
+        button.w = 230.0f
         button.h = 25.0f
         items.add(item)
         itemButtons.add(button)
@@ -66,11 +66,11 @@ class Inventory(val gui: Gui, val player: Player) {
                     container.removeText(itemDescLuck)
                 }
 
-                itemDescName = container.addText("Name: ${item.name}", 0.0f, 20.0f)
-                itemDescStamina = container.addText("Stamina: ${item.stamina}", 0.0f, 40.0f)
-                itemDescStrength = container.addText("Strength: ${item.strength}", 0.0f, 60.0f)
-                itemDescAgility = container.addText("Agility: ${item.agility}", 0.0f, 80.0f)
-                itemDescLuck = container.addText("Luck: ${item.luck}", 0.0f, 100.0f)
+                itemDescName = container.addText("Name: ${item.name}", 0.0f, 20.0f, background = true)
+                itemDescStamina = container.addText("Stamina: ${item.stamina}", 0.0f, 40.0f, background = true)
+                itemDescStrength = container.addText("Strength: ${item.strength}", 0.0f, 60.0f, background = true)
+                itemDescAgility = container.addText("Agility: ${item.agility}", 0.0f, 80.0f, background = true)
+                itemDescLuck = container.addText("Luck: ${item.luck}", 0.0f, 100.0f, background = true)
             }
         }
     }

@@ -61,7 +61,7 @@ class Font(ttfFile: String) {
     }
 
     fun buildBitmap(resourceFactory: ResourceFactory, width: Int, height: Int, pixelHeight: Float) {
-        cdata = STBTTPackedchar.malloc(3 * 512)
+        cdata = STBTTPackedchar.malloc(2 * 512)
 
         val startChar = 32
         val numChars = 512
@@ -81,12 +81,6 @@ class Font(ttfFile: String) {
         cdata.limit(p + limit)
         cdata.position(p)
         stbtt_PackSetOversampling(pc, 2, 2)
-        stbtt_PackFontRange(pc, ttf, 0, pixelHeight, startChar, cdata)
-
-        p = 2 * numChars + startChar
-        cdata.limit(p + limit)
-        cdata.position(p)
-        stbtt_PackSetOversampling(pc, 3, 1)
         stbtt_PackFontRange(pc, ttf, 0, pixelHeight, startChar, cdata)
 
         stbtt_PackEnd(pc)
