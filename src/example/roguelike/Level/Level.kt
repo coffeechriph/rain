@@ -133,8 +133,8 @@ class Level {
         this.height = height
         map = IntArray(mapWidth*mapHeight)
 
-        val enemyTexture = resourceFactory.loadTexture2d("./data/textures/krac.png", TextureFilter.NEAREST)
-        enemyTexture.setTiledTexture(32,32)
+        val enemyTexture = resourceFactory.loadTexture2d("./data/textures/krac2.0.png", TextureFilter.NEAREST)
+        enemyTexture.setTiledTexture(16,16)
         enemyMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture, Vector3f(1.0f, 1.0f, 1.0f))
         enemySystem = EntitySystem(scene)
         scene.addSystem(enemySystem)
@@ -633,7 +633,7 @@ class Level {
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
                     .attachAnimatorComponent()
-                    .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
+                    .attachBoxColliderComponent(width = 12.0f, height = 16.0f)
                     .build()
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
@@ -651,7 +651,7 @@ class Level {
 
             val room = rooms[random.nextInt(rooms.size)]
             val p = room.tiles[random.nextInt(room.tiles.size)]
-            kracGuy.setPosition(Vector2i(p.x*64, p.y*64))
+            kracGuy.setPosition(Vector2i(p.x*32, p.y*32))
             enemies.add(kracGuy)
         }
     }

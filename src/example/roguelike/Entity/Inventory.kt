@@ -20,7 +20,7 @@ class Inventory(val gui: Gui, val player: Player) {
     private lateinit var itemDescStamina: Text
     private lateinit var itemDescStrength: Text
     private lateinit var itemDescLuck: Text
-    private val startX = 1280 / 2.0f - 250.0f
+    private val startX = 1280 / 2.0f - 115.0f
     private val startY = 0.0f
     private var container: Container
     private var lastButtonClicked: ToggleButton? = null
