@@ -7,7 +7,7 @@ open class GuiC() {
     var h = 0.0f
     var active = false
     var text = "Nothing"
-    lateinit var parent: Container
+    lateinit var container: Container
 
     open fun trigger(): Boolean{return true}
 }

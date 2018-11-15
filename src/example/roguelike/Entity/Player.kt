@@ -111,6 +111,10 @@ class Player : Entity() {
         }
 
         keepPlayerWithinBorder(system)
+
+        if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {
+            inventory.visible = !inventory.visible
+        }
     }
 
     private fun setDirectionBasedOnInput(input: Input) {
