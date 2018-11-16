@@ -73,8 +73,6 @@ class Player : Entity() {
             }
         }
 
-        // TODO: Take in input as queue where we use the latest key pressed
-        // TODO: The current way of handling input fucks up the animation and feels clunky
         var velX = 0.0f
         var velY = 0.0f
         if (left_active) {
