@@ -14,6 +14,9 @@ import rain.vulkan.VertexAttribute
 import kotlin.math.ceil
 import kotlin.math.floor
 
+// TODO: We want a nice way to hide/show single components
+// TODO: The problem currently is that if every component is hidden we can't update the vertex buffers as they
+// TODO: Would be empty..
 class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font) {
     val transform = Transform()
     var isDirty = false

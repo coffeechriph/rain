@@ -1,3 +1,5 @@
 * Pain points in using api
-No way to get window dimensions
-Having no callbacks for gui makes it hard to know which component was triggered last
+x No way to get window dimensions
+x Having no callbacks for gui makes it hard to know which component was triggered last
+x We have to create a new material for every difference between them. This means that the same shader may be loaded several times which
+x is stupid. Should be possible, as with textures, to reuse shaders.

@@ -1,9 +1,7 @@
 package example.roguelike.Entity
 
+import rain.api.gui.*
 import rain.api.gui.Container
-import rain.api.gui.Gui
-import rain.api.gui.Text
-import rain.api.gui.ToggleButton
 
 class Inventory(val gui: Gui, val player: Player) {
     var visible = true
@@ -11,7 +9,23 @@ class Inventory(val gui: Gui, val player: Player) {
             field = value
             container.visible = value
         }
+
+    private val ItemNone = Item(ItemType.NONE, "Empty", 0, 0, 0, 0)
+    var equippedWeapon: Item = ItemNone
+    var equippedHead: Item = ItemNone
+    var equippedGloves: Item = ItemNone
+    var equippedBoots: Item = ItemNone
+    var equippedChest: Item = ItemNone
+    var equippedLegs: Item = ItemNone
+    private lateinit var equippedWeaponText: Text
+    private lateinit var equippedHeadText: Text
+    private lateinit var equippedGlovesText: Text
+    private lateinit var equippedBootsText: Text
+    private lateinit var equippedChestText: Text
+    private lateinit var equippedLegsText: Text
+
     private var itemButtons = ArrayList<ToggleButton>()
+    private var equipButton = Button()
     private var items = ArrayList<Item>()
     private lateinit var headerText: Text
     private lateinit var itemDescName: Text
@@ -24,9 +38,24 @@ class Inventory(val gui: Gui, val player: Player) {
     private val startY = 0.0f
     private var container: Container
     private var lastButtonClicked: ToggleButton? = null
+    private var selectedItem: Item = ItemNone
 
     init {
         container = gui.newContainer(startX, startY, 500.0f, 720.0f)
+        container.visible = false
+        equipButton.x = 230.0f
+        equipButton.y = 140.0f
+        equipButton.w = 100.0f
+        equipButton.h = 20.0f
+        equipButton.text = "Equip"
+        container.addComponent(equipButton)
+
+        equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 160.0f, background = true)
+        equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 180.0f, background = true)
+        equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 200.0f, background = true)
+        equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 220.0f, background = true)
+        equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 240.0f, background = true)
+        equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 260.0f, background = true)
     }
 
     fun addItem(item: Item) {
@@ -65,7 +94,7 @@ class Inventory(val gui: Gui, val player: Player) {
             if (index > -1) {
                 lastButtonClicked = itemButtons[index]
                 itemButtons[index].active = true
-                val item = items[index]
+                selectedItem = items[index]
                 if (::itemDescName.isInitialized) {
                     container.removeText(itemDescName)
                     container.removeText(itemDescType)
@@ -75,17 +104,43 @@ class Inventory(val gui: Gui, val player: Player) {
                     container.removeText(itemDescLuck)
                 }
 
-                itemDescName = container.addText("Name: ${item.name}", 230.0f, 20.0f, background = true)
-                itemDescType = container.addText("Type: ${item.type.name}", 230.0f, 40.0f, background = true)
-                itemDescStamina = container.addText("Stamina: ${item.stamina}", 230.0f, 60.0f, background = true)
-                itemDescStrength = container.addText("Strength: ${item.strength}", 230.0f, 80.0f, background = true)
-                itemDescAgility = container.addText("Agility: ${item.agility}", 230.0f, 100.0f, background = true)
-                itemDescLuck = container.addText("Luck: ${item.luck}", 230.0f, 120.0f, background = true)
+                itemDescName = container.addText("Name: ${selectedItem.name}", 230.0f, 20.0f, background = true)
+                itemDescType = container.addText("Type: ${selectedItem.type.name}", 230.0f, 40.0f, background = true)
+                itemDescStamina = container.addText("Stamina: ${selectedItem.stamina}", 230.0f, 60.0f, background = true)
+                itemDescStrength = container.addText("Strength: ${selectedItem.strength}", 230.0f, 80.0f, background = true)
+                itemDescAgility = container.addText("Agility: ${selectedItem.agility}", 230.0f, 100.0f, background = true)
+                itemDescLuck = container.addText("Luck: ${selectedItem.luck}", 230.0f, 120.0f, background = true)
             }
 
             if (lastButtonClicked != null) {
                 lastButtonClicked!!.active = true
             }
+        }
+
+        if (equipButton.active) {
+            when (selectedItem.type) {
+                ItemType.CHEST -> equippedChest = selectedItem
+                ItemType.GLOVES -> equippedGloves = selectedItem
+                ItemType.MELEE -> equippedWeapon = selectedItem
+                ItemType.RANGED -> equippedWeapon = selectedItem
+                ItemType.LEGS -> equippedLegs = selectedItem
+                ItemType.BOOTS -> equippedBoots = selectedItem
+                ItemType.HEAD -> equippedHead = selectedItem
+            }
+
+            container.removeText(equippedWeaponText)
+            container.removeText(equippedHeadText)
+            container.removeText(equippedChestText)
+            container.removeText(equippedGlovesText)
+            container.removeText(equippedBootsText)
+            container.removeText(equippedLegsText)
+
+            equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 170.0f, background = true)
+            equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 190.0f, background = true)
+            equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 210.0f, background = true)
+            equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 230.0f, background = true)
+            equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 250.0f, background = true)
+            equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 270.0f, background = true)
         }
     }
 }

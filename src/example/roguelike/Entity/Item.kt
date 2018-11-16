@@ -6,13 +6,15 @@ import rain.api.scene.Scene
 import kotlin.random.Random
 
 enum class ItemType {
+    NONE,
     MELEE,
     RANGED,
     HEAD,
     SHOULDER,
     LEGS,
     CHEST,
-    HANDS,
+    GLOVES,
+    BOOTS,
     CONSUMABLE
 }
 

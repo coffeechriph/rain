@@ -18,7 +18,7 @@ class HealthBar: Entity() {
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        transform.z = 12.0f
+        transform.z = 11.0f
 
         if (parentTransform != null) {
             transform.x = parentTransform!!.x
