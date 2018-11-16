@@ -6,8 +6,11 @@ import rain.api.entity.*
 import rain.api.scene.Scene
 
 class Player : Entity() {
-    private var xdir = Direction.NONE
-    private var ydir = Direction.NONE
+    private var left_active = false
+    private var right_active = false
+    private var up_active = false
+    private var down_active = false
+
     var playerMovedCell = true
     var cellX = 0
         private set
@@ -72,43 +75,42 @@ class Player : Entity() {
 
         // TODO: Take in input as queue where we use the latest key pressed
         // TODO: The current way of handling input fucks up the animation and feels clunky
-        if (ydir != Direction.NONE || xdir != Direction.NONE) {
-            when (xdir) {
-                Direction.LEFT -> {
-                    if (cellX > 0) {
-                        collider.setVelocity(-120.0f, collider.getVelocity().y)
-                        animator.setAnimation("walk_left")
-                    }
-                }
-                Direction.RIGHT -> {
-                    // TODO: Constant window width
-                    if (cellX < 1024) {
-                        collider.setVelocity(120.0f, collider.getVelocity().y)
-                        animator.setAnimation("walk_right")
-                    }
-                }
-            }
-
-            when (ydir) {
-                Direction.UP -> {
-                    if (cellY > 0) {
-                        collider.setVelocity(collider.getVelocity().x, -120.0f)
-                        animator.setAnimation("walk_up")
-                    }
-                }
-                Direction.DOWN -> {
-                    // TODO: Constant window height
-                    if (cellY < 1024) {
-                        collider.setVelocity(collider.getVelocity().x, 120.0f)
-                        animator.setAnimation("walk_down")
-                    }
-                }
-            }
+        var velX = 0.0f
+        var velY = 0.0f
+        if (left_active) {
+            velX -= 120.0f
         }
-        else {
-            collider.setVelocity(0.0f, 0.0f)
+
+        if (right_active) {
+            velX += 120.0f
+        }
+
+        if (up_active) {
+            velY -= 120.0f
+        }
+
+        if (down_active) {
+            velY += 120.0f
+        }
+
+        if (velX < 0.0f) {
+            animator.setAnimation("walk_left")
+        }
+        else if (velX > 0.0f) {
+            animator.setAnimation("walk_right")
+        }
+        else if (velY < 0.0f) {
+            animator.setAnimation("walk_up")
+        }
+        else if (velY > 0.0f) {
+            animator.setAnimation("walk_down")
+        }
+
+        if (velX == 0.0f && velY == 0.0f) {
             animator.setAnimation("idle")
         }
+
+        collider.setVelocity(velX, velY)
 
         keepPlayerWithinBorder(system)
 
@@ -119,27 +121,27 @@ class Player : Entity() {
 
     private fun setDirectionBasedOnInput(input: Input) {
         if (input.keyState(Input.Key.KEY_A) == Input.InputState.PRESSED) {
-            xdir = Direction.LEFT
+            left_active = true
         } else if (input.keyState(Input.Key.KEY_A) == Input.InputState.RELEASED) {
-            xdir = Direction.NONE
+            left_active = false
         }
 
         if (input.keyState(Input.Key.KEY_D) == Input.InputState.PRESSED) {
-            xdir = Direction.RIGHT
+            right_active = true
         } else if (input.keyState(Input.Key.KEY_D) == Input.InputState.RELEASED) {
-            xdir = Direction.NONE
+            right_active = false
         }
 
         if (input.keyState(Input.Key.KEY_W) == Input.InputState.PRESSED) {
-            ydir = Direction.UP
+            up_active = true
         } else if (input.keyState(Input.Key.KEY_W) == Input.InputState.RELEASED) {
-            ydir = Direction.NONE
+            up_active = false
         }
 
         if (input.keyState(Input.Key.KEY_S) == Input.InputState.PRESSED) {
-            ydir = Direction.DOWN
+            down_active = true
         } else if (input.keyState(Input.Key.KEY_S) == Input.InputState.RELEASED) {
-            ydir = Direction.NONE
+            down_active = false
         }
     }
 
