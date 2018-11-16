@@ -22,7 +22,7 @@ class HealthBar: Entity() {
 
         if (parentTransform != null) {
             transform.x = parentTransform!!.x
-            transform.y = parentTransform!!.y - 32
+            transform.y = parentTransform!!.y - 48
         }
     }
 }

@@ -26,7 +26,7 @@ open class Enemy : Entity() {
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
-        transform.setScale(96.0f, 96.0f)
+        transform.setScale(80.0f, 80.0f)
         transform.z = 1.0f + pos.y%720 * 0.001f
         cellX = pos.x / 1280
         cellY = pos.y / 720

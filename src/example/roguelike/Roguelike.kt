@@ -108,8 +108,8 @@ class Roguelike: Rain() {
         if (player.transform.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && player.transform.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
                 player.transform.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && player.transform.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
             level.build(resourceFactory, System.currentTimeMillis(), healthBarSystem, healthMaterial)
-            level.switchCell(resourceFactory, 0, 0)
             player.setPosition(level.getFirstTilePos())
+            level.switchCell(resourceFactory, player.cellX, player.cellY)
         }
 
         // We need to divide by 32 as each tile on minimap is 2px in size while the actual tiles are 64

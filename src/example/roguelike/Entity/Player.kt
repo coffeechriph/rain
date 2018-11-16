@@ -76,14 +76,14 @@ class Player : Entity() {
             when (xdir) {
                 Direction.LEFT -> {
                     if (cellX > 0) {
-                        collider.setVelocity(-200.0f, collider.getVelocity().y)
+                        collider.setVelocity(-120.0f, collider.getVelocity().y)
                         animator.setAnimation("walk_left")
                     }
                 }
                 Direction.RIGHT -> {
                     // TODO: Constant window width
                     if (cellX < 1024) {
-                        collider.setVelocity(200.0f, collider.getVelocity().y)
+                        collider.setVelocity(120.0f, collider.getVelocity().y)
                         animator.setAnimation("walk_right")
                     }
                 }
@@ -92,14 +92,14 @@ class Player : Entity() {
             when (ydir) {
                 Direction.UP -> {
                     if (cellY > 0) {
-                        collider.setVelocity(collider.getVelocity().x, -200.0f)
+                        collider.setVelocity(collider.getVelocity().x, -120.0f)
                         animator.setAnimation("walk_up")
                     }
                 }
                 Direction.DOWN -> {
                     // TODO: Constant window height
                     if (cellY < 1024) {
-                        collider.setVelocity(collider.getVelocity().x, 200.0f)
+                        collider.setVelocity(collider.getVelocity().x, 120.0f)
                         animator.setAnimation("walk_down")
                     }
                 }

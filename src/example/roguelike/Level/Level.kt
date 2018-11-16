@@ -15,13 +15,10 @@ import rain.api.scene.Scene
 import rain.api.scene.TileIndex
 import rain.api.scene.TileIndexNone
 import rain.api.scene.Tilemap
-import java.awt.image.BufferedImage
-import java.io.File
-import java.util.*
-import javax.imageio.ImageIO
 import kotlin.IllegalStateException
 import kotlin.collections.ArrayList
 import kotlin.math.sign
+import kotlin.random.Random
 
 class Level {
     lateinit var map: IntArray
@@ -53,7 +50,7 @@ class Level {
     private var mapFrontIndices = Array(0){ TileIndex(0, 0) }
     private var rooms = ArrayList<Room>()
     private var enemies = ArrayList<Enemy>()
-    private var random = Random()
+    private var random = Random(System.currentTimeMillis())
     private lateinit var enemySystem: EntitySystem<Enemy>
     private lateinit var enemyMaterial: Material
     private lateinit var collisionSystem: EntitySystem<Entity>
@@ -222,6 +219,7 @@ class Level {
         // Set position of start and exit
         val startRoom = rooms[0]
         val endRoom = rooms[rooms.size-1]
+
         startPosition = startRoom.tiles[startRoom.tiles.size/2]
         exitPosition = endRoom.tiles[endRoom.tiles.size/2]
 
@@ -245,6 +243,7 @@ class Level {
     private fun populateTilemap() {
         for (room in rooms) {
             val tileY = room.type.ordinal
+            val tilesToRemove = ArrayList<Vector2i>()
 
             for (tile in room.tiles) {
                 val index = tile.x + tile.y * mapWidth
@@ -261,6 +260,7 @@ class Level {
                             else {
                                 mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3, tileY)
                                 map[tile.x + (tile.y - 2) * mapWidth] = 1
+                                tilesToRemove.add(tile)
                             }
                         }
                     }
@@ -274,8 +274,13 @@ class Level {
                         map[tile.x + (tile.y+3) * mapWidth] == 1) {
                         mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2, 1)
                         map[tile.x + (tile.y + 1) * mapWidth] = 1
+                        tilesToRemove.add(tile)
                     }
                 }
+            }
+
+            for (tile in tilesToRemove) {
+                room.tiles.remove(tile)
             }
         }
     }
@@ -369,6 +374,7 @@ class Level {
     }
 
     private fun buildRooms() {
+        rooms.clear()
         val mapCopy = map.copyOf()
 
         var x = 0
@@ -378,7 +384,7 @@ class Level {
             if (mapCopy[i] == 0) {
                 val area = Vector4i(Int.MAX_VALUE, Int.MAX_VALUE, Int.MIN_VALUE, Int.MIN_VALUE)
                 val tiles = floodSearchRoom(x,y,area,mapCopy,ArrayList())
-                val room = Room(tiles, area, RoomType.values()[Random().nextInt(3)])
+                val room = Room(tiles, area, RoomType.values()[random.nextInt(3)])
                 rooms.add(room)
             }
 
@@ -650,8 +656,8 @@ class Level {
             kracGuy.healthBar.transform.sy = 7.0f
 
             val room = rooms[random.nextInt(rooms.size)]
-            val p = room.tiles[random.nextInt(room.tiles.size)]
-            kracGuy.setPosition(Vector2i(p.x*32, p.y*32))
+            val p = room.findNoneEdgeTile(random)
+            kracGuy.setPosition(Vector2i(p.x*64, p.y*64))
             enemies.add(kracGuy)
         }
     }
@@ -664,10 +670,10 @@ class Level {
                     .attachSpriteComponent(itemMaterial)
                     .attachBoxColliderComponent(32.0f, 32.0f, BodyDef.BodyType.StaticBody)
                     .build()
-            val r = rooms[random.nextInt(rooms.size)]
-            val t = r.tiles[random.nextInt(r.tiles.size)]
+            val room = rooms[random.nextInt(rooms.size)]
+            val tile = room.findNoneEdgeTile(random)
 
-            container.setPosition(Vector2i(t.x*64, t.y*64))
+            container.setPosition(Vector2i(tile.x*64, tile.y*64))
             container.collider.setDamping(100.0f)
             container.collider.setDensity(1000.0f)
             container.collider.setFriction(1.0f)
