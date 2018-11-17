@@ -79,7 +79,7 @@ class Level {
             if (container.open && !container.looted) {
                 container.looted = true
 
-                for (i in 0 until random.nextInt(10)) {
+                for (i in 0 until random.nextInt(5) + 1) {
                     val combination = ITEM_COMBINATIONS[random.nextInt(ITEM_COMBINATIONS.size)]
                     val name = combination.second[random.nextInt(combination.second.size)]
 
@@ -87,19 +87,21 @@ class Level {
                     // TODO: So add some sort of modifier that is based on the current level
                     var quality = random.nextFloat() * random.nextFloat()
                     quality *= 100
-                    quality += 1
                     var qualityName = "None"
+                    var qualityIndex = 1.0f
                     for (q in ITEM_QUALITIES) {
                         if (quality.toInt() in q.first) {
                             qualityName = q.second
                             break
                         }
-                    }
-                    val finalQuality = quality.toInt()
 
-                    val item = Item(combination.first, "$qualityName $name", random.nextInt(finalQuality), random.nextInt(finalQuality), random.nextInt
-                    (finalQuality),
-                            random.nextInt(finalQuality))
+                        qualityIndex += 1
+                    }
+
+                    val finalQuality = (qualityIndex*qualityIndex*qualityIndex + 1).toInt()
+
+                    val item = Item(combination.first, "$qualityName $name", random.nextInt(finalQuality)+1, random.nextInt(finalQuality)+1,
+                            random.nextInt(finalQuality)+1,random.nextInt(finalQuality)+1)
                     levelItemSystem.newEntity(item)
                             .attachTransformComponent()
                             .attachSpriteComponent(itemMaterial)

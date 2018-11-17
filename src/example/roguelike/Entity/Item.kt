@@ -31,11 +31,12 @@ val ITEM_COMBINATIONS = arrayOf(
 )
 
 val ITEM_QUALITIES = arrayOf(
-    Pair(0..15, "[Poor]"),
-    Pair(16..30, "[Common]"),
-    Pair(31..74, "[Good]"),
-    Pair(75..94, "[Rare]"),
-    Pair(95..100, "[Epic]")
+    Pair(0..24, "[Poor]"),
+    Pair(25..60, "[Common]"),
+    Pair(61..81, "[Good]"),
+    Pair(82..90, "[Great]"),
+    Pair(91..98, "[Rare]"),
+    Pair(98..100, "[Epic]")
 )
 class Item (val type: ItemType, val name: String, val stamina: Int, val strength: Int, val agility: Int, val luck: Int): Entity() {
     var cellX = 0
