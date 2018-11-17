@@ -68,11 +68,11 @@ class Inventory(val gui: Gui, val player: Player) {
         statContainer = gui.newContainer(0.0f, 720.0f - 120.0f, 100.0f, 120.0f)
         statContainer.visible = true
 
-        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f)
-        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f)
-        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
-        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
-        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
+        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
+        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
+        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f, background = true)
+        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f, background = true)
+        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f, background = true)
 
         equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f, background = true)
         equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f, background = true)
@@ -230,10 +230,10 @@ class Inventory(val gui: Gui, val player: Player) {
 
         player.health = player.baseHealth + (player.stamina * 1.5f).toInt()
 
-        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f)
-        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f)
-        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
-        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
-        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
+        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
+        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
+        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f, background = true)
+        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f, background = true)
+        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f, background = true)
     }
 }

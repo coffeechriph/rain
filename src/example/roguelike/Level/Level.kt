@@ -98,7 +98,7 @@ class Level {
                         qualityIndex += 1
                     }
 
-                    val finalQuality = (qualityIndex*qualityIndex*qualityIndex + 1).toInt()
+                    val finalQuality = (qualityIndex*qualityIndex + qualityIndex).toInt()
 
                     val item = Item(combination.first, "$qualityName $name", random.nextInt(finalQuality)+1, random.nextInt(finalQuality)+1,
                             random.nextInt(finalQuality)+1,random.nextInt(finalQuality)+1)
