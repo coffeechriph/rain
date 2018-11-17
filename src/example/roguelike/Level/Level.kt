@@ -15,10 +15,9 @@ import rain.api.scene.Scene
 import rain.api.scene.TileIndex
 import rain.api.scene.TileIndexNone
 import rain.api.scene.Tilemap
-import kotlin.IllegalStateException
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.sign
-import kotlin.random.Random
 
 class Level {
     lateinit var map: IntArray
@@ -50,7 +49,7 @@ class Level {
     private var mapFrontIndices = Array(0){ TileIndex(0, 0) }
     private var rooms = ArrayList<Room>()
     private var enemies = ArrayList<Enemy>()
-    private var random = Random(System.currentTimeMillis())
+    private lateinit var random: Random
     private lateinit var enemySystem: EntitySystem<Enemy>
     private lateinit var enemyMaterial: Material
     private lateinit var collisionSystem: EntitySystem<Entity>
@@ -81,7 +80,24 @@ class Level {
                 container.looted = true
 
                 for (i in 0 until random.nextInt(10)) {
-                    val item = Item(ItemType.values()[random.nextInt(ItemType.values().size)], ITEM_NAMES[random.nextInt(ITEM_NAMES.size)], random.nextInt(10), random.nextInt(10), random.nextInt(10), random.nextInt(10))
+                    val combination = ITEM_COMBINATIONS[random.nextInt(ITEM_COMBINATIONS.size)]
+                    val name = combination.second[random.nextInt(combination.second.size)]
+
+                    var quality = random.nextFloat() * random.nextFloat()
+                    quality *= 100
+                    quality += 1
+                    var qualityName = "None"
+                    for (q in ITEM_QUALITIES) {
+                        if (quality.toInt() in q.first) {
+                            qualityName = q.second
+                            break
+                        }
+                    }
+                    val finalQuality = quality.toInt()
+
+                    val item = Item(combination.first, "$qualityName $name", random.nextInt(finalQuality), random.nextInt(finalQuality), random.nextInt
+                    (finalQuality),
+                            random.nextInt(finalQuality))
                     levelItemSystem.newEntity(item)
                             .attachTransformComponent()
                             .attachSpriteComponent(itemMaterial)

@@ -1,6 +1,6 @@
 package example.roguelike.Entity
 
-import rain.api.*
+import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.scene.Scene
@@ -10,8 +10,18 @@ class Krac: Enemy() {
     private var idleDir = 0
 
     override fun onCollision(entity: Entity) {
-        if (entity is Attack) {
-            damage(Random().nextInt(99))
+        val random = Random(System.currentTimeMillis())
+        if (entity is Attack && entity.attacker is Player) {
+            val player = entity.attacker as Player
+            val baseDamage = player.strength * 2.1f
+            val critChange = 0.05 * player.agility
+            val critted = random.nextFloat() < critChange
+            var damage = baseDamage * random.nextFloat()
+            if (critted) {
+                damage *= random.nextInt(4) + 1
+            }
+
+            damage(damage.toInt())
         }
     }
 

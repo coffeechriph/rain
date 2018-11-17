@@ -1,11 +1,11 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.*
+import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
 
-class Player : Entity() {
+class Player() : Entity() {
     private var left_active = false
     private var right_active = false
     private var up_active = false
@@ -31,6 +31,18 @@ class Player : Entity() {
     lateinit var animator: Animator
     lateinit var collider: Collider
 
+    var health = 100
+    var stamina = 1
+    var strength = 1
+    var agility = 1
+    var luck = 1
+
+    val baseHealth = 100
+    val baseStamina = 1
+    val baseStrength = 1
+    val baseAgility = 1
+    val baseLuck = 1
+
     fun setPosition(pos: Vector2i) {
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
 
@@ -54,6 +66,7 @@ class Player : Entity() {
         animator.setAnimation("idle")
 
         attack = Attack(transform)
+        attack.attacker = this
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {

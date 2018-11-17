@@ -1,6 +1,6 @@
 package example.roguelike.Entity
 
-import rain.api.*
+import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.entity.Transform
@@ -15,6 +15,7 @@ class Attack(val parentTransform: Transform) : Entity() {
     private var active = false
     private var direction = Direction.DOWN
     private var activeTime = 0
+    lateinit var attacker: Entity
 
     fun attack(direction: Direction) {
         active = true

@@ -2,7 +2,7 @@ package example.roguelike.Level
 
 import org.joml.Vector2i
 import org.joml.Vector4i
-import kotlin.random.Random
+import java.util.*
 
 enum class RoomType {
     DIRT_CAVE,
