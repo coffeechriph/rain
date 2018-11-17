@@ -4,7 +4,7 @@ import rain.api.gui.*
 import rain.api.gui.Container
 
 class Inventory(val gui: Gui, val player: Player) {
-    var visible = true
+    var visible = false
         set(value) {
             field = value
             container.visible = value
@@ -26,6 +26,7 @@ class Inventory(val gui: Gui, val player: Player) {
 
     private var itemButtons = ArrayList<ToggleButton>()
     private var equipButton = Button()
+    private var dropButton = Button()
     private var items = ArrayList<Item>()
     private lateinit var headerText: Text
     private lateinit var itemDescName: Text
@@ -56,6 +57,13 @@ class Inventory(val gui: Gui, val player: Player) {
         equipButton.h = 20.0f
         equipButton.text = "Equip"
         container.addComponent(equipButton)
+
+        dropButton.x = 335.0f
+        dropButton.y = 145.0f
+        dropButton.w = 100.0f
+        dropButton.h = 20.0f
+        dropButton.text = "Drop"
+        container.addComponent(dropButton)
 
         statContainer = gui.newContainer(0.0f, 720.0f - 120.0f, 100.0f, 120.0f)
         statContainer.visible = true
@@ -134,55 +142,98 @@ class Inventory(val gui: Gui, val player: Player) {
         }
 
         if (equipButton.active) {
-            when (selectedItem.type) {
-                ItemType.CHEST -> equippedChest = selectedItem
-                ItemType.GLOVES -> equippedGloves = selectedItem
-                ItemType.MELEE -> equippedWeapon = selectedItem
-                ItemType.RANGED -> equippedWeapon = selectedItem
-                ItemType.LEGS -> equippedLegs = selectedItem
-                ItemType.BOOTS -> equippedBoots = selectedItem
-                ItemType.HEAD -> equippedHead = selectedItem
-            }
-
-            container.removeText(equippedWeaponText)
-            container.removeText(equippedHeadText)
-            container.removeText(equippedChestText)
-            container.removeText(equippedGlovesText)
-            container.removeText(equippedBootsText)
-            container.removeText(equippedLegsText)
-
-            statContainer.removeText(healthText)
-            statContainer.removeText(staminaText)
-            statContainer.removeText(strengthText)
-            statContainer.removeText(agilityText)
-            statContainer.removeText(luckText)
-
-            equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f, background = true)
-            equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f, background = true)
-            equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 215.0f, background = true)
-            equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 235.0f, background = true)
-            equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 255.0f, background = true)
-            equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 275.0f, background = true)
-
-            player.stamina = player.baseStamina + equippedWeapon.stamina + equippedHead.stamina + equippedChest.stamina + equippedGloves.stamina +
-                    equippedBoots.stamina + equippedLegs.stamina
-
-            player.strength = player.baseStrength + equippedWeapon.strength + equippedHead.strength + equippedChest.strength + equippedGloves.strength +
-                    equippedBoots.strength + equippedLegs.strength
-
-            player.agility = player.baseAgility + equippedWeapon.agility + equippedHead.agility + equippedChest.agility + equippedGloves.agility +
-                    equippedBoots.agility + equippedLegs.agility
-
-            player.luck = player.baseLuck + equippedWeapon.luck + equippedHead.luck + equippedChest.luck + equippedGloves.luck +
-                    equippedBoots.luck + equippedLegs.luck
-
-            player.health = player.baseHealth + (player.stamina * 1.5f).toInt()
-
-            healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f)
-            staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f)
-            strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
-            agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
-            luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
+            updateEquippedItems()
         }
+        else if(dropButton.active) {
+            if (selectedItem != ItemNone) {
+                if (selectedItem == equippedWeapon) {
+                    equippedWeapon = ItemNone
+                }
+                else if (selectedItem == equippedChest) {
+                    equippedChest = ItemNone
+                }
+                else if (selectedItem == equippedLegs) {
+                    equippedLegs = ItemNone
+                }
+                else if (selectedItem == equippedBoots) {
+                    equippedBoots = ItemNone
+                }
+                else if (selectedItem == equippedGloves) {
+                    equippedGloves = ItemNone
+                }
+                else if (selectedItem == equippedHead) {
+                    equippedHead = ItemNone
+                }
+
+                val index = items.indexOf(selectedItem)
+                if (index >= 0) {
+                    val button = itemButtons[index]
+                    container.removeComponent(button)
+                    itemButtons.removeAt(index)
+                    items.remove(selectedItem)
+                }
+
+                selectedItem = ItemNone
+
+                for (i in 0 until itemButtons.size) {
+                    itemButtons[i].y = 20.0f + i*25.0f
+                }
+                container.isDirty = true
+
+                updateEquippedItems()
+            }
+        }
+    }
+
+    private fun updateEquippedItems() {
+        when (selectedItem.type) {
+            ItemType.CHEST -> equippedChest = selectedItem
+            ItemType.GLOVES -> equippedGloves = selectedItem
+            ItemType.MELEE -> equippedWeapon = selectedItem
+            ItemType.RANGED -> equippedWeapon = selectedItem
+            ItemType.LEGS -> equippedLegs = selectedItem
+            ItemType.BOOTS -> equippedBoots = selectedItem
+            ItemType.HEAD -> equippedHead = selectedItem
+        }
+
+        container.removeText(equippedWeaponText)
+        container.removeText(equippedHeadText)
+        container.removeText(equippedChestText)
+        container.removeText(equippedGlovesText)
+        container.removeText(equippedBootsText)
+        container.removeText(equippedLegsText)
+
+        statContainer.removeText(healthText)
+        statContainer.removeText(staminaText)
+        statContainer.removeText(strengthText)
+        statContainer.removeText(agilityText)
+        statContainer.removeText(luckText)
+
+        equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f, background = true)
+        equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f, background = true)
+        equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 215.0f, background = true)
+        equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 235.0f, background = true)
+        equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 255.0f, background = true)
+        equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 275.0f, background = true)
+
+        player.stamina = player.baseStamina + equippedWeapon.stamina + equippedHead.stamina + equippedChest.stamina + equippedGloves.stamina +
+                equippedBoots.stamina + equippedLegs.stamina
+
+        player.strength = player.baseStrength + equippedWeapon.strength + equippedHead.strength + equippedChest.strength + equippedGloves.strength +
+                equippedBoots.strength + equippedLegs.strength
+
+        player.agility = player.baseAgility + equippedWeapon.agility + equippedHead.agility + equippedChest.agility + equippedGloves.agility +
+                equippedBoots.agility + equippedLegs.agility
+
+        player.luck = player.baseLuck + equippedWeapon.luck + equippedHead.luck + equippedChest.luck + equippedGloves.luck +
+                equippedBoots.luck + equippedLegs.luck
+
+        player.health = player.baseHealth + (player.stamina * 1.5f).toInt()
+
+        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f)
+        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f)
+        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
+        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
+        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
     }
 }

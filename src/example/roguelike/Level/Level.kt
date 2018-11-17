@@ -83,6 +83,8 @@ class Level {
                     val combination = ITEM_COMBINATIONS[random.nextInt(ITEM_COMBINATIONS.size)]
                     val name = combination.second[random.nextInt(combination.second.size)]
 
+                    // TODO: Quality should also be based around how far the player has gotten
+                    // TODO: So add some sort of modifier that is based on the current level
                     var quality = random.nextFloat() * random.nextFloat()
                     quality *= 100
                     quality += 1

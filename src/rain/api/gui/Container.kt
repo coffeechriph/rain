@@ -3,15 +3,15 @@ package rain.api.gui
 import org.joml.Vector2i
 import org.joml.Vector4i
 import org.lwjgl.stb.STBTTAlignedQuad
-import org.lwjgl.stb.STBTruetype.*
+import org.lwjgl.stb.STBTruetype.stbtt_GetCodepointKernAdvance
+import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.entity.Transform
 import rain.api.gfx.*
-import java.nio.ByteBuffer
 import rain.vulkan.VertexAttribute
-import kotlin.math.ceil
+import java.nio.ByteBuffer
 import kotlin.math.floor
 
 // TODO: We want a nice way to hide/show single components
@@ -260,6 +260,16 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     // Handles interaction with gui elements. If a element is being interacted with the
     // input events will be de-registered in order to keep them from being forwarded to game code.
     fun update(input: Input) {
+
+        if (lastTriggeredComponent != null) {
+            if (lastTriggeredComponent is Button) {
+                updateButton(input)
+            }
+            else if (lastTriggeredComponent is ToggleButton) {
+                updateToggleButton(input)
+            }
+        }
+
         val mouseDown = input.mouseState(Input.Button.MOUSE_BUTTON_1) == Input.InputState.PRESSED
 
         if (mouseDown) {
@@ -276,29 +286,12 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                 }
             }
         }
-
-        if (lastTriggeredComponent != null) {
-            if (lastTriggeredComponent is Button) {
-                updateButton(input)
-            }
-            else if (lastTriggeredComponent is ToggleButton) (
-                updateToggleButton(input)
-            )
-        }
     }
 
     private fun updateButton(input: Input) {
         if (lastTriggeredComponent != null) {
-            val mp = input.mousePosition
-            if (!isInside(mp, Vector4i(transform.x.toInt(), transform.y.toInt(), transform.sx.toInt(), transform.sy.toInt())) ||
-                !isInside(Vector2i(mp.x - transform.x.toInt(), mp.y - transform.y.toInt()), Vector4i(lastTriggeredComponent!!.x.toInt(), lastTriggeredComponent!!.y.toInt(), lastTriggeredComponent!!.w.toInt(), lastTriggeredComponent!!.h.toInt()))) {
-                isDirty = lastTriggeredComponent!!.trigger()
-                lastTriggeredComponent = null
-            }
-            else if (input.mouseState(Input.Button.MOUSE_BUTTON_1) == Input.InputState.RELEASED) {
-                isDirty = lastTriggeredComponent!!.trigger()
-                lastTriggeredComponent = null
-            }
+            isDirty = lastTriggeredComponent!!.trigger()
+            lastTriggeredComponent = null
         }
     }
 

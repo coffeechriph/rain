@@ -69,4 +69,42 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
             entity.inventory.addItem(this)
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Item
+
+        if (type != other.type) return false
+        if (name != other.name) return false
+        if (stamina != other.stamina) return false
+        if (strength != other.strength) return false
+        if (agility != other.agility) return false
+        if (luck != other.luck) return false
+        if (cellX != other.cellX) return false
+        if (cellY != other.cellY) return false
+        if (pickedUp != other.pickedUp) return false
+        if (transform != other.transform) return false
+        if (sprite != other.sprite) return false
+        if (collider != other.collider) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + stamina
+        result = 31 * result + strength
+        result = 31 * result + agility
+        result = 31 * result + luck
+        result = 31 * result + cellX
+        result = 31 * result + cellY
+        result = 31 * result + pickedUp.hashCode()
+        result = 31 * result + transform.hashCode()
+        result = 31 * result + sprite.hashCode()
+        result = 31 * result + collider.hashCode()
+        return result
+    }
 }
