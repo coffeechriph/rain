@@ -663,7 +663,7 @@ class Level {
         enemySystem.clear()
         healthBarSystem.clear()
 
-        for (i in 0 until 300) {
+        for (i in 0 until random.nextInt(200) + 20) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
@@ -696,7 +696,7 @@ class Level {
         containers.clear()
         containerSystem.clear()
 
-        for (i in 0 until 100) {
+        for (i in 0 until random.nextInt(30) + 10) {
             val container = Container()
             containerSystem.newEntity(container)
                     .attachTransformComponent()
