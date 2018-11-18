@@ -93,6 +93,7 @@ class Roguelike: Rain() {
         player.inventory = inventory
         player.level = level
 
+        // TODO: Constant window dimensions
         container = gui.newContainer(1280.0f/2.0f - 100, 720.0f - 40.0f, 200.0f, 40.0f)
         currentLevelText = container.addText("Current Level: ${player.currentLevel}", 0.0f, 0.0f, background = true)
         currentLevelText.x += currentLevelText.w/2.0f
