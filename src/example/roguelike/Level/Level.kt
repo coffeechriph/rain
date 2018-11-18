@@ -85,7 +85,7 @@ class Level {
 
                     var quality = random.nextFloat() * random.nextFloat()
                     quality *= 100
-                    quality += random.nextFloat() * (player.currentLevel.toFloat()) * 0.01f
+                    quality += random.nextFloat() * (player.currentLevel.toFloat()) * 0.02f
                     var qualityName = "None"
                     var qualityIndex = 1.0f
                     for (q in ITEM_QUALITIES) {
@@ -112,7 +112,7 @@ class Level {
                     item.transform.sx = 64.0f
                     item.transform.sy = 64.0f
                     item.sprite.textureTileOffset.x = 3
-                    item.sprite.textureTileOffset.y = 4 + random.nextInt(2)
+                    item.sprite.textureTileOffset.y = 4 + random.nextInt(3)
 
                     item.collider.setDamping(300.0f)
                     item.collider.setFriction(0.0f)
@@ -344,6 +344,20 @@ class Level {
                 }
             }
         }
+
+        x = 0
+        y = 0
+        for (i in 0 until map.size) {
+            if (x == 0 || x == mapWidth-1 || y == 0 || y == mapHeight-1) {
+                map[x + y*mapWidth] = 1
+            }
+
+            x += 1
+            if (x >= mapWidth) {
+                x = 0
+                y += 1
+            }
+        }
     }
 
     private fun numNeighbours(x: Int, y: Int): Int {
@@ -536,6 +550,26 @@ class Level {
                         else {
                             collisions++
                         }
+
+                        if (y > 0) {
+                            if (map[(x - 1) + (y - 1) * mapWidth] == 1) {
+                                map[(x - 1) + (y - 1) * mapWidth] = 0
+                                room.tiles.add(Vector2i(x - 1, y - 1))
+                            }
+                            else {
+                                collisions++
+                            }
+                        }
+
+                        if (y < mapHeight - 1) {
+                            if (map[(x - 1) + (y + 1) * mapWidth] == 1) {
+                                map[(x - 1) + (y + 1) * mapWidth] = 0
+                                room.tiles.add(Vector2i(x - 1, y + 1))
+                            }
+                            else {
+                                collisions++
+                            }
+                        }
                     }
 
                     if (x < mapWidth - 1) {
@@ -545,6 +579,27 @@ class Level {
                         }
                         else {
                             collisions++
+                        }
+
+
+                        if (y > 0) {
+                            if (map[(x + 1) + (y - 1) * mapWidth] == 1) {
+                                map[(x + 1) + (y - 1) * mapWidth] = 0
+                                room.tiles.add(Vector2i(x + 1, y - 1))
+                            }
+                            else {
+                                collisions++
+                            }
+                        }
+
+                        if (y < mapHeight - 1) {
+                            if (map[(x + 1) + (y + 1) * mapWidth] == 1) {
+                                map[(x + 1) + (y + 1) * mapWidth] = 0
+                                room.tiles.add(Vector2i(x + 1, y + 1))
+                            }
+                            else {
+                                collisions++
+                            }
                         }
                     }
 
@@ -582,7 +637,7 @@ class Level {
                         traversalDone += 1
                     }
 
-                    if (traversalDone == 2 || collisions > 3) {
+                    if (traversalDone == 2 || collisions > 7) {
                         break
                     }
                 }
