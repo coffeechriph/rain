@@ -12,6 +12,8 @@ import rain.api.entity.EntitySystem
 import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
+import rain.api.gui.Container
+import rain.api.gui.Text
 import rain.api.scene.Camera
 
 class Roguelike: Rain() {
@@ -24,7 +26,9 @@ class Roguelike: Rain() {
     private lateinit var healthBarSystem: EntitySystem<HealthBar>
     private var player = Player()
     private lateinit var inventory: Inventory
-    private var miniPlayer = HealthBar()
+    private lateinit var container: Container
+    private lateinit var currentLevelText: Text
+
     // TODO: The depth range is aquired from the renderer
     // TODO: Create a method in scene to create a new camera which auto-injects the depth range
     private var camera = Camera(Vector2f(0.0f, 20.0f))
@@ -69,7 +73,7 @@ class Roguelike: Rain() {
         level.build(resourceFactory, 0, healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
-        scene.addTilemap(level.minimapTilemap)
+        //scene.addTilemap(level.minimapTilemap)
 
         camera = Camera(Vector2f(0.0f, 20.0f))
         scene.setActiveCamera(camera)
@@ -83,16 +87,15 @@ class Roguelike: Rain() {
         player.maxCellY = level.maxCellY
         player.tileWidth = 64
         player.setPosition(level.getFirstTilePos())
-
-        healthBarSystem.newEntity(miniPlayer)
-                .attachTransformComponent()
-                .attachSpriteComponent(healthMaterial)
-                .build()
-        miniPlayer.transform.setScale(4.0f, 4.0f)
-        miniPlayer.transform.z = 12.0f
+        level.switchCell(resourceFactory, player.cellX, player.cellY)
 
         inventory = Inventory(gui, player)
         player.inventory = inventory
+        player.level = level
+
+        container = gui.newContainer(1280.0f/2.0f - 100, 720.0f - 40.0f, 200.0f, 40.0f)
+        currentLevelText = container.addText("Current Level: ${player.currentLevel}", 0.0f, 0.0f, background = true)
+        currentLevelText.x += currentLevelText.w/2.0f
     }
 
     override fun update() {
@@ -110,14 +113,11 @@ class Roguelike: Rain() {
             level.build(resourceFactory, System.currentTimeMillis(), healthBarSystem, healthMaterial)
             player.setPosition(level.getFirstTilePos())
             level.switchCell(resourceFactory, player.cellX, player.cellY)
-        }
 
-        // We need to divide by 32 as each tile on minimap is 2px in size while the actual tiles are 64
-        // to adjust the player position according to the minimap
-        // We then take the cell index multiplied by the number of tiles per cell * 2 to adjust to minimap tile size
-        val tx = player.transform.x / 32 + player.cellX * level.width * 2
-        val ty = player.transform.y / 32 + player.cellY * level.height * 2
-        miniPlayer.transform.x = tx
-        miniPlayer.transform.y = ty
+            player.currentLevel += 1
+            container.removeText(currentLevelText)
+            currentLevelText = container.addText("Current Level: ${player.currentLevel}", 0.0f, 0.0f, background = true)
+            currentLevelText.x += currentLevelText.w/2.0f
+        }
     }
 }

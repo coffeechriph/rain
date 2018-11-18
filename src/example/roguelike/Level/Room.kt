@@ -25,12 +25,26 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
                 if (tile2.x == tile.x && (tile2.y == tile.y - 1 || tile2.y == tile.y + 1)) {
                     neighbours += 1
                 }
-                else if (tile2.y == tile.y && (tile2.x == tile.x - 1 || tile2.x == tile.x + 1)) {
+
+                if (tile2.y == tile.y && (tile2.x == tile.x - 1 || tile2.x == tile.x + 1)) {
+                    neighbours += 1
+                }
+
+                if (tile2.x == tile.x - 1 && tile2.y == tile.y - 1) {
+                    neighbours += 1
+                }
+                else if (tile2.x == tile.x + 1 && tile2.y == tile.y - 1) {
+                    neighbours += 1
+                }
+                else if (tile2.x == tile.x - 1 && tile2.y == tile.y + 1) {
+                    neighbours += 1
+                }
+                else if (tile2.x == tile.x + 1 && tile2.y == tile.y + 1)  {
                     neighbours += 1
                 }
             }
 
-            if (neighbours >= 4) {
+            if (neighbours >= 8) {
                 viableTiles.add(tile)
             }
         }

@@ -83,10 +83,9 @@ class Level {
                     val combination = ITEM_COMBINATIONS[random.nextInt(ITEM_COMBINATIONS.size)]
                     val name = combination.second[random.nextInt(combination.second.size)]
 
-                    // TODO: Quality should also be based around how far the player has gotten
-                    // TODO: So add some sort of modifier that is based on the current level
                     var quality = random.nextFloat() * random.nextFloat()
                     quality *= 100
+                    quality += random.nextFloat() * (player.currentLevel.toFloat()) * 0.01f
                     var qualityName = "None"
                     var qualityIndex = 1.0f
                     for (q in ITEM_QUALITIES) {
@@ -238,14 +237,13 @@ class Level {
 
         // Set position of start and exit
         val startRoom = rooms[0]
-        val endRoom = rooms[rooms.size-1]
+        val endRoom = rooms[0]
 
         startPosition = startRoom.tiles[startRoom.tiles.size/2]
-        exitPosition = endRoom.tiles[endRoom.tiles.size/2]
+        exitPosition = endRoom.tiles[endRoom.tiles.size/2+1]
 
         mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
 
-        switchCell(resourceFactory, 0, 0)
         generateEnemies(healthBarMaterial, healthBarSystem)
         generateContainers()
 
@@ -263,7 +261,6 @@ class Level {
     private fun populateTilemap() {
         for (room in rooms) {
             val tileY = room.type.ordinal
-            val tilesToRemove = ArrayList<Vector2i>()
 
             for (tile in room.tiles) {
                 val index = tile.x + tile.y * mapWidth
@@ -280,7 +277,6 @@ class Level {
                             else {
                                 mapFrontIndices[tile.x + (tile.y - 2) * mapWidth] = TileIndex(3, tileY)
                                 map[tile.x + (tile.y - 2) * mapWidth] = 1
-                                tilesToRemove.add(tile)
                             }
                         }
                     }
@@ -294,8 +290,18 @@ class Level {
                         map[tile.x + (tile.y+3) * mapWidth] == 1) {
                         mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2, 1)
                         map[tile.x + (tile.y + 1) * mapWidth] = 1
-                        tilesToRemove.add(tile)
                     }
+                }
+            }
+        }
+
+        // Remove tiles that are now solid
+        for (room in rooms) {
+            val tilesToRemove = ArrayList<Vector2i>()
+            for (tile in room.tiles) {
+                val index = tile.x + tile.y * mapWidth
+                if (map[index] == 1) {
+                    tilesToRemove.add(tile)
                 }
             }
 
@@ -653,6 +659,10 @@ class Level {
     }
 
     private fun generateEnemies(healthBarMaterial: Material, healthBarSystem: EntitySystem<HealthBar>) {
+        enemies.clear()
+        enemySystem.clear()
+        healthBarSystem.clear()
+
         for (i in 0 until 300) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
@@ -683,6 +693,9 @@ class Level {
     }
 
     private fun generateContainers() {
+        containers.clear()
+        containerSystem.clear()
+
         for (i in 0 until 100) {
             val container = Container()
             containerSystem.newEntity(container)

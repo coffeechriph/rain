@@ -2,11 +2,10 @@ package rain.api.entity
 
 import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.CircleShape
+import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2i
 import rain.api.assertion
-import kotlin.IllegalStateException
-import com.badlogic.gdx.physics.box2d.FixtureDef
 import rain.api.gfx.Material
 import rain.api.scene.Scene
 
@@ -34,6 +33,35 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return Builder(id, entity, this)
     }
 
+    fun removeEntity(entity: T) {
+        val sprite = spriteComponentsMap[entity.getId()]
+        if (sprite != null) {
+            spriteComponents.remove(sprite)
+            spriteComponentsMap.remove(entity.getId())
+        }
+
+        val transform = transformComponentsMap[entity.getId()]
+        if (transform != null) {
+            transformComponents.remove(transform)
+            transformComponentsMap.remove(entity.getId())
+        }
+
+        val collider = colliderComponentsMap[entity.getId()]
+        if (collider != null) {
+            colliderComponents.remove(collider)
+            colliderComponentsMap.remove(entity.getId())
+        }
+
+        val animator = animatorComponentsMap[entity.getId()]
+        if (animator != null) {
+            animatorComponents.remove(animator)
+            animatorComponentsMap.remove(entity.getId())
+        }
+
+        entityWrappersMap.remove(entity.getId())
+        entityWrappers.remove(entity)
+    }
+
     fun clear() {
         entityId = 0
         entities.clear()
@@ -43,6 +71,8 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         spriteComponentsMap.clear()
         transformComponentsMap.clear()
         entityWrappersMap.clear()
+        animatorComponents.clear()
+        animatorComponentsMap.clear()
 
         for (collider in colliderComponents) {
             scene.physicWorld.destroyBody(collider!!.getBody())

@@ -1,5 +1,6 @@
 package example.roguelike.Entity
 
+import example.roguelike.Level.Level
 import org.joml.Vector2i
 import rain.api.Input
 import rain.api.entity.*
@@ -11,7 +12,7 @@ class Player() : Entity() {
     private var up_active = false
     private var down_active = false
 
-    var playerMovedCell = true
+    var playerMovedCell = false
     var cellX = 0
         private set
     var cellY = 0
@@ -36,12 +37,15 @@ class Player() : Entity() {
     var strength = 1
     var agility = 1
     var luck = 1
+    lateinit var level: Level
 
     val baseHealth = 100
     val baseStamina = 1
     val baseStrength = 1
     val baseAgility = 1
     val baseLuck = 1
+
+    var currentLevel = 1
 
     fun setPosition(pos: Vector2i) {
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
@@ -123,7 +127,7 @@ class Player() : Entity() {
 
         collider.setVelocity(velX, velY)
 
-        keepPlayerWithinBorder(system)
+        keepPlayerWithinBorder<Player>()
 
         if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {
             inventory.visible = !inventory.visible
@@ -157,7 +161,7 @@ class Player() : Entity() {
     }
 
     // TODO: This method uses constant window dimensions
-    private fun <T : Entity> keepPlayerWithinBorder(system: EntitySystem<T>) {
+    private fun <T : Entity> keepPlayerWithinBorder() {
         if (collider.getPosition().x < 0) {
             if (cellX > 0) {
                 collider.setPosition(1270.0f, collider.getPosition().y)
@@ -166,9 +170,8 @@ class Player() : Entity() {
                 cellX -= 1
             }
         }
-        else if (collider.getPosition().x > 1280.0f) {
-            // TODO: Make this a variable that can be randomly picked depending on level size
-            if (cellX < 1024) {
+        else if (collider.getPosition().x > 1270) {
+            if (cellX < level.maxCellX) {
                 collider.setPosition(10.0f, collider.getPosition().y)
 
                 playerMovedCell = true
@@ -184,9 +187,8 @@ class Player() : Entity() {
                 cellY -= 1
             }
         }
-        else if (collider.getPosition().y > 720.0f) {
-            // TODO: Make this a variable that can be randomly picked depending on level size
-            if (cellY < 1024) {
+        else if (collider.getPosition().y > 710) {
+            if (cellY < level.maxCellY) {
                 collider.setPosition(collider.getPosition().x, 10.0f)
 
                 playerMovedCell = true
