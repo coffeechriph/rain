@@ -41,4 +41,7 @@ internal class VulkanResult
         else -> String.format("%s [%d]", "Unknown", Integer.valueOf(result))
     }
 
+    override fun toString(): String {
+        return result
+    }
 }

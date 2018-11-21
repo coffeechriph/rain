@@ -52,9 +52,9 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
         transform.z = 1.1f + transform.y * 0.001f
         transform.setScale(96.0f, 96.0f)
         val body = system.findColliderComponent(getId())!!
-        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
+        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%752)
         cellX = pos.x / 1280
-        cellY = pos.y / 720
+        cellY = pos.y / 752
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {

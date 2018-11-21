@@ -4,7 +4,25 @@ import org.joml.Vector2i
 import rain.api.assertion
 
 class NavMesh(val width: Int, val height: Int) {
-    private data class Node(var parent: Node?, val x: Int, val y: Int, var F: Int, var G: Int, var H: Int)
+    private class Node(var parent: Node?, val x: Int, val y: Int, var F: Int, var G: Int) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Node
+
+            if (x != other.x) return false
+            if (y != other.y) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = x
+            result = 31 * result + y
+            return result
+        }
+    }
 
     // Map which indicates wether or not a particular cell is traversable and how slow it is to traverse.
     // 0 = Takes no time to traverse
@@ -13,7 +31,7 @@ class NavMesh(val width: Int, val height: Int) {
     // Note: The idea here is to have multiple nav meshes where each mesh would allow for a particular
     // unit (for example) to traverse at different places.
     val map = ByteArray(width*height)
-    private val nodes = Array(width*height){Node(null,0, 0, 0, 0, 0)}
+    private val nodes = Array(width*height){Node(null,0, 0, 0, 0)}
     private val openList = ArrayList<Node>()
     private val closedList = ArrayList<Node>()
 
@@ -24,17 +42,6 @@ class NavMesh(val width: Int, val height: Int) {
 
         for (i in 0 until data.size) {
             map[i] = data[i]
-        }
-
-        var x = 0
-        var y = 0
-        for (i in 0 until map.size) {
-            nodes[i] = Node(null, x, y, 0, 0, 0)
-            x += 1
-            if (x >= width) {
-                x = 0
-                y += 1
-            }
         }
     }
 
@@ -49,6 +56,20 @@ class NavMesh(val width: Int, val height: Int) {
 
         if (destIndex < 0 || destIndex > map.size) {
             assertion("Destination is outside the map! ${destination.x}, ${destination.y}")
+        }
+
+        openList.clear()
+        closedList.clear()
+
+        var x = 0
+        var y = 0
+        for (i in 0 until map.size) {
+            nodes[i] = Node(null, x, y, 0, 0)
+            x += 1
+            if (x >= width) {
+                x = 0
+                y += 1
+            }
         }
 
         openList.add(nodes[origin.x + origin.y * width])
@@ -69,22 +90,24 @@ class NavMesh(val width: Int, val height: Int) {
                     continue
                 }
 
-                c.parent = current
-
-                val nG = current.G + map[current.x + current.y * width]
+                val nG = current.G + map[c.x + c.y * width]
                 val dx = (destination.x - c.x)
                 val dy = (destination.y - c.y)
-                val nH = dx*dx+dy*dy
+                val nH = Math.abs(dx) + Math.abs(dy)
                 val nF = nG + nH
 
-                if (openList.contains(c) && nG > c.G) {
-                    continue
+                if (!openList.contains(c)) {
+                    c.parent = current
+                    c.F = nF
+                    openList.add(c)
                 }
                 else {
-                    c.F = nF
-                    c.G = nG
-                    c.H = nH
-                    openList.add(c)
+                    if (nG > c.G) {
+                        continue
+                    }
+                    else {
+                        c.F = nF
+                    }
                 }
             }
         }
@@ -92,7 +115,7 @@ class NavMesh(val width: Int, val height: Int) {
         val finalList = ArrayList<Vector2i>()
         var current: Node? = closedList.last()
         while (current != null) {
-            finalList.add(Vector2i(current.x, current.y))
+            finalList.add(0, Vector2i(current.x, current.y))
             current = current.parent
         }
 

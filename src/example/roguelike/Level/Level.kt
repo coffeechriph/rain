@@ -11,10 +11,7 @@ import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
-import rain.api.scene.Scene
-import rain.api.scene.TileIndex
-import rain.api.scene.TileIndexNone
-import rain.api.scene.Tilemap
+import rain.api.scene.*
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.sign
@@ -56,6 +53,7 @@ class Level {
     private lateinit var containerSystem: EntitySystem<Container>
     private lateinit var levelItemSystem: EntitySystem<Item>
     private var containers = ArrayList<Container>()
+    private lateinit var navMesh: NavMesh
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
 
@@ -70,6 +68,70 @@ class Level {
             }
 
             enemy.healthBar.transform.sx = enemy.health / 2.0f
+
+            if (!enemy.traversing) {
+                enemy.collider.setVelocity(0.0f,0.0f)
+                if (enemy.transform.x < player.transform.x - 16.0f || enemy.transform.x > player.transform.x + 16.0f
+                && enemy.transform.y < player.transform.y - 16.0f || enemy.transform.y > player.transform.y + 16.0f) {
+                    val worldX = enemy.transform.x / 64 + (enemy.cellX * width)
+                    val worldY = enemy.transform.y / 64 + (enemy.cellY * height)
+                    val px = player.transform.x / 64 + (player.cellX * width)
+                    val py = player.transform.y / 64 + (player.cellY * height)
+
+                    val path = navMesh.findPath(Vector2i(worldX.toInt(), worldY.toInt()), Vector2i(px.toInt(), py.toInt()))
+                    enemy.path = path
+                    enemy.pathIndex = 1
+                    enemy.traversing = true
+                    enemy.traverseSleep = System.currentTimeMillis()
+
+                    val dx = player.transform.x - enemy.transform.x
+                    val dy = player.transform.y - enemy.transform.y
+                    enemy.lastPlayerAngle = Math.atan2(dy.toDouble(), dx.toDouble()).toFloat()
+                }
+            }
+            else if (enemy.path.size > 0 && enemy.pathIndex < enemy.path.size) {
+                val ax = player.transform.x - enemy.transform.x
+                val ay = player.transform.y - enemy.transform.y
+                val currAngle = Math.atan2(ay.toDouble(), ax.toDouble()).toFloat()
+                if (Math.abs(enemy.lastPlayerAngle-currAngle) >= Math.PI*0.3f) {
+                    enemy.traversing = false
+                }
+                else {
+                    val target = Vector2i(enemy.path[enemy.pathIndex])
+                    target.mul(64)
+                    target.x %= 1280
+                    target.y %= 752
+                    val dx = target.x - enemy.transform.x
+                    val dy = target.y - enemy.transform.y
+                    val ln = Math.sqrt((dx * dx + dy * dy).toDouble())
+                    if (ln <= 0) {
+                        enemy.collider.setVelocity(0.0f, 0.0f)
+                        enemy.pathIndex += 1
+                        if (enemy.pathIndex >= enemy.path.size) {
+                            enemy.traversing = false
+                        }
+                    } else {
+                        val vx = dx / ln
+                        val vy = dy / ln
+
+                        enemy.collider.setVelocity(vx.toFloat() * 120.0f, vy.toFloat() * 120.0f)
+                        if (enemy.transform.x >= target.x - 16 && enemy.transform.x <= target.x + 16 &&
+                                enemy.transform.y >= target.y - 16 && enemy.transform.y <= target.y + 16 ||
+                                enemy.transform.x >= player.transform.x - 16.0f && enemy.transform.x <= player.transform.x + 16.0f
+                                && enemy.transform.y >= player.transform.y - 16.0f && enemy.transform.y <= player.transform.y + 16.0f) {
+                            enemy.pathIndex += 1
+                            if (enemy.pathIndex >= enemy.path.size) {
+                                enemy.traversing = false
+                            }
+                        } else if (System.currentTimeMillis() - enemy.traverseSleep >= 500 && enemy.pathIndex >= 5) {
+                            enemy.traversing = false
+                        }
+                    }
+                }
+            }
+            else {
+                enemy.traversing = false
+            }
         }
 
         for (container in containers) {
@@ -148,6 +210,7 @@ class Level {
         this.width = width
         this.height = height
         map = IntArray(mapWidth*mapHeight)
+        navMesh = NavMesh(mapWidth, mapHeight)
 
         val enemyTexture = resourceFactory.loadTexture2d("./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
@@ -229,7 +292,12 @@ class Level {
     fun build(resourceFactory: ResourceFactory, seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
         random = Random(seed)
         generate(7)
+        addWallBlockersAtEdges()
         buildRooms()
+
+        for (i in 0 until map.size) {
+            navMesh.map[i] = (map[i] * 127).toByte()
+        }
 
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
@@ -256,6 +324,53 @@ class Level {
         minimapIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
         minimapTilemap.create(resourceFactory, material, mapWidth, mapHeight, 2.0f, 2.0f, minimapIndices)
         minimapTilemap.update(minimapIndices)
+    }
+
+    private fun addWallBlockersAtEdges() {
+        // Find tiles at the edge of a cell
+        // If they are solid we want to extend them into the neighbouring cell
+        // This is to remove the buggy cell change which causes wall stucks and spasm
+        var x = 0
+        var y = 0
+        for (i in 0 until maxCellX * maxCellY) {
+            if (y < mapHeight - 1) {
+                for (k in 0 until width) {
+                    if (map[(x + k) + y * mapWidth] == 1) {
+                        map[(x + k) + (y + 1) * mapWidth] = 1
+                    }
+                }
+            }
+
+            if (y > 0) {
+                for (k in 0 until width) {
+                    if (map[(x + k) + y * mapWidth] == 1) {
+                        map[(x + k) + (y - 1) * mapWidth] = 1
+                    }
+                }
+            }
+
+            if (x < mapWidth - 1 && y + width < mapHeight) {
+                for (k in 0 until width) {
+                    if (map[x + (y + k) * mapWidth] == 1) {
+                        map[(x + 1) + (y + k) * mapWidth] = 1
+                    }
+                }
+            }
+
+            if (x > 0 && y + width < mapHeight) {
+                for (k in 0 until width) {
+                    if (map[x + (y + k) * mapWidth] == 1) {
+                        map[(x - 1) + (y + k) * mapWidth] = 1
+                    }
+                }
+            }
+
+            x += width
+            if (x >= mapWidth) {
+                x = 0
+                y += height
+            }
+        }
     }
 
     private fun populateTilemap() {
@@ -718,7 +833,7 @@ class Level {
         enemySystem.clear()
         healthBarSystem.clear()
 
-        for (i in 0 until random.nextInt(200) + 20) {
+        for (i in 0 until random.nextInt(50) + 10) {
             val kracGuy = Krac()
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()

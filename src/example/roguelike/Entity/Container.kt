@@ -20,9 +20,9 @@ class Container : Entity() {
     fun setPosition(pos: Vector2i) {
         transform.z = 2.0f + transform.y * 0.001f
         transform.setScale(64.0f, 64.0f)
-        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%720)
+        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%752)
         cellX = pos.x / 1280
-        cellY = pos.y / 720
+        cellY = pos.y / 752
     }
 
     override fun onCollision(entity: Entity) {

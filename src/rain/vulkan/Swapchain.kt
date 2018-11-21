@@ -251,11 +251,11 @@ internal class Swapchain {
 
     fun aquireNextImage(logicalDevice: LogicalDevice, semaphore: Semaphore): Int {
         val err = vkAcquireNextImageKHR(logicalDevice.device, swapchain, -1L, semaphore.semaphore, 0, pImageIndex)
-        if (err != VK_SUCCESS) {
-            assertion("Failed to acquire next image from swapchain " + VulkanResult(err))
-        }
-        else if (err == VK_ERROR_OUT_OF_DATE_KHR) {
+        if (err == VK_ERROR_OUT_OF_DATE_KHR) {
             return -1
+        }
+        else if(err != VK_SUCCESS) {
+            assertion("Failed to acquire next image from swapchain" + VulkanResult(err))
         }
         return pImageIndex.get(0)
     }
