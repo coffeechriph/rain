@@ -73,6 +73,7 @@ class Roguelike: Rain() {
         level.build(resourceFactory, 0, healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
+        scene.addTilemap(level.detailTilemap)
         scene.addTilemap(level.minimapTilemap)
 
         camera = Camera(Vector2f(0.0f, 20.0f))

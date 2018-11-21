@@ -35,6 +35,8 @@ class Level {
         private set
     var frontTilemap = Tilemap()
         private set
+    var detailTilemap = Tilemap()
+        private set
     var minimapTilemap = Tilemap()
 
     private lateinit var material: Material
@@ -44,6 +46,7 @@ class Level {
 
     private var mapBackIndices = Array(0){ TileIndex(0, 0) }
     private var mapFrontIndices = Array(0){ TileIndex(0, 0) }
+    private var mapDetailIndices = Array(0) { TileIndexNone }
     private var rooms = ArrayList<Room>()
     private var enemies = ArrayList<Enemy>()
     private lateinit var random: Random
@@ -231,6 +234,7 @@ class Level {
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
         val backIndices = Array(width*height){ TileIndexNone }
         val frontIndices = Array(width*height){ TileIndexNone }
+        var detailIndices = Array(width*height){ TileIndexNone }
         var sx = cellX * width
         var sy = cellY * height
 
@@ -244,6 +248,7 @@ class Level {
 
             backIndices[i] = mapBackIndices[sx + sy*mapWidth]
             frontIndices[i] = mapFrontIndices[sx + sy*mapWidth]
+            detailIndices[i] = mapDetailIndices[sx + sy*mapWidth]
 
             if (map[sx + sy*mapWidth] == 1) {
                 val e = Entity()
@@ -276,16 +281,21 @@ class Level {
         if (firstBuild) {
             backTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, backIndices)
             frontTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, frontIndices)
+            detailTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, detailIndices)
             backTilemap.update(backIndices)
             frontTilemap.update(frontIndices)
+            detailTilemap.update(detailIndices)
             backTilemap.transform.setPosition(0.0f, 0.0f, 1.0f)
+            detailTilemap.transform.setPosition(0.0f, 0.0f, 1.1f)
             frontTilemap.transform.setPosition(0.0f, 0.0f, 10.0f)
+
             minimapTilemap.transform.setPosition(0.0f, 0.0f, 13.0f)
             firstBuild = false
         }
         else {
             backTilemap.update(backIndices)
             frontTilemap.update(frontIndices)
+            detailTilemap.update(detailIndices)
         }
     }
 
@@ -301,6 +311,7 @@ class Level {
 
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
+        mapDetailIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         populateTilemap()
 
         // Set position of start and exit
@@ -406,6 +417,14 @@ class Level {
                         mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2, 1)
                         map[tile.x + (tile.y + 1) * mapWidth] = 1
                     }
+                }
+
+                val r = random.nextInt(40)
+                if (r == 1){
+                    mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(5, 1)
+                }
+                else if (r == 2) {
+                    mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(5, 2)
                 }
             }
         }
