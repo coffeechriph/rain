@@ -49,7 +49,8 @@ class Inventory(val gui: Gui, val player: Player) {
     private var luckText: Text
 
     init {
-        container = gui.newContainer(startX, startY, 500.0f, 720.0f)
+        container = gui.newContainer(startX, startY, 500.0f, 500.0f)
+        container.background = true
         container.visible = false
         equipButton.x = 230.0f
         equipButton.y = 145.0f

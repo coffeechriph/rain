@@ -23,7 +23,13 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     var visible = true
         set(value) {
             field = value
-            isDirty = value
+            isDirty = true
+        }
+
+    var background = false
+        set(value) {
+            field = value
+            isDirty = true
         }
     private val components = ArrayList<GuiC>()
     private val textfields = ArrayList<Text>()
@@ -101,6 +107,21 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     private fun buildComponentVertices(renderer: Renderer) {
         val depth = renderer.getDepthRange().y - 0.1f
         val list = ArrayList<Float>()
+
+        // Add optional background for container
+        if (background) {
+            val w = transform.sx
+            val h = transform.sy
+
+            list.addAll(listOf(
+                    0.0f, 0.0f, depth, 0.0f, 0.0f,
+                    0.0f, h, depth, 0.0f, 0.5f,
+                    w, h, depth, 0.25f, 0.5f,
+                    w, h, depth, 0.25f, 0.5f,
+                    w, 0.0f, depth, 0.25f, 0.0f,
+                    0.0f, 0.0f, depth, 0.0f, 0.0f))
+        }
+
         for (component in components) {
             val x = component.x
             val y = component.y
