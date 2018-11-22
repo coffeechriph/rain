@@ -132,12 +132,40 @@ class NavMesh(val width: Int, val height: Int) {
             if (map[index] != 127.toByte()) {
                 list.add(nodes[index])
             }
+
+            if (y > 0) {
+                val index2 = (x - 1) + (y - 1) * width
+                if (map[index2] != 127.toByte()) {
+                    list.add(nodes[index2])
+                }
+            }
+
+            if (y < height - 1) {
+                val index2 = (x - 1) + (y + 1) * width
+                if (map[index2] != 127.toByte()) {
+                    list.add(nodes[index2])
+                }
+            }
         }
 
         if (x < width - 1) {
             val index = (x + 1) + y * width
             if (map[index] != 127.toByte()) {
                 list.add(nodes[index])
+            }
+
+            if (y > 0) {
+                val index2 = (x + 1) + (y - 1) * width
+                if (map[index2] != 127.toByte()) {
+                    list.add(nodes[index2])
+                }
+            }
+
+            if (y < height - 1) {
+                val index2 = (x + 1) + (y + 1) * width
+                if (map[index2] != 127.toByte()) {
+                    list.add(nodes[index2])
+                }
             }
         }
 
