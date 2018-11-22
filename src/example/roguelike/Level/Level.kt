@@ -318,8 +318,8 @@ class Level {
         val startRoom = rooms[0]
         val endRoom = rooms[0]
 
-        startPosition = startRoom.tiles[startRoom.tiles.size/2]
-        exitPosition = endRoom.tiles[endRoom.tiles.size/2+1]
+        startPosition = startRoom.findNoneEdgeTile(random)
+        exitPosition = endRoom.findNoneEdgeTile(random)
 
         mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
 
@@ -596,7 +596,7 @@ class Level {
                     nearestRoom.neighbourRooms.add(room)
                 }
                 else {
-                    throw IllegalStateException("Unable to find a neighbouring room!")
+                    break
                 }
             }
         }
@@ -885,7 +885,7 @@ class Level {
         containers.clear()
         containerSystem.clear()
 
-        for (i in 0 until random.nextInt(30) + 10) {
+        for (i in 0 until random.nextInt(50) + 20) {
             val container = Container()
             containerSystem.newEntity(container)
                     .attachTransformComponent()
