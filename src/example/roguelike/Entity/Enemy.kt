@@ -4,6 +4,7 @@ import org.joml.Vector2i
 import rain.api.*
 import rain.api.entity.*
 import rain.api.scene.Scene
+import java.util.*
 import kotlin.math.sin
 
 open class Enemy : Entity() {
@@ -15,8 +16,16 @@ open class Enemy : Entity() {
         private set
     private var attackAnimation = 0.0f
     private var wasAttacked = false
+
+    var strength = 10
+        private set
+    var agility = 10
+        private set
+
     var health = 100
         private set
+    var damage = 10
+
     var healthBar = HealthBar()
     var traversing = false
     var path = ArrayList<Vector2i>()
@@ -28,6 +37,8 @@ open class Enemy : Entity() {
     lateinit var sprite: Sprite
     lateinit var animator: Animator
 
+    protected var attackTimeout = 0
+
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%752)
@@ -37,11 +48,37 @@ open class Enemy : Entity() {
         cellY = pos.y / 752
     }
 
-    fun damage(dmg: Int) {
+    fun damage(random: Random, player: Player) {
         if (!wasAttacked) {
             wasAttacked = true
             attackAnimation = 0.0f
-            health -= dmg
+
+            val baseDamage = player.strength * 1.5f
+            val critChange = Math.min((0.05f * player.agility - 0.005f * agility), 0.0f)
+            val critted = random.nextFloat() < critChange
+            var damage = baseDamage * random.nextFloat()
+            if (critted) {
+                damage *= random.nextInt(4) + 1.5f
+            }
+
+            health -= damage.toInt()
+        }
+    }
+
+    fun attack(random: Random, player: Player) {
+        if (attackTimeout == 0) {
+            val baseDamage = strength * 1.5f
+            val critChange = Math.min((0.05f * agility) - (0.005f * player.agility), 0.0f)
+            val critted = random.nextFloat() < critChange
+            var damage = baseDamage * random.nextFloat()
+            if (critted) {
+                damage *= random.nextInt(4) + 1.5f
+            }
+
+            player.healthDamaged += damage.toInt()
+
+            // TODO: Make this time based
+            attackTimeout = 30
         }
     }
 

@@ -70,6 +70,13 @@ class Level {
                 continue
             }
 
+            val dx = player.transform.x - enemy.transform.x
+            val dy = player.transform.y - enemy.transform.y
+            if (Math.sqrt((dx * dx + dy * dy).toDouble()) < 64.0) {
+                enemy.attack(random, player)
+                player.inventory.updateEquippedItems()
+            }
+
             enemy.healthBar.transform.sx = enemy.health / 2.0f
 
             if (!enemy.traversing) {

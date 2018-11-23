@@ -13,15 +13,7 @@ class Krac: Enemy() {
         val random = Random(System.currentTimeMillis())
         if (entity is Attack && entity.attacker is Player) {
             val player = entity.attacker as Player
-            val baseDamage = player.strength * 1.5f
-            val critChange = 0.05 * player.agility
-            val critted = random.nextFloat() < critChange
-            var damage = baseDamage * random.nextFloat()
-            if (critted) {
-                damage *= random.nextInt(4) + 1.5f
-            }
-
-            damage(damage.toInt())
+            damage(random, player)
         }
     }
 
@@ -51,5 +43,8 @@ class Krac: Enemy() {
         }
 
         handleDamage(transform)
+        if (attackTimeout > 0) {
+            attackTimeout -= 1
+        }
     }
 }

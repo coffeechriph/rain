@@ -101,6 +101,10 @@ class Roguelike: Rain() {
     }
 
     override fun update() {
+        if (player.health == 0) {
+            // TODO: PLAYER DIED
+        }
+
         level.update(player)
 
         if (player.playerMovedCell) {

@@ -39,13 +39,18 @@ class Player() : Entity() {
     var luck = 1
     lateinit var level: Level
 
-    val baseHealth = 100
+    var baseHealth = 100
+    var healthDamaged = 0
+        set(value) {
+            field = value
+        }
     val baseStamina = 1
     val baseStrength = 1
     val baseAgility = 1
     val baseLuck = 1
 
     var currentLevel = 1
+    private var regenHealthTimeout = 0
 
     fun setPosition(pos: Vector2i) {
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%752)
@@ -131,6 +136,15 @@ class Player() : Entity() {
 
         if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {
             inventory.visible = !inventory.visible
+        }
+
+        if (healthDamaged > 0 && regenHealthTimeout == 0) {
+            healthDamaged -= 1
+            regenHealthTimeout = 20
+        }
+
+        if (regenHealthTimeout > 0) {
+            regenHealthTimeout -= 1
         }
     }
 

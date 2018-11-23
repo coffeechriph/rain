@@ -186,7 +186,7 @@ class Inventory(val gui: Gui, val player: Player) {
         }
     }
 
-    private fun updateEquippedItems() {
+    fun updateEquippedItems() {
         when (selectedItem.type) {
             ItemType.CHEST -> equippedChest = selectedItem
             ItemType.GLOVES -> equippedGloves = selectedItem
@@ -229,7 +229,7 @@ class Inventory(val gui: Gui, val player: Player) {
         player.luck = player.baseLuck + equippedWeapon.luck + equippedHead.luck + equippedChest.luck + equippedGloves.luck +
                 equippedBoots.luck + equippedLegs.luck
 
-        player.health = player.baseHealth + (player.stamina * 1.5f).toInt()
+        player.health = player.baseHealth - player.healthDamaged + (player.stamina * 1.5f).toInt()
 
         healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
         staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
