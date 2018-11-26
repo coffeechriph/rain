@@ -13,8 +13,6 @@ import rain.api.gfx.TextureFilter
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
-import java.nio.IntBuffer
-
 
 internal class VulkanTexture2d: Texture2d {
     var texture: Long = 0
@@ -207,5 +205,10 @@ internal class VulkanTexture2d: Texture2d {
         commandBuffer.end()
         commandBuffer.submit(queue)
         vkQueueWaitIdle(queue)
+    }
+
+    fun destroy(logicalDevice: LogicalDevice) {
+        vkDestroyImage(logicalDevice.device, texture, null)
+        vkDestroySampler(logicalDevice.device, textureSampler, null)
     }
 }

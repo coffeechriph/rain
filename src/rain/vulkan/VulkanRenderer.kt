@@ -67,6 +67,14 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
     }
 
+    fun cleanSoftResources() {
+        for (pipeline in pipelines) {
+            pipeline.destroy(logicalDevice)
+        }
+        pipelines.clear()
+        drawOpsQueue.clear()
+    }
+
     override fun setActiveCamera(camera: Camera) {
         this.camera = camera
     }
@@ -164,6 +172,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         for (pipeline in pipelines) {
             pipeline.destroy(logicalDevice)
         }
+        pipelines.clear()
 
         renderpass.destroy(logicalDevice)
 
@@ -173,7 +182,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
             vkDestroyFence(logicalDevice.device, drawingFinishedFence[i][0], null)
         }
     }
-
 
     override fun render() {
         if(recreateSwapchain(vk.surface)) {

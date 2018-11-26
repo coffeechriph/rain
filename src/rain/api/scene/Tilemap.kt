@@ -158,4 +158,8 @@ class Tilemap {
 
         vertexBuffer.update(vertices.toFloatArray())
     }
+
+    fun destroy() {
+
+    }
 }

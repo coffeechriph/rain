@@ -52,6 +52,11 @@ internal class VulkanVertexBuffer: VertexBuffer {
         }
     }
 
+    fun destroy(logicalDevice: LogicalDevice) {
+        vkDestroyBuffer(logicalDevice.device, buffer, null)
+        buffer = 0L
+    }
+
     fun create(vk: Vk, commandPool: CommandPool, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
         if (vertices.isEmpty()) {
             assertion("Unable to create vertex buffer with no vertices!")

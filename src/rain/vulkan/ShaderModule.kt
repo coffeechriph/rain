@@ -8,6 +8,7 @@ import rain.api.assertion
 import rain.util.readFileAsByteBuffer
 
 internal class ShaderModule(val id: Long) {
+    private var moduleId: Long = 0
     lateinit var createInfo: VkPipelineShaderStageCreateInfo
         private set
 
@@ -27,6 +28,7 @@ internal class ShaderModule(val id: Long) {
             assertion("Failed to create shader module: " + VulkanResult(err))
         }
 
+        moduleId = shaderModule
         return shaderModule
     }
 
@@ -36,5 +38,9 @@ internal class ShaderModule(val id: Long) {
                 .stage(stage)
                 .module(load(logicalDevice, path))
                 .pName(memUTF8("main"))
+    }
+
+    fun destroy(logicalDevice: LogicalDevice) {
+        vkDestroyShaderModule(logicalDevice.device, moduleId, null)
     }
 }

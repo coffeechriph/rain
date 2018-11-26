@@ -11,4 +11,5 @@ interface ResourceFactory {
     fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, color: Vector3f): Material
     fun loadTexture2d(textureFile: String, filter: TextureFilter): Texture2d
     fun createTexture2d(imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d
+    fun clear()
 }

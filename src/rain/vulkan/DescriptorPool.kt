@@ -2,8 +2,7 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-import org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+import org.lwjgl.vulkan.VK10.*
 import rain.api.assertion
 import java.nio.LongBuffer
 
@@ -216,5 +215,9 @@ internal class DescriptorPool {
         }
 
         return DescriptorSet(descriptorSets, layout, uniformBuffer.mode)
+    }
+
+    fun destroy(logicalDevice: LogicalDevice) {
+        vkDestroyDescriptorPool(logicalDevice.device, pool, null)
     }
 }

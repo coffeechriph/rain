@@ -41,9 +41,6 @@ class Player() : Entity() {
 
     var baseHealth = 100
     var healthDamaged = 0
-        set(value) {
-            field = value
-        }
     val baseStamina = 1
     val baseStrength = 1
     val baseAgility = 1

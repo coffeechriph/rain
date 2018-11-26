@@ -6,10 +6,10 @@ import rain.api.gfx.*
 
 class Gui(private val resourceFactory: ResourceFactory, private val renderer: Renderer) {
     private val containers = ArrayList<Container>()
-    private val material: Material
+    private lateinit var material: Material
+    lateinit var font: Font
 
-    var font: Font
-    init {
+    fun init() {
         val guiSkin = resourceFactory.loadTexture2d("./data/textures/skin.png", TextureFilter.NEAREST)
         font = Font("./data/fonts/FreeSans.ttf")
         font.buildBitmap(resourceFactory, 1024, 1024, 20.0f)
@@ -44,5 +44,10 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
         for (container in containers) {
             container.render(renderer)
         }
+    }
+
+    fun clear() {
+        containers.clear()
+        font.destroy()
     }
 }

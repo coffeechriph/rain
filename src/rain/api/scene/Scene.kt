@@ -106,4 +106,15 @@ class Scene {
             renderer.submitDraw(drawable)
         }
     }
+
+    fun clear() {
+        entitySystems.clear()
+        tilemaps.clear()
+        cameras.clear()
+
+        // The world needs to be alive - we just want to clear it from old colliders
+        physicWorld.dispose()
+        physicWorld = World(Vector2(0.0f, 0.0f), true)
+        physicWorld.setContactListener(physicsContactListener)
+    }
 }

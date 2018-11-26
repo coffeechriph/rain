@@ -14,6 +14,7 @@ open class Rain {
     private val vk = Vk()
     private val timer = Timer()
     private lateinit var vulkanRenderer: VulkanRenderer
+    private lateinit var stateManager: StateManager
     internal val input = Input()
     lateinit var resourceFactory: ResourceFactory
         private set
@@ -30,6 +31,9 @@ open class Rain {
         }
 
         gui = Gui(resourceFactory, vulkanRenderer)
+        gui.init()
+
+        stateManager = StateManager(resourceFactory, scene, gui, input)
     }
 
     private fun createVulkanApi() {
@@ -48,18 +52,29 @@ open class Rain {
         init()
 
         while (context.pollEvents()) {
-            timer.update()
-            context.title = "FPS: " + timer.framesPerSecond
-            vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
-            context.windowDirty = false
+            if (!stateManager.switchState) {
+                timer.update()
+                context.title = "FPS: " + timer.framesPerSecond
+                vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
+                context.windowDirty = false
 
-            gui.update(input)
-            scene.update(vulkanRenderer, input, timer.deltaTime)
-            update()
-            gui.render()
-            vulkanRenderer.render()
+                gui.update(input)
+                scene.update(vulkanRenderer, input, timer.deltaTime)
+                update()
+                stateManager.update()
+                gui.render()
+                vulkanRenderer.render()
 
-            input.updateKeyState()
+                input.updateKeyState()
+            }
+            else {
+                scene.clear()
+                gui.clear()
+                resourceFactory.clear()
+
+                gui.init()
+                vulkanRenderer.cleanSoftResources()
+            }
         }
 
         vulkanRenderer.destroy()

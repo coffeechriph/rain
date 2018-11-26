@@ -14,11 +14,13 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     internal val materials: MutableList<VulkanMaterial>
     private val textures: MutableMap<Long, VulkanTexture2d>
     private val shaders: MutableMap<Long, ShaderModule>
+    private val buffers: MutableList<VulkanVertexBuffer>
 
     init {
         this.materials = ArrayList()
         this.textures = HashMap()
         this.shaders = HashMap()
+        this.buffers = ArrayList()
         this.logicalDevice = vk.logicalDevice
         this.physicalDevice = vk.physicalDevice
         this.queue = vk.deviceQueue
@@ -33,6 +35,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
         val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
+        buffers.add(buffer)
         return buffer
     }
 
@@ -78,13 +81,38 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     override fun loadTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
         texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile, filter)
+        textures.put(uniqueId(), texture2d)
         return texture2d
     }
 
     override fun createTexture2d(imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
         val texture2d = VulkanTexture2d()
         texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels, filter)
+        textures.put(uniqueId(), texture2d)
         return texture2d
+    }
+
+    override fun clear() {
+        for (material in materials) {
+            material.destroy()
+        }
+        materials.clear()
+
+        for (texture in textures) {
+            texture.value.destroy(vk.logicalDevice)
+        }
+        textures.clear()
+
+        for (shader in shaders) {
+            shader.value.destroy(vk.logicalDevice)
+        }
+        shaders.clear()
+
+        for (buffer in buffers) {
+            buffer.destroy(vk.logicalDevice)
+        }
+        buffers.clear()
+        resourceId = 0
     }
 
     private fun uniqueId(): Long {

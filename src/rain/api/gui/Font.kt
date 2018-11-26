@@ -132,4 +132,8 @@ class Font(ttfFile: String) {
         cpOut.put(0, c1.toInt())
         return 1
     }
+
+    fun destroy() {
+        fontInfo.clear()
+    }
 }

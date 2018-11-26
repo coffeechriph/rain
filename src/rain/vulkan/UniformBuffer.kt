@@ -44,4 +44,10 @@ internal class UniformBuffer {
         MemoryUtil.memCopy(MemoryUtil.memAddress(bufferData), data, bufferData.remaining().toLong())
         vkUnmapMemory(logicalDevice.device, bufferMemory[index])
     }
+
+    fun destroy(logicalDevice: LogicalDevice) {
+        for (b in buffer) {
+            vkDestroyBuffer(logicalDevice.device, b, null)
+        }
+    }
 }

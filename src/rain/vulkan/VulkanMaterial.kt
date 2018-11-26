@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
 import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
 
-internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: Array<Texture2d>, internal val color: Vector3f, logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
+internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer()
     internal val sceneData = UniformBuffer()
@@ -46,5 +46,11 @@ internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderMod
             .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_VERTEX_BIT)
             .withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
             .build(logicalDevice)
+    }
+
+    fun destroy() {
+        descriptorPool.destroy(logicalDevice)
+        textureDataUBO.destroy(logicalDevice)
+        sceneData.destroy(logicalDevice)
     }
 }
