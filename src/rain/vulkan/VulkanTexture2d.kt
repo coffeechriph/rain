@@ -7,24 +7,22 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.gfx.Texture2d
 import rain.api.assertion
+import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
 
-internal class VulkanTexture2d: Texture2d {
-    var texture: Long = 0
+internal class VulkanTexture2d(val id: Long): Texture2d {
+    private var texture: Long = 0
     var textureView: Long = 0
     var textureSampler: Long = 0
 
     private var width = 0
     private var height = 0
-    internal var texCoordWidth = 1.0f
-        private set
-    internal var texCoordHeight = 1.0f
-        private set
+    private var texCoordWidth = 1.0f
+    private var texCoordHeight = 1.0f
 
     override fun getWidth(): Int {
         return width

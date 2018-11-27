@@ -37,13 +37,12 @@ open class Rain {
 
     private fun createVulkanApi() {
         vk.create(context.windowPointer)
-        resourceFactory = VulkanResourceFactory(vk)
         vulkanRenderer = VulkanRenderer(vk, context)
         vulkanRenderer.create()
+        resourceFactory = VulkanResourceFactory(vk, vulkanRenderer)
     }
 
     open fun init() {}
-    open fun update() {}
 
     fun run() {
         startLog()
@@ -59,7 +58,6 @@ open class Rain {
 
                 gui.update(input)
                 scene.update(vulkanRenderer, input, timer.deltaTime)
-                update()
                 stateManager.update()
 
                 gui.render()

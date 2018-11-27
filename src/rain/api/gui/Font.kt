@@ -1,21 +1,19 @@
 package rain.api.gui
 
-import org.lwjgl.stb.*
-import rain.util.readFileAsByteBuffer
-import java.nio.ByteBuffer
-import java.nio.IntBuffer
-import org.lwjgl.system.MemoryStack.stackPush
-import org.lwjgl.stb.STBImageWrite.stbi_write_png
+import org.lwjgl.stb.STBTTAlignedQuad
+import org.lwjgl.stb.STBTTFontinfo
+import org.lwjgl.stb.STBTTPackContext
+import org.lwjgl.stb.STBTTPackedchar
 import org.lwjgl.stb.STBTruetype.*
+import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
+import rain.util.readFileAsByteBuffer
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
-import org.lwjgl.stb.STBTruetype.stbtt_PackEnd
-import javax.swing.Spring.scale
-import org.lwjgl.stb.STBTruetype.stbtt_PackFontRange
-import org.lwjgl.stb.STBTruetype.stbtt_PackSetOversampling
+import java.nio.IntBuffer
 
 class Font(ttfFile: String) {
     var useKerning = true
@@ -85,7 +83,7 @@ class Font(ttfFile: String) {
 
         stbtt_PackEnd(pc)
 
-        texture = resourceFactory.createTexture2d(bitmap, width, height, 1, TextureFilter.NEAREST)
+        texture = resourceFactory.createTexture2d("fontTexture", bitmap, width, height, 1, TextureFilter.NEAREST)
         fontHeight = pixelHeight
         bitmapWidth = width
         bitmapHeight = height

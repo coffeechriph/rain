@@ -212,10 +212,10 @@ class Level {
         firstBuild = true
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
-        texture = resourceFactory.loadTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)
+        texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
-        material = resourceFactory.createMaterial("./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f,1.0f, 1.0f))
-        itemMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f, 1.0f, 1.0f))
+        material = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f,1.0f, 1.0f))
+        itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f, 1.0f, 1.0f))
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
         this.width = width
@@ -223,9 +223,10 @@ class Level {
         map = IntArray(mapWidth*mapHeight)
         navMesh = NavMesh(mapWidth, mapHeight)
 
-        val enemyTexture = resourceFactory.loadTexture2d("./data/textures/krac2.0.png", TextureFilter.NEAREST)
+        val enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
-        enemyMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture,
+                Vector3f(1.0f, 1.0f, 1.0f))
         enemySystem = EntitySystem(scene)
         scene.addSystem(enemySystem)
 

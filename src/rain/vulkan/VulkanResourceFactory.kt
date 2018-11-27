@@ -2,17 +2,18 @@ package rain.vulkan
 
 import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
+import rain.api.assertion
 import rain.api.gfx.*
 import java.nio.ByteBuffer
 
-internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
+internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) : ResourceFactory {
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
     private val physicalDevice: PhysicalDevice
     private val queue: Queue
     private val commandPool: CommandPool
     internal val materials: MutableList<VulkanMaterial>
-    private val textures: MutableMap<Long, VulkanTexture2d>
+    private val textures: MutableMap<String, VulkanTexture2d>
     private val shaders: MutableMap<Long, ShaderModule>
     private val buffers: MutableList<VulkanVertexBuffer>
 
@@ -28,10 +29,6 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         this.commandPool.create(logicalDevice, vk.queueFamilyIndices.graphicsFamily)
     }
 
-    fun getShader(id: Long): ShaderModule? {
-        return shaders.get(id)
-    }
-
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
         val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
@@ -40,7 +37,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
     }
 
     // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
-    override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
+    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
 
@@ -52,13 +49,13 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         shaders.put(vertex.id, vertex)
         shaders.put(fragment.id, fragment)
 
-        val material = VulkanMaterial(uniqueId(), vertex, fragment, Array(1){texture2d}, color, logicalDevice, physicalDevice.memoryProperties)
+        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, Array(1){texture2d}, color, logicalDevice, physicalDevice.memoryProperties)
         materials.add(material)
 
         return material
     }
 
-    override fun createMaterial(vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, color: Vector3f): Material {
+    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, color: Vector3f): Material {
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
 
@@ -70,7 +67,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         shaders.put(vertex.id, vertex)
         shaders.put(fragment.id, fragment)
 
-        val material = VulkanMaterial(uniqueId(), vertex, fragment, texture2d, color, logicalDevice, physicalDevice.memoryProperties)
+        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, texture2d, color, logicalDevice, physicalDevice.memoryProperties)
         materials.add(material)
 
         return material
@@ -78,18 +75,79 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
 
     // TODO: We should be able to actually load the texture at a later time on the main thread
     // In order to make this method thread-safe
-    override fun loadTexture2d(textureFile: String, filter: TextureFilter): Texture2d {
-        val texture2d = VulkanTexture2d()
+    override fun loadTexture2d(name: String, textureFile: String, filter: TextureFilter): Texture2d {
+        val texture2d = VulkanTexture2d(uniqueId())
         texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile, filter)
-        textures.put(uniqueId(), texture2d)
+        textures[name] = texture2d
         return texture2d
     }
 
-    override fun createTexture2d(imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
-        val texture2d = VulkanTexture2d()
+    override fun createTexture2d(name: String, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
+        val texture2d = VulkanTexture2d(uniqueId())
         texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels, filter)
-        textures.put(uniqueId(), texture2d)
+        textures[name] = texture2d
         return texture2d
+    }
+
+    // Deleting a material involves removing any pipeline which may reference it.
+    override fun deleteMaterial(name: String) {
+        var index = 0
+        for (material in materials) {
+            if (material.name == name) {
+                break
+            }
+
+            index += 1
+        }
+
+        if (index >= materials.size) {
+            return
+        }
+
+        val material = materials[index]
+        renderer.removePipelinesWithMaterial(material)
+
+        material.destroy()
+        materials.removeAt(index)
+    }
+
+    // Deleting a texture involves removing any material that references it.
+    override fun deleteTexture2d(name: String) {
+        val texture = textures[name]
+        if (texture != null) {
+            texture.destroy(logicalDevice)
+
+            val materialsToRemove = ArrayList<String>()
+            for (material in materials) {
+                for (mt in material.texture2d) {
+                    val vt = mt as VulkanTexture2d
+                    if (vt.id == texture.id) {
+                        materialsToRemove.add(material.name)
+                        break
+                    }
+                }
+            }
+
+            for (matName in materialsToRemove) {
+                deleteMaterial(matName)
+            }
+
+            textures.remove(name)
+        }
+    }
+
+    override fun getMaterial(name: String): Material {
+        for (material in materials) {
+            if (material.name == name) {
+                return material
+            }
+        }
+
+        assertion("Material $name does not exist!")
+    }
+
+    override fun getTexture2d(name: String): Texture2d {
+        return textures[name] ?: assertion("Texture $name does not exist!")
     }
 
     override fun clear() {
@@ -99,7 +157,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         materials.clear()
 
         for (texture in textures) {
-            //texture.value.destroy(vk.logicalDevice)
+            texture.value.destroy(vk.logicalDevice)
         }
         textures.clear()
 
@@ -109,7 +167,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         shaders.clear()
 
         for (buffer in buffers) {
-            //buffer.destroy(vk.logicalDevice)
+            buffer.destroy(vk.logicalDevice)
         }
         buffers.clear()
         resourceId = 0

@@ -13,10 +13,10 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
     lateinit var font: Font
 
     fun init() {
-        val guiSkin = resourceFactory.loadTexture2d("./data/textures/skin.png", TextureFilter.NEAREST)
+        val guiSkin = resourceFactory.loadTexture2d("guiTexture","./data/textures/skin.png", TextureFilter.NEAREST)
         font = Font("./data/fonts/FreeSans.ttf")
         font.buildBitmap(resourceFactory, 1024, 1024, 20.0f)
-        material = resourceFactory.createMaterial("./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", arrayOf(guiSkin, font.texture), Vector3f(1.0f, 1.0f, 1.0f))
+        material = resourceFactory.createMaterial("guiMaterial","./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", arrayOf(guiSkin, font.texture), Vector3f(1.0f, 1.0f, 1.0f))
     }
 
     fun newContainer(x: Float, y: Float, w: Float, h: Float): Container {

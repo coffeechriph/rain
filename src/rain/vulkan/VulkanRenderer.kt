@@ -13,6 +13,7 @@ import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
 import rain.api.scene.Camera
 import java.util.*
+import kotlin.collections.ArrayList
 
 internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     private val pipelines: MutableList<Pipeline> = ArrayList()
@@ -42,7 +43,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     private val drawOpsQueue = ArrayDeque<Drawable>()
 
     var swapchainIsDirty = true
-    var frameIndex = 0
+    private var frameIndex = 0
 
     private lateinit var camera: Camera
 
@@ -91,7 +92,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         cleanUpResources()
     }
 
-    internal fun recreateRenderCommandBuffers() {
+    private fun recreateRenderCommandBuffers() {
         renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers.size)
     }
 
@@ -102,7 +103,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         }
     }
 
-    fun recreateSwapchain(surface: Surface): Boolean {
+    private fun recreateSwapchain(surface: Surface): Boolean {
         if (swapchainIsDirty) {
             vkDeviceWaitIdle(logicalDevice.device)
 
@@ -232,6 +233,20 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         frameIndex++
         if(frameIndex >= imageAcquiredSemaphore.size) {
             frameIndex = 0
+        }
+    }
+
+    fun removePipelinesWithMaterial(material: VulkanMaterial) {
+        val toRemove = ArrayList<Pipeline>()
+        for (pipeline in pipelines) {
+            if (pipeline.material.id == material.id) {
+                pipeline.destroy(logicalDevice)
+                toRemove.add(pipeline)
+            }
+        }
+
+        for (pipeline in toRemove) {
+            pipelines.remove(pipeline)
         }
     }
 

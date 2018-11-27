@@ -40,9 +40,9 @@ class GameState(stateManager: StateManager): State(stateManager) {
     private var level = Level()
 
     override fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
-        mobTexture = resourceFactory.loadTexture2d("./data/textures/dwarf.png", TextureFilter.NEAREST)
+        mobTexture = resourceFactory.loadTexture2d("mobTexture","./data/textures/dwarf.png", TextureFilter.NEAREST)
         mobTexture.setTiledTexture(16,16)
-        mobMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        mobMaterial = resourceFactory.createMaterial("mobMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture, Vector3f(1.0f, 1.0f, 1.0f))
         player = Player()
         playerSystem = EntitySystem(scene)
         playerSystem.newEntity(player)
@@ -53,9 +53,10 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .build()
         scene.addSystem(playerSystem)
 
-        val attackTexture = resourceFactory.loadTexture2d("./data/textures/attack.png", TextureFilter.NEAREST)
+        val attackTexture = resourceFactory.loadTexture2d("attackTexture","./data/textures/attack.png", TextureFilter.NEAREST)
         attackTexture.setTiledTexture(16,16)
-        attackMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", attackTexture, Vector3f(1.0f, 1.0f,
+        attackMaterial = resourceFactory.createMaterial("attackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", attackTexture,
+        Vector3f(1.0f, 1.0f,
                 1.0f))
 
         attackSystem = EntitySystem(scene)
@@ -67,8 +68,9 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .build()
         scene.addSystem(attackSystem)
 
-        val healthTexture = resourceFactory.loadTexture2d("./data/textures/health.png", TextureFilter.NEAREST)
-        healthMaterial = resourceFactory.createMaterial("./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", healthTexture, Vector3f(1.0f, 1.0f,
+        val healthTexture = resourceFactory.loadTexture2d("healthTexture","./data/textures/health.png", TextureFilter.NEAREST)
+        healthMaterial = resourceFactory.createMaterial("healthMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", healthTexture,
+        Vector3f(1.0f, 1.0f,
                 1.0f))
         healthBarSystem = EntitySystem(scene)
         scene.addSystem(healthBarSystem)

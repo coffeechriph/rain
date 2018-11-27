@@ -1,7 +1,6 @@
 package rain
 
 import rain.api.Input
-import rain.api.assertion
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
 import rain.api.scene.Scene
