@@ -8,20 +8,14 @@ import rain.api.scene.Scene
 
 class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val gui: Gui, val input: Input) {
     var switchState = false
-        get() {
-            switchState = !field
-            return !field
-        }
-        private set
-
     val states = HashMap<String, State>()
-    private var currentState: State? = null
+    private lateinit var currentState: State
+    private var nextStateKey: String? = null
 
     fun startState(key: String) {
-        switchState = true
         if (states.containsKey(key)) {
-            currentState = states[key]!!
-            currentState!!.init(resourceFactory, scene, gui, input)
+            nextStateKey = key
+            switchState = true
             return
         }
 
@@ -29,6 +23,16 @@ class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val g
     }
 
     fun update() {
-        currentState!!.update(resourceFactory, scene, gui, input)
+        if (::currentState.isInitialized) {
+            currentState.update(resourceFactory, scene, gui, input)
+        }
+    }
+
+    fun initNextState() {
+        if (nextStateKey != null) {
+            currentState = states[nextStateKey!!]!!
+            nextStateKey = null
+        }
+        currentState.init(resourceFactory, scene, gui, input)
     }
 }

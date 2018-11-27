@@ -8,16 +8,10 @@ import java.nio.LongBuffer
 
 internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val bufferMode: BufferMode)
 internal class DescriptorPool {
-    var pool: Long = 0
+    private var pool: Long = 0
     var descriptorSets = ArrayList<DescriptorSet>()
     private var uniformBuffers = ArrayList<UniformBufferDescriptor>()
     private var textureDescriptors = ArrayList<TextureDescriptor>()
-
-    constructor() {}
-    constructor(pool: Long, descriptorSets: ArrayList<DescriptorSet>) {
-        this.pool = pool
-        this.descriptorSets = descriptorSets
-    }
 
     internal class TextureDescriptor(val buffer: MutableList<VulkanTexture2d>, val stageFlags: Int)
     internal class UniformBufferDescriptor(val buffer: MutableList<UniformBuffer>, val stageFlags: Int)

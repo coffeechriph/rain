@@ -2,19 +2,18 @@ package rain
 
 import rain.api.*
 import rain.api.gfx.ResourceFactory
-import rain.api.gui.Button
-import rain.api.gui.Font
 import rain.api.gui.Gui
-import rain.api.gui.ToggleButton
 import rain.api.scene.Scene
-import rain.vulkan.*
+import rain.vulkan.Vk
+import rain.vulkan.VulkanRenderer
+import rain.vulkan.VulkanResourceFactory
 
 open class Rain {
     private val context = Window()
     private val vk = Vk()
     private val timer = Timer()
     private lateinit var vulkanRenderer: VulkanRenderer
-    private lateinit var stateManager: StateManager
+    internal lateinit var stateManager: StateManager
     internal val input = Input()
     lateinit var resourceFactory: ResourceFactory
         private set
@@ -62,18 +61,23 @@ open class Rain {
                 scene.update(vulkanRenderer, input, timer.deltaTime)
                 update()
                 stateManager.update()
+
                 gui.render()
                 vulkanRenderer.render()
 
                 input.updateKeyState()
             }
             else {
+                vulkanRenderer.recreateResources()
+                stateManager.switchState = false
                 scene.clear()
                 gui.clear()
                 resourceFactory.clear()
 
                 gui.init()
-                vulkanRenderer.cleanSoftResources()
+                scene.init(resourceFactory)
+
+                stateManager.initNextState()
             }
         }
 

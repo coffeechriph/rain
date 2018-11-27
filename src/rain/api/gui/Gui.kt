@@ -2,7 +2,10 @@ package rain.api.gui
 
 import org.joml.Vector3f
 import rain.api.Input
-import rain.api.gfx.*
+import rain.api.gfx.Material
+import rain.api.gfx.Renderer
+import rain.api.gfx.ResourceFactory
+import rain.api.gfx.TextureFilter
 
 class Gui(private val resourceFactory: ResourceFactory, private val renderer: Renderer) {
     private val containers = ArrayList<Container>()
@@ -48,6 +51,6 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
 
     fun clear() {
         containers.clear()
-        font.destroy()
+        //font.destroy()
     }
 }

@@ -99,7 +99,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         materials.clear()
 
         for (texture in textures) {
-            texture.value.destroy(vk.logicalDevice)
+            //texture.value.destroy(vk.logicalDevice)
         }
         textures.clear()
 
@@ -109,7 +109,7 @@ internal class VulkanResourceFactory(val vk: Vk) : ResourceFactory {
         shaders.clear()
 
         for (buffer in buffers) {
-            buffer.destroy(vk.logicalDevice)
+            //buffer.destroy(vk.logicalDevice)
         }
         buffers.clear()
         resourceId = 0

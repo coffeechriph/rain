@@ -209,6 +209,7 @@ class Level {
     }
 
     fun create(resourceFactory: ResourceFactory, scene: Scene, mapWidth: Int, mapHeight: Int, width: Int, height: Int) {
+        firstBuild = true
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
         texture = resourceFactory.loadTexture2d("./data/textures/tiles.png", TextureFilter.NEAREST)

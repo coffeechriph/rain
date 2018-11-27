@@ -1,9 +1,10 @@
 package rain.api.scene
 
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.physics.box2d.*
+import com.badlogic.gdx.physics.box2d.Box2D
+import com.badlogic.gdx.physics.box2d.World
 import org.joml.Vector2f
-import rain.api.*
+import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.gfx.*
@@ -114,7 +115,5 @@ class Scene {
 
         // The world needs to be alive - we just want to clear it from old colliders
         physicWorld.dispose()
-        physicWorld = World(Vector2(0.0f, 0.0f), true)
-        physicWorld.setContactListener(physicsContactListener)
     }
 }

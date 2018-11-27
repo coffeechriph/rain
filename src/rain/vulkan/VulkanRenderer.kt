@@ -8,14 +8,10 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
+import rain.api.assertion
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
-import rain.api.gfx.VertexBuffer
 import rain.api.scene.Camera
-import rain.api.assertion
-import rain.api.entity.Transform
-import rain.api.gfx.Material
-import java.nio.ByteBuffer
 import java.util.*
 
 internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
@@ -67,14 +63,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
     }
 
-    fun cleanSoftResources() {
-        for (pipeline in pipelines) {
-            pipeline.destroy(logicalDevice)
-        }
-        pipelines.clear()
-        drawOpsQueue.clear()
-    }
-
     override fun setActiveCamera(camera: Camera) {
         this.camera = camera
     }
@@ -107,6 +95,13 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers.size)
     }
 
+    fun recreateResources() {
+        swapchainIsDirty = true
+        if (recreateSwapchain(vk.surface)) {
+            recreateRenderCommandBuffers()
+        }
+    }
+
     fun recreateSwapchain(surface: Surface): Boolean {
         if (swapchainIsDirty) {
             vkDeviceWaitIdle(logicalDevice.device)
@@ -130,7 +125,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
             swapchain.create(logicalDevice, physicalDevice, surface, setupCommandPool, setupQueue, extent2D)
             renderpass.create(logicalDevice, surface.format, findDepthFormat(physicalDevice))
-            pipelines.clear()
             swapchain.createFramebuffers(logicalDevice, renderpass, extent2D)
             swapchainIsDirty = false
 
@@ -215,7 +209,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         camera.projection.get(projectionMatrixBuffer)
         for (pipeline in pipelines) {
             pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer, nextImage)
-            pipeline.begin(renderCommandBuffers[frameIndex], pipeline.descriptorPool, nextImage)
+            pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
 

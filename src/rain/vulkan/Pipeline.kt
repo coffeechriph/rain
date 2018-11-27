@@ -3,8 +3,8 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.gfx.Drawable
 import rain.api.assertion
+import rain.api.gfx.Drawable
 import java.nio.LongBuffer
 import java.util.*
 
@@ -193,7 +193,7 @@ internal class Pipeline {
         memFree(pOffset)
     }
 
-    fun begin(cmdBuffer: CommandPool.CommandBuffer, descriptorPool: DescriptorPool, nextFrame: Int) {
+    fun begin(cmdBuffer: CommandPool.CommandBuffer, nextFrame: Int) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
         pOffset.put(0, 0L)
         pBuffer.put(0, vertexBuffer.buffer)

@@ -49,8 +49,8 @@ internal class VulkanMaterial(val id: Long, internal val vertexShader: ShaderMod
     }
 
     fun destroy() {
-        descriptorPool.destroy(logicalDevice)
-        textureDataUBO.destroy(logicalDevice)
         sceneData.destroy(logicalDevice)
+        textureDataUBO.destroy(logicalDevice)
+        //descriptorPool.destroy(logicalDevice)
     }
 }
