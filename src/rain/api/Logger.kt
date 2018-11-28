@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import java.util.stream.Collectors
 
 private var logBuffer = ByteArray(10240)
 private var logIndex = 0
@@ -26,9 +27,10 @@ fun endLog() {
 fun log(text: String) {
     val stackWalker = StackWalker.getInstance()
     val frame = stackWalker.walk { stream ->
-        stream
-            .filter { s -> s.className != "rain.LoggerKt" }
-            .findFirst().get()
+        val stack = stream
+            .filter { s -> !s.className.contains("rain") }
+            .collect(Collectors.toList())
+        stack[0]
     }
 
     val finalString = frame.className + ".${frame.methodName}[@${frame.lineNumber}]: " + text + System.getProperty("line.separator")
