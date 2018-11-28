@@ -4,6 +4,7 @@ import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
 import rain.api.assertion
 import rain.api.gfx.*
+import rain.api.log
 import java.nio.ByteBuffer
 
 internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) : ResourceFactory {
@@ -30,6 +31,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     }
 
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
+        log("Creating vertex buffer of size ${vertices.size*4} bytes.")
         val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
         buffers.add(buffer)
@@ -38,6 +40,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
 
     // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
     override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
+        log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
 
@@ -56,6 +59,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     }
 
     override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, color: Vector3f): Material {
+        log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
 
@@ -76,6 +80,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     // TODO: We should be able to actually load the texture at a later time on the main thread
     // In order to make this method thread-safe
     override fun loadTexture2d(name: String, textureFile: String, filter: TextureFilter): Texture2d {
+        log("Loading texture $name from $textureFile with filter $filter.")
         val texture2d = VulkanTexture2d(uniqueId())
         texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile, filter)
         textures[name] = texture2d
@@ -83,6 +88,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     }
 
     override fun createTexture2d(name: String, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
+        log("Creating texture $name from source with filter $filter.")
         val texture2d = VulkanTexture2d(uniqueId())
         texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels, filter)
         textures[name] = texture2d

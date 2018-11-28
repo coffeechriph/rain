@@ -77,7 +77,7 @@ internal class Swapchain {
                 break
             }
             if (swapchainPresentMode != preferredPresentMode && pPresentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-                println("Preferred present mode not available. Using VK_PRESENT_MODE_IMMEDIATE_KHR")
+                log("Preferred present mode not available. Using VK_PRESENT_MODE_IMMEDIATE_KHR")
                 swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR
             }
         }

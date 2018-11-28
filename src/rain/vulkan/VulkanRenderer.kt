@@ -11,6 +11,7 @@ import rain.api.Window
 import rain.api.assertion
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
+import rain.api.log
 import rain.api.scene.Camera
 import java.util.*
 import kotlin.collections.ArrayList
@@ -105,6 +106,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
     private fun recreateSwapchain(surface: Surface): Boolean {
         if (swapchainIsDirty) {
+            log("Swapchain is dirty must recreate!")
             vkDeviceWaitIdle(logicalDevice.device)
 
             cleanUpResources()
@@ -147,6 +149,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
                 }
             }
 
+            log("Successfully recreated swapchain.")
             return true
         }
 
@@ -187,7 +190,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
         var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000)
         if (result != VK_SUCCESS) {
-            print("Failed to wait for fence!")
+            log("Failed to wait for fence!")
         }
 
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore[frameIndex])
@@ -224,7 +227,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
         result = vkResetFences(logicalDevice.device, drawingFinishedFence[frameIndex])
         if (result != VK_SUCCESS) {
-            print("Failed to reset fence!")
+            log("Failed to reset fence!")
         }
         renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence[frameIndex])
 

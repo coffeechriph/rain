@@ -6,6 +6,7 @@ import org.lwjgl.system.MemoryUtil.memAllocPointer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.assertion
+import rain.api.log
 import java.nio.ByteBuffer
 
 internal class PhysicalDevice {
@@ -45,12 +46,12 @@ internal class PhysicalDevice {
         vkGetPhysicalDeviceProperties(device, properties)
         vkGetPhysicalDeviceMemoryProperties(device, memoryProperties)
 
-        println("Selected Physical device:")
-        println("\tDevice Name [${properties.deviceNameString()}]")
+        log("Selected Physical device:")
+        log("\tDevice Name [${properties.deviceNameString()}]")
         for(i in 0 until memoryProperties.memoryHeapCount()) {
             // TODO: This will not be correct if there are multiple physical devices
             heapSize = memoryProperties.memoryHeaps(i).size()
-            println("\tMemory Heap[size: ${memoryProperties.memoryHeaps(i).size() / 1024 / 1024}MB, flags:${memoryProperties.memoryHeaps(i).flags()}]");
+            log("\tMemory Heap[size: ${memoryProperties.memoryHeaps(i).size() / 1024 / 1024}MB, flags:${memoryProperties.memoryHeaps(i).flags()}]");
         }
 
         properties.free()
@@ -87,9 +88,9 @@ internal class PhysicalDevice {
             }
 
             if(requiredExtensions.isNotEmpty()) {
-                println("Missing extensions:")
+                log("Missing extensions:")
                 for(required in requiredExtensions) {
-                    println("\t- $required")
+                    log("\t- $required")
                 }
             }
             requiredExtensions.isEmpty()
