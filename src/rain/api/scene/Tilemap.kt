@@ -4,7 +4,7 @@ import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
 import rain.api.entity.Transform
 import rain.api.gfx.*
-import rain.api.log
+import rain.log
 import java.nio.ByteBuffer
 
 class Tilemap {

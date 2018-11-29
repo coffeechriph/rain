@@ -5,7 +5,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2i
-import rain.api.assertion
+import rain.assertion
 import rain.api.gfx.Material
 import rain.api.scene.Scene
 

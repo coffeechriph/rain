@@ -5,7 +5,7 @@ import com.badlogic.gdx.physics.box2d.ContactImpulse
 import com.badlogic.gdx.physics.box2d.ContactListener
 import com.badlogic.gdx.physics.box2d.Manifold
 import rain.api.entity.Entity
-import rain.api.assertion
+import rain.assertion
 
 class PhysicsContactListener : ContactListener {
     override fun endContact(contact: Contact?) {

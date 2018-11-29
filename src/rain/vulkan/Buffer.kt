@@ -2,7 +2,7 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.*
-import rain.api.assertion
+import rain.assertion
 
 internal fun createBuffer(logicalDevice: LogicalDevice, size: Long, usage: Int, properties: Int, memoryProperties: VkPhysicalDeviceMemoryProperties): VulkanVertexBuffer.Buffer {
     val bufInfo = VkBufferCreateInfo.calloc()

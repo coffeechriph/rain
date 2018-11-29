@@ -3,7 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.assertion
+import rain.assertion
 import rain.api.gfx.Drawable
 import java.nio.LongBuffer
 import java.util.*

@@ -3,7 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkImageViewCreateInfo
-import rain.api.assertion
+import rain.assertion
 
 internal class ImageView {
     internal var imageView: Long = 0

@@ -8,10 +8,10 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
-import rain.api.assertion
+import rain.assertion
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
-import rain.api.log
+import rain.log
 import rain.api.scene.Camera
 import java.util.*
 import kotlin.collections.ArrayList

@@ -77,7 +77,10 @@ open class Rain {
                 gui.init()
                 scene.init(resourceFactory)
 
-                stateManager.initNextState()
+                // TODO: Having initNextState returning true = game exit is kinda ugly
+                if(stateManager.initNextState()) {
+                    break
+                }
             }
         }
 

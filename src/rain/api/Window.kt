@@ -3,6 +3,8 @@ import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
+import rain.assertion
+import rain.log
 
 internal class Window {
     var windowPointer: Long = -1

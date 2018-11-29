@@ -1,7 +1,7 @@
 package rain.api.scene
 
 import org.joml.Vector2i
-import rain.api.assertion
+import rain.assertion
 
 class NavMesh(val width: Int, val height: Int) {
     private class Node(var parent: Node?, val x: Int, val y: Int, var F: Int, var G: Int) {

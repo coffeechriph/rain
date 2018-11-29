@@ -7,7 +7,7 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.assertion
+import rain.assertion
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
 import java.io.File

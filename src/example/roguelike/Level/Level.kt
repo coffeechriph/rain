@@ -37,7 +37,6 @@ class Level {
         private set
     var detailTilemap = Tilemap()
         private set
-    var minimapTilemap = Tilemap()
 
     private lateinit var material: Material
     private lateinit var itemMaterial: Material
@@ -298,7 +297,6 @@ class Level {
             detailTilemap.transform.setPosition(0.0f, 0.0f, 1.1f)
             frontTilemap.transform.setPosition(0.0f, 0.0f, 10.0f)
 
-            minimapTilemap.transform.setPosition(0.0f, 0.0f, 13.0f)
             firstBuild = false
         }
         else {
@@ -334,16 +332,6 @@ class Level {
 
         generateEnemies(healthBarMaterial, healthBarSystem)
         generateContainers()
-
-        val minimapIndices = Array(mapWidth*mapHeight){ TileIndex(2, 1) }
-        for (i in 0 until rooms.size) {
-            for (j in 0 until rooms[i].tiles.size) {
-                minimapIndices[rooms[i].tiles[j].x + rooms[i].tiles[j].y * mapWidth] = TileIndex(7, rooms[i].type.ordinal)
-            }
-        }
-        minimapIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
-        minimapTilemap.create(resourceFactory, material, mapWidth, mapHeight, 2.0f, 2.0f, minimapIndices)
-        minimapTilemap.update(minimapIndices)
     }
 
     private fun addWallBlockersAtEdges() {

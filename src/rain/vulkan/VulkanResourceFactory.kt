@@ -2,9 +2,9 @@ package rain.vulkan
 
 import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
-import rain.api.assertion
+import rain.assertion
 import rain.api.gfx.*
-import rain.api.log
+import rain.log
 import java.nio.ByteBuffer
 
 internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) : ResourceFactory {
@@ -31,7 +31,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     }
 
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
-        log("Creating vertex buffer of size ${vertices.size*4} bytes.")
+        log("Creating vertex buffer of size ${vertices.size * 4} bytes.")
         val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
         buffers.add(buffer)

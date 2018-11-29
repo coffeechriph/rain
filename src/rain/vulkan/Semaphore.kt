@@ -3,7 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkSemaphoreCreateInfo
-import rain.api.assertion
+import rain.assertion
 
 internal class Semaphore {
     var semaphore: Long = 0

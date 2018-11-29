@@ -5,7 +5,7 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
-import rain.api.assertion
+import rain.assertion
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanVertexBuffer: VertexBuffer {

@@ -4,7 +4,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo
-import rain.api.assertion
+import rain.assertion
 import rain.util.readFileAsByteBuffer
 
 internal class ShaderModule(val id: Long) {
