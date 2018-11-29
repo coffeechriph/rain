@@ -9,6 +9,7 @@ import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
 
 open class Rain {
+    private val exceptionHandler = ExceptionHandler()
     private val context = Window()
     private val vk = Vk()
     private val timer = Timer()
@@ -22,6 +23,7 @@ open class Rain {
     val scene = Scene()
 
     fun create(width: Int, height: Int, title: String, api: Api) {
+        Thread.setDefaultUncaughtExceptionHandler(exceptionHandler)
         context.create(width, height, title, input)
 
         when(api) {
