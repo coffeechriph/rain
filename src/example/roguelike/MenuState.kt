@@ -1,10 +1,16 @@
 package example.roguelike
 
 import org.joml.Vector2f
+import org.joml.Vector3f
 import rain.State
 import rain.StateManager
 import rain.api.Input
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
+import rain.api.gfx.Texture2d
+import rain.api.gfx.TextureFilter
 import rain.api.gui.Container
 import rain.api.gui.Gui
 import rain.api.gui.ToggleButton
@@ -17,6 +23,10 @@ class MenuState(stateManager: StateManager): State(stateManager) {
     private lateinit var startGameButton: ToggleButton
     private lateinit var settingsButton: ToggleButton
     private lateinit var exitButton: ToggleButton
+    private lateinit var bannerEntity: Entity
+    private lateinit var bannerEntitySystem: EntitySystem<Entity>
+    private lateinit var bannerMaterial: Material
+    private lateinit var bannerTexture: Texture2d
     private var selectedButton = 0
 
     private var buttonsAnimation = 0.0f
@@ -27,7 +37,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         menuContainer = gui.newContainer(0.0f, 0.0f, 1280.0f, 720.0f)
         startGameButton = ToggleButton()
         startGameButton.x = 1280.0f / 2.0f - 100.0f
-        startGameButton.y = 240.0f
+        startGameButton.y = 280.0f
         startGameButton.w = 200.0f
         startGameButton.h = 60.0f
         startGameButton.text = "New Game"
@@ -35,7 +45,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
 
         settingsButton = ToggleButton()
         settingsButton.x = 1280.0f / 2.0f - 100.0f
-        settingsButton.y = 330.0f
+        settingsButton.y = 370.0f
         settingsButton.w = 200.0f
         settingsButton.h = 60.0f
         settingsButton.text = "Settings"
@@ -43,11 +53,32 @@ class MenuState(stateManager: StateManager): State(stateManager) {
 
         exitButton= ToggleButton()
         exitButton.x = 1280.0f / 2.0f - 100.0f
-        exitButton.y = 420.0f
+        exitButton.y = 460.0f
         exitButton.w = 200.0f
         exitButton.h = 60.0f
         exitButton.text = "Exit"
         menuContainer.addComponent(exitButton)
+
+        bannerTexture = resourceFactory.loadTexture2d("bannerTexture", "./data/textures/banner.png", TextureFilter.NEAREST)
+        bannerTexture.setTiledTexture(256,64)
+        bannerMaterial = resourceFactory.createMaterial("bannerMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", bannerTexture,
+                Vector3f(1.0f, 1.0f, 1.0f))
+        bannerEntity = Entity()
+
+        bannerEntitySystem = EntitySystem(scene)
+        bannerEntitySystem.newEntity(bannerEntity)
+                .attachTransformComponent()
+                .attachSpriteComponent(bannerMaterial)
+                .build()
+
+        val bannerTransform = bannerEntitySystem.findTransformComponent(bannerEntity.getId())
+        bannerTransform!!.sx = 1024.0f
+        bannerTransform.sy = 256.0f
+        bannerTransform.x = 1280.0f / 2.0f
+        bannerTransform.y = 128.0f
+        bannerTransform.z = 1.0f
+
+        scene.addSystem(bannerEntitySystem)
     }
 
     override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
@@ -57,18 +88,18 @@ class MenuState(stateManager: StateManager): State(stateManager) {
                 startGameButton.w = 200.0f + scale
                 startGameButton.h = 60.0f + scale
                 startGameButton.x = 1280.0f / 2.0f - 100.0f - scale / 2.0f
-                startGameButton.y = 240.0f - scale / 2.0f
+                startGameButton.y = 280.0f - scale / 2.0f
                 startGameButton.active = true
                 settingsButton.active = false
                 exitButton.active = false
 
                 settingsButton.x = 1280.0f / 2.0f - 100.0f
-                settingsButton.y = 330.0f
+                settingsButton.y = 370.0f
                 settingsButton.w = 200.0f
                 settingsButton.h = 60.0f
 
                 exitButton.x = 1280.0f / 2.0f - 100.0f
-                exitButton.y = 420.0f
+                exitButton.y = 460.0f
                 exitButton.w = 200.0f
                 exitButton.h = 60.0f
             }
@@ -76,18 +107,18 @@ class MenuState(stateManager: StateManager): State(stateManager) {
                 settingsButton.w = 200.0f + scale
                 settingsButton.h = 60.0f + scale
                 settingsButton.x = 1280.0f / 2.0f - 100.0f - scale / 2.0f
-                settingsButton.y = 330.0f - scale / 2.0f
+                settingsButton.y = 370.0f - scale / 2.0f
                 settingsButton.active = true
                 startGameButton.active = false
                 exitButton.active = false
 
                 startGameButton.x = 1280.0f / 2.0f - 100.0f
-                startGameButton.y = 240.0f
+                startGameButton.y = 280.0f
                 startGameButton.w = 200.0f
                 startGameButton.h = 60.0f
 
                 exitButton.x = 1280.0f / 2.0f - 100.0f
-                exitButton.y = 420.0f
+                exitButton.y = 460.0f
                 exitButton.w = 200.0f
                 exitButton.h = 60.0f
             }
@@ -95,18 +126,18 @@ class MenuState(stateManager: StateManager): State(stateManager) {
                 exitButton.w = 200.0f + scale
                 exitButton.h = 60.0f + scale
                 exitButton.x = 1280.0f / 2.0f - 100.0f - scale / 2.0f
-                exitButton.y = 420.0f - scale / 2.0f
+                exitButton.y = 460.0f - scale / 2.0f
                 exitButton.active = true
                 startGameButton.active = false
                 settingsButton.active = false
 
                 startGameButton.x = 1280.0f / 2.0f - 100.0f
-                startGameButton.y = 240.0f
+                startGameButton.y = 280.0f
                 startGameButton.w = 200.0f
                 startGameButton.h = 60.0f
 
                 settingsButton.x = 1280.0f / 2.0f - 100.0f
-                settingsButton.y = 330.0f
+                settingsButton.y = 370.0f
                 settingsButton.w = 200.0f
                 settingsButton.h = 60.0f
             }
