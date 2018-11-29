@@ -29,6 +29,6 @@ class Roguelike: Rain() {
         menuState = MenuState(stateManager)
         stateManager.states.put("menu", menuState)
 
-        stateManager.startState("game")
+        stateManager.startState("menu")
     }
 }
