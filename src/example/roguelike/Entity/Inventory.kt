@@ -1,5 +1,6 @@
 package example.roguelike.Entity
 
+import rain.api.Input
 import rain.api.gui.*
 import rain.api.gui.Container
 
@@ -25,7 +26,6 @@ class Inventory(val gui: Gui, val player: Player) {
     private var equippedLegsText: Text
 
     private var itemButtons = ArrayList<ToggleButton>()
-    private var equipButton = Button()
     private var dropButton = Button()
     private var items = ArrayList<Item>()
     private lateinit var headerText: Text
@@ -41,6 +41,7 @@ class Inventory(val gui: Gui, val player: Player) {
     private var statContainer: Container
     private var lastButtonClicked: ToggleButton? = null
     private var selectedItem: Item = ItemNone
+    private var selectedItemIndex = 0
 
     private var healthText: Text
     private var staminaText: Text
@@ -52,16 +53,10 @@ class Inventory(val gui: Gui, val player: Player) {
         container = gui.newContainer(startX, startY, 500.0f, 500.0f)
         container.background = true
         container.visible = false
-        equipButton.x = 230.0f
-        equipButton.y = 145.0f
-        equipButton.w = 100.0f
-        equipButton.h = 20.0f
-        equipButton.text = "Equip"
-        container.addComponent(equipButton)
 
-        dropButton.x = 335.0f
+        dropButton.x = 235.0f
         dropButton.y = 145.0f
-        dropButton.w = 100.0f
+        dropButton.w = 200.0f
         dropButton.h = 20.0f
         dropButton.text = "Drop"
         container.addComponent(dropButton)
@@ -100,49 +95,33 @@ class Inventory(val gui: Gui, val player: Player) {
 
         headerText = container.addText("<Inventory: ${items.size}>", 0.0f, 0.0f, background = true)
         headerText.x = 115.0f - headerText.w/2.0f
+
+        if (items.size == 1) {
+            updateSelectedItemDesc(0)
+        }
     }
 
-    fun update() {
-        if (itemButtons.size > 0) {
-            var index = -1
-            for (i in 0 until itemButtons.size) {
-                if (itemButtons[i].active && itemButtons[i] != lastButtonClicked) {
-                    index = i
-                    break
+    fun update(input: Input) {
+        if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
+            if (selectedItemIndex > 0) {
+                selectedItemIndex -= 1
+                for (i in 0 until items.size) {
+                    itemButtons[i].active = i == selectedItemIndex
                 }
+                updateSelectedItemDesc(selectedItemIndex)
             }
-
-            for (i in 0 until itemButtons.size) {
-                itemButtons[i].active = false
-            }
-
-            if (index > -1) {
-                lastButtonClicked = itemButtons[index]
-                itemButtons[index].active = true
-                selectedItem = items[index]
-                if (::itemDescName.isInitialized) {
-                    container.removeText(itemDescName)
-                    container.removeText(itemDescType)
-                    container.removeText(itemDescStamina)
-                    container.removeText(itemDescStrength)
-                    container.removeText(itemDescAgility)
-                    container.removeText(itemDescLuck)
+        }
+        else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
+            if (selectedItemIndex < items.size - 1) {
+                selectedItemIndex += 1
+                for (i in 0 until items.size) {
+                    itemButtons[i].active = i == selectedItemIndex
                 }
-
-                itemDescName = container.addText("Name: ${selectedItem.name}", 230.0f, 20.0f, background = true)
-                itemDescType = container.addText("Type: ${selectedItem.type.name}", 230.0f, 40.0f, background = true)
-                itemDescStamina = container.addText("Stamina: ${selectedItem.stamina}", 230.0f, 60.0f, background = true)
-                itemDescStrength = container.addText("Strength: ${selectedItem.strength}", 230.0f, 80.0f, background = true)
-                itemDescAgility = container.addText("Agility: ${selectedItem.agility}", 230.0f, 100.0f, background = true)
-                itemDescLuck = container.addText("Luck: ${selectedItem.luck}", 230.0f, 120.0f, background = true)
-            }
-
-            if (lastButtonClicked != null) {
-                lastButtonClicked!!.active = true
+                updateSelectedItemDesc(selectedItemIndex)
             }
         }
 
-        if (equipButton.active) {
+        if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
             updateEquippedItems()
         }
         else if(dropButton.active) {
@@ -176,14 +155,43 @@ class Inventory(val gui: Gui, val player: Player) {
 
                 selectedItem = ItemNone
 
+                if (selectedItemIndex >= items.size) {
+                    selectedItemIndex = items.size - 1
+                }
+
                 for (i in 0 until itemButtons.size) {
                     itemButtons[i].y = 20.0f + i*25.0f
                 }
                 container.isDirty = true
 
                 updateEquippedItems()
+
+                if (items.size > 0) {
+                    updateSelectedItemDesc(selectedItemIndex)
+                }
             }
         }
+    }
+
+    private fun updateSelectedItemDesc(index: Int) {
+        lastButtonClicked = itemButtons[index]
+        itemButtons[index].active = true
+        selectedItem = items[index]
+        if (::itemDescName.isInitialized) {
+            container.removeText(itemDescName)
+            container.removeText(itemDescType)
+            container.removeText(itemDescStamina)
+            container.removeText(itemDescStrength)
+            container.removeText(itemDescAgility)
+            container.removeText(itemDescLuck)
+        }
+
+        itemDescName = container.addText("Name: ${selectedItem.name}", 230.0f, 20.0f, background = true)
+        itemDescType = container.addText("Type: ${selectedItem.type.name}", 230.0f, 40.0f, background = true)
+        itemDescStamina = container.addText("Stamina: ${selectedItem.stamina}", 230.0f, 60.0f, background = true)
+        itemDescStrength = container.addText("Strength: ${selectedItem.strength}", 230.0f, 80.0f, background = true)
+        itemDescAgility = container.addText("Agility: ${selectedItem.agility}", 230.0f, 100.0f, background = true)
+        itemDescLuck = container.addText("Luck: ${selectedItem.luck}", 230.0f, 120.0f, background = true)
     }
 
     fun updateEquippedItems() {

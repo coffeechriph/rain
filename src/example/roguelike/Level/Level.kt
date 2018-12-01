@@ -294,7 +294,7 @@ class Level {
             frontTilemap.update(frontIndices)
             detailTilemap.update(detailIndices)
             backTilemap.transform.setPosition(0.0f, 0.0f, 1.0f)
-            detailTilemap.transform.setPosition(0.0f, 0.0f, 1.1f)
+            detailTilemap.transform.setPosition(0.0f, 0.0f, 1.01f)
             frontTilemap.transform.setPosition(0.0f, 0.0f, 10.0f)
 
             firstBuild = false

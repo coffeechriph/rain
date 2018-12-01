@@ -108,20 +108,6 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
         val depth = renderer.getDepthRange().y - 0.1f
         val list = ArrayList<Float>()
 
-        // Add optional background for container
-        if (background) {
-            val w = transform.sx
-            val h = transform.sy
-
-            list.addAll(listOf(
-                    0.0f, 0.0f, depth, 0.0f, 0.0f,
-                    0.0f, h, depth, 0.0f, 0.5f,
-                    w, h, depth, 0.25f, 0.5f,
-                    w, h, depth, 0.25f, 0.5f,
-                    w, 0.0f, depth, 0.25f, 0.0f,
-                    0.0f, 0.0f, depth, 0.0f, 0.0f))
-        }
-
         for (component in components) {
             val x = component.x
             val y = component.y
@@ -166,6 +152,20 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
                         x + w, y, depth, 0.25f, 0.0f,
                         x, y, depth, 0.0f, 0.0f))
             }
+        }
+
+        // Add optional background for container
+        if (background) {
+            val w = transform.sx
+            val h = transform.sy
+
+            list.addAll(listOf(
+                    0.0f, 0.0f, depth, 0.0f, 0.0f,
+                    0.0f, h, depth, 0.0f, 0.5f,
+                    w, h, depth, 0.25f, 0.5f,
+                    w, h, depth, 0.25f, 0.5f,
+                    w, 0.0f, depth, 0.25f, 0.0f,
+                    0.0f, 0.0f, depth, 0.0f, 0.0f))
         }
 
         if (list.size > 0) {

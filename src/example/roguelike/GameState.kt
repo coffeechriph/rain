@@ -118,7 +118,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
             player.playerMovedCell = false
         }
 
-        inventory.update()
+        inventory.update(input)
 
         if (player.transform.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && player.transform.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
                 player.transform.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && player.transform.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {

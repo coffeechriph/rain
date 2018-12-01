@@ -80,7 +80,7 @@ class Player() : Entity() {
 
         setDirectionBasedOnInput(input)
 
-        if (attack.isReady()) {
+        if (attack.isReady() && !inventory.visible) {
             if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
                 attack.attack(Direction.LEFT)
             } else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
