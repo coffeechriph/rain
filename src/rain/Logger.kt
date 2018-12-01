@@ -77,6 +77,8 @@ fun log(text: String) {
     for (c in finalString) {
         logBuffer[logIndex++] = c.toByte()
     }
+
+    print(finalString)
 }
 
 fun assertion(text: String): Nothing {

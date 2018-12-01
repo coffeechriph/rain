@@ -416,12 +416,9 @@ class Level {
                     }
                 }
 
-                val r = random.nextInt(40)
+                val r = random.nextInt(20)
                 if (r == 1){
-                    mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(5, 1)
-                }
-                else if (r == 2) {
-                    mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(5, 2)
+                    mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
                 }
             }
         }

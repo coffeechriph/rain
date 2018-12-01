@@ -138,6 +138,7 @@ class Player() : Entity() {
         if (healthDamaged > 0 && regenHealthTimeout == 0) {
             healthDamaged -= 1
             regenHealthTimeout = 20
+            inventory.updateEquippedItems()
         }
 
         if (regenHealthTimeout > 0) {
