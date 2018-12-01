@@ -16,7 +16,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.sign
 
-class Level {
+class Level(val player: Player) {
     lateinit var map: IntArray
         private set
     var mapWidth = 0
@@ -59,7 +59,7 @@ class Level {
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
 
-    fun update(player: Player) {
+    fun update() {
         for (enemy in enemies) {
             enemy.sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
             enemy.healthBar.sprite.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
@@ -848,12 +848,18 @@ class Level {
 
         for (i in 0 until random.nextInt(50) + 10) {
             val kracGuy = Krac()
+            kracGuy.enemyType = random.nextInt(2)
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
                     .attachAnimatorComponent()
-                    .attachBoxColliderComponent(width = 12.0f, height = 16.0f)
+                    .attachBoxColliderComponent(width = 60.0f, height = 40.0f)
                     .build()
+
+            val levelFactor = player.currentLevel*player.currentLevel
+            kracGuy.strength = random.nextInt(levelFactor) + levelFactor*5
+            kracGuy.agility = random.nextInt(levelFactor) + levelFactor*2
+            kracGuy.health = 100 + random.nextInt(levelFactor)
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
             kracGuy.collider.setDamping(100.0f)

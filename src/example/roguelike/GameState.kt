@@ -29,7 +29,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
     private lateinit var playerSystem: EntitySystem<Player>
     private lateinit var attackSystem: EntitySystem<Attack>
     private lateinit var healthBarSystem: EntitySystem<HealthBar>
-    private var player = Player()
+    private lateinit var player: Player
     private lateinit var inventory: Inventory
     private lateinit var container: Container
     private lateinit var currentLevelText: Text
@@ -37,7 +37,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
     // TODO: The depth range is aquired from the renderer
     // TODO: Create a method in scene to create a new camera which auto-injects the depth range
     private var camera = Camera(Vector2f(0.0f, 20.0f))
-    private var level = Level()
+    private lateinit var level: Level
 
     override fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
         mobTexture = resourceFactory.loadTexture2d("mobTexture","./data/textures/dwarf.png", TextureFilter.NEAREST)
@@ -52,6 +52,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
                 .build()
         scene.addSystem(playerSystem)
+        level = Level(player)
 
         val attackTexture = resourceFactory.loadTexture2d("attackTexture","./data/textures/attack.png", TextureFilter.NEAREST)
         attackTexture.setTiledTexture(16,16)
@@ -111,7 +112,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
             stateManager.startState("menu")
         }
 
-        level.update(player)
+        level.update()
 
         if (player.playerMovedCell) {
             level.switchCell(resourceFactory, player.cellX, player.cellY)

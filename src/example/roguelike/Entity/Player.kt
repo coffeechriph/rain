@@ -41,10 +41,10 @@ class Player() : Entity() {
 
     var baseHealth = 100
     var healthDamaged = 0
-    val baseStamina = 1
-    val baseStrength = 1
-    val baseAgility = 1
-    val baseLuck = 1
+    val baseStamina = 5
+    val baseStrength = 5
+    val baseAgility = 5
+    val baseLuck = 5
 
     var currentLevel = 1
     private var regenHealthTimeout = 0

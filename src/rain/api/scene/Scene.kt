@@ -77,11 +77,12 @@ class Scene {
                 if (animator.animationTime >= 1.0f) {
                     animator.animationTime = 0.0f
                     animator.animationIndex += 1
-                    animator.textureTileOffset.x = animator.animation.startFrame + animator.animationIndex
 
                     if (animator.animationIndex >= animator.animation.endFrame - animator.animation.startFrame) {
                         animator.animationIndex = 0
                     }
+
+                    animator.textureTileOffset.x = animator.animation.startFrame + animator.animationIndex
                 }
 
                 animator.animationTime += deltaTime * animator.animation.speed

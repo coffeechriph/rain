@@ -20,11 +20,13 @@ class Krac: Enemy() {
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         super.init(scene, system)
 
+        val offsetX = if (enemyType == 0) 0 else { 3 }
+
         // TODO: Should be able to animate on the Y axis as well
-        animator.addAnimation("idle_up", 0, 0, 1, 1.0f)
-        animator.addAnimation("idle_down", 0, 0, 0, 1.0f)
-        animator.addAnimation("idle_left", 0, 0, 1, 1.0f)
-        animator.addAnimation("idle_right", 0, 0, 0, 1.0f)
+        animator.addAnimation("idle_up", offsetX, offsetX, 1, 1.0f)
+        animator.addAnimation("idle_down", offsetX, offsetX, 0, 1.0f)
+        animator.addAnimation("idle_left", offsetX, offsetX, 1, 1.0f)
+        animator.addAnimation("idle_right", offsetX, offsetX, 0, 1.0f)
         animator.setAnimation("idle_up")
     }
 

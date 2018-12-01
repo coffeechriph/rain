@@ -1,15 +1,13 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.*
+import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
 import java.util.*
 import kotlin.math.sin
 
 open class Enemy : Entity() {
-    lateinit var player: Player
-
     var cellX = 0
         private set
     var cellY = 0
@@ -17,14 +15,10 @@ open class Enemy : Entity() {
     private var attackAnimation = 0.0f
     private var wasAttacked = false
 
-    var strength = 10
-        private set
-    var agility = 10
-        private set
-
+    var strength = 1
+    var agility = 1
     var health = 100
-        private set
-    var damage = 10
+    var enemyType = 0
 
     var healthBar = HealthBar()
     var traversing = false
