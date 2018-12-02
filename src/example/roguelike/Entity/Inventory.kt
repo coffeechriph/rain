@@ -61,7 +61,7 @@ class Inventory(val gui: Gui, val player: Player) {
         dropButton.text = "Drop"
         container.addComponent(dropButton)
 
-        statContainer = gui.newContainer(0.0f, 720.0f - 120.0f, 100.0f, 120.0f)
+        statContainer = gui.newContainer(0.0f, 768.0f - 120.0f, 100.0f, 120.0f)
         statContainer.visible = true
 
         healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)

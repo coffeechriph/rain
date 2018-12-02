@@ -77,7 +77,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
         scene.addSystem(healthBarSystem)
 
         // TODO: Constant window dimensions
-        level.create(resourceFactory, scene, 8960 / 64, 5040 / 64, 1280 / 64, 720 / 64 + 1)
+        level.create(resourceFactory, scene, 8960 / 64, 5040 / 64, 1280 / 64, 768 / 64)
         level.build(resourceFactory, 0, healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
@@ -102,7 +102,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
         player.level = level
 
         // TODO: Constant window dimensions
-        container = gui.newContainer(1280.0f/2.0f - 100, 720.0f - 40.0f, 200.0f, 40.0f)
+        container = gui.newContainer(1280.0f/2.0f - 100, 768.0f - 40.0f, 200.0f, 40.0f)
         currentLevelText = container.addText("Current Level: ${player.currentLevel}", 0.0f, 0.0f, background = true)
         currentLevelText.x += currentLevelText.w/2.0f
     }

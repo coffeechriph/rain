@@ -81,7 +81,7 @@ class Level(val player: Player) {
             if (!enemy.traversing) {
                 enemy.collider.setVelocity(0.0f,0.0f)
                 if (enemy.transform.x < player.transform.x - 16.0f || enemy.transform.x > player.transform.x + 16.0f
-                && enemy.transform.y < player.transform.y - 16.0f || enemy.transform.y > player.transform.y + 16.0f) {
+                || enemy.transform.y < player.transform.y - 16.0f || enemy.transform.y > player.transform.y + 16.0f) {
                     val worldX = enemy.transform.x / 64 + (enemy.cellX * width)
                     val worldY = enemy.transform.y / 64 + (enemy.cellY * height)
                     val px = player.transform.x / 64 + (player.cellX * width)
@@ -109,7 +109,7 @@ class Level(val player: Player) {
                     val target = Vector2i(enemy.path[enemy.pathIndex])
                     target.mul(64)
                     target.x %= 1280
-                    target.y %= 752
+                    target.y %= 768
                     val dx = target.x - enemy.transform.x
                     val dy = target.y - enemy.transform.y
                     val ln = Math.sqrt((dx * dx + dy * dy).toDouble())
@@ -119,7 +119,8 @@ class Level(val player: Player) {
                         if (enemy.pathIndex >= enemy.path.size) {
                             enemy.traversing = false
                         }
-                    } else {
+                    }
+                    else {
                         val vx = dx / ln
                         val vy = dy / ln
 
@@ -132,7 +133,8 @@ class Level(val player: Player) {
                             if (enemy.pathIndex >= enemy.path.size) {
                                 enemy.traversing = false
                             }
-                        } else if (System.currentTimeMillis() - enemy.traverseSleep >= 500 && enemy.pathIndex >= 5) {
+                        }
+                        else if (System.currentTimeMillis() - enemy.traverseSleep >= 500 && enemy.pathIndex >= 3) {
                             enemy.traversing = false
                         }
                     }
@@ -257,6 +259,10 @@ class Level(val player: Player) {
             backIndices[i] = mapBackIndices[sx + sy*mapWidth]
             frontIndices[i] = mapFrontIndices[sx + sy*mapWidth]
             detailIndices[i] = mapDetailIndices[sx + sy*mapWidth]
+
+            if (navMesh.map[sx + sy*mapWidth] == 127.toByte()) {
+                backIndices[i] = TileIndex(7,0)
+            }
 
             if (map[sx + sy*mapWidth] == 1) {
                 val e = Entity()
@@ -849,7 +855,7 @@ class Level(val player: Player) {
         for (i in 0 until random.nextInt(50) + 10) {
             val enemy = random.nextInt(2)
 
-            val kracGuy = if (enemy == 0) {MiniKrac()} else {MiniKrac()}
+            val kracGuy = if (enemy == 0) {Krac()} else {MiniKrac()}
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
@@ -886,21 +892,23 @@ class Level(val player: Player) {
         containers.clear()
         containerSystem.clear()
 
-        for (i in 0 until random.nextInt(50) + 20) {
+        for (i in 0 until random.nextInt(50) + 100) {
             val container = Container()
             containerSystem.newEntity(container)
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)
-                    .attachBoxColliderComponent(32.0f, 32.0f, BodyDef.BodyType.StaticBody)
+                    .attachBoxColliderComponent(16.0f, 16.0f, BodyDef.BodyType.StaticBody)
                     .build()
             val room = rooms[random.nextInt(rooms.size)]
             val tile = room.findNoneEdgeTile(random)
 
-            container.setPosition(Vector2i(tile.x*64, tile.y*64))
+            container.setPosition(Vector2i(tile.x*64 + 32, tile.y*64 + 32))
             container.collider.setDamping(100.0f)
             container.collider.setDensity(1000.0f)
             container.collider.setFriction(1.0f)
             containers.add(container)
+
+            navMesh.map[tile.x + tile.y * mapWidth] = 127
         }
     }
 }

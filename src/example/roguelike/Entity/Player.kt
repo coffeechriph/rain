@@ -55,10 +55,10 @@ class Player() : Entity() {
     private var inCombat = false
 
     fun setPosition(pos: Vector2i) {
-        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%752)
 
         cellX = pos.x / 1280
-        cellY = pos.y / 752
+        cellY = pos.y / 768
+        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%768)
         playerMovedCell = true
     }
 

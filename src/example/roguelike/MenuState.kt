@@ -34,7 +34,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
     override fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
         scene.setActiveCamera(camera)
 
-        menuContainer = gui.newContainer(0.0f, 0.0f, 1280.0f, 720.0f)
+        menuContainer = gui.newContainer(0.0f, 0.0f, 1280.0f, 768.0f)
         startGameButton = ToggleButton()
         startGameButton.x = 1280.0f / 2.0f - 100.0f
         startGameButton.y = 280.0f
