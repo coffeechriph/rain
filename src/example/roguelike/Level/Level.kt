@@ -54,6 +54,7 @@ class Level(val player: Player) {
     private lateinit var collisionSystem: EntitySystem<Entity>
     private lateinit var containerSystem: EntitySystem<Container>
     private lateinit var levelItemSystem: EntitySystem<Item>
+    private lateinit var navMeshSystem: EntitySystem<Entity>
     private var containers = ArrayList<Container>()
     private lateinit var navMesh: NavMesh
     var startPosition = Vector2i()
@@ -79,6 +80,7 @@ class Level(val player: Player) {
             enemy.healthBar.transform.sx = enemy.health / 2.0f
 
             if (!enemy.traversing) {
+                navMeshSystem.clear()
                 enemy.collider.setVelocity(0.0f,0.0f)
                 if (enemy.transform.x < player.transform.x - 16.0f || enemy.transform.x > player.transform.x + 16.0f
                 || enemy.transform.y < player.transform.y - 16.0f || enemy.transform.y > player.transform.y + 16.0f) {
@@ -96,6 +98,20 @@ class Level(val player: Player) {
                     val dx = player.transform.x - enemy.transform.x
                     val dy = player.transform.y - enemy.transform.y
                     enemy.lastPlayerAngle = Math.atan2(dy.toDouble(), dx.toDouble()).toFloat()
+
+                    for (p in path) {
+                        val i = Entity()
+                        navMeshSystem.newEntity(i)
+                                .attachTransformComponent()
+                                .attachSpriteComponent(itemMaterial)
+                                .build()
+                        val transform = navMeshSystem.findTransformComponent(i.getId())
+                        transform!!.x = (p.x*64).toFloat() % 1280 + 32
+                        transform.y = (p.y*64).toFloat() % 768 + 32
+                        transform.z = 10.0f
+                        transform.sx = 64.0f
+                        transform.sy = 64.0f
+                    }
                 }
             }
             else if (enemy.path.size > 0 && enemy.pathIndex < enemy.path.size) {
@@ -123,12 +139,11 @@ class Level(val player: Player) {
                     else {
                         val vx = dx / ln
                         val vy = dy / ln
-
-                        enemy.collider.setVelocity(vx.toFloat() * 120.0f, vy.toFloat() * 120.0f)
-                        if (enemy.transform.x >= target.x - 16 && enemy.transform.x <= target.x + 16 &&
-                                enemy.transform.y >= target.y - 16 && enemy.transform.y <= target.y + 16 ||
-                                enemy.transform.x >= player.transform.x - 16.0f && enemy.transform.x <= player.transform.x + 16.0f
-                                && enemy.transform.y >= player.transform.y - 16.0f && enemy.transform.y <= player.transform.y + 16.0f) {
+                        enemy.collider.setVelocity(vx.toFloat() * 120.0f * enemy.walkingSpeedFactor, vy.toFloat() * 120.0f * enemy.walkingSpeedFactor)
+                        if (enemy.transform.x >= target.x - 64 && enemy.transform.x <= target.x + 64 &&
+                                enemy.transform.y >= target.y - 64 && enemy.transform.y <= target.y + 64 ||
+                                enemy.transform.x >= player.transform.x - 32.0f && enemy.transform.x <= player.transform.x + 32.0f
+                                && enemy.transform.y >= player.transform.y - 32.0f && enemy.transform.y <= player.transform.y + 32.0f) {
                             enemy.pathIndex += 1
                             if (enemy.pathIndex >= enemy.path.size) {
                                 enemy.traversing = false
@@ -239,6 +254,9 @@ class Level(val player: Player) {
 
         levelItemSystem = EntitySystem(scene)
         scene.addSystem(levelItemSystem)
+
+        navMeshSystem = EntitySystem(scene)
+        scene.addSystem(navMeshSystem)
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -259,10 +277,6 @@ class Level(val player: Player) {
             backIndices[i] = mapBackIndices[sx + sy*mapWidth]
             frontIndices[i] = mapFrontIndices[sx + sy*mapWidth]
             detailIndices[i] = mapDetailIndices[sx + sy*mapWidth]
-
-            if (navMesh.map[sx + sy*mapWidth] == 127.toByte()) {
-                backIndices[i] = TileIndex(7,0)
-            }
 
             if (map[sx + sy*mapWidth] == 1) {
                 val e = Entity()
@@ -897,13 +911,12 @@ class Level(val player: Player) {
             containerSystem.newEntity(container)
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)
-                    .attachBoxColliderComponent(16.0f, 16.0f, BodyDef.BodyType.StaticBody)
+                    .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
                     .build()
             val room = rooms[random.nextInt(rooms.size)]
             val tile = room.findNoneEdgeTile(random)
 
             container.setPosition(Vector2i(tile.x*64 + 32, tile.y*64 + 32))
-            container.collider.setDamping(100.0f)
             container.collider.setDensity(1000.0f)
             container.collider.setFriction(1.0f)
             containers.add(container)

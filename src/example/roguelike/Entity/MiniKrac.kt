@@ -13,6 +13,7 @@ class MiniKrac: Enemy() {
         strengthFactor = 0.75f
         healthFactor = 0.65f
         agilityFactor = 3.0f
+        walkingSpeedFactor = 1.3f
     }
 
     override fun onCollision(entity: Entity) {

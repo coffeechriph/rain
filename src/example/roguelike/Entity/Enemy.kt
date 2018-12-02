@@ -36,6 +36,8 @@ open class Enemy : Entity() {
 
     protected var attackTimeoutValue = 30
     protected var attackTimeout = 0
+    var walkingSpeedFactor = 1.0f
+        protected set
 
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {

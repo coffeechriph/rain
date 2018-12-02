@@ -203,13 +203,13 @@ class Player() : Entity() {
 
         if (collider.getPosition().y < 0) {
             if (cellY > 0) {
-                collider.setPosition(collider.getPosition().x, 710.0f)
+                collider.setPosition(collider.getPosition().x, 758.0f)
 
                 playerMovedCell = true
                 cellY -= 1
             }
         }
-        else if (collider.getPosition().y > 710) {
+        else if (collider.getPosition().y > 768) {
             if (cellY < level.maxCellY) {
                 collider.setPosition(collider.getPosition().x, 10.0f)
 
