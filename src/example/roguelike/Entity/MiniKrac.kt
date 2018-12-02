@@ -6,13 +6,13 @@ import rain.api.entity.EntitySystem
 import rain.api.scene.Scene
 import java.util.*
 
-class Krac: Enemy() {
+class MiniKrac: Enemy() {
     private var idleDir = 0
 
     init {
-        strengthFactor = 2.0f
-        healthFactor = 1.5f
-        agilityFactor = 0.1f
+        strengthFactor = 0.75f
+        healthFactor = 0.65f
+        agilityFactor = 3.0f
     }
 
     override fun onCollision(entity: Entity) {
@@ -27,13 +27,13 @@ class Krac: Enemy() {
         super.init(scene, system)
 
         // TODO: Should be able to animate on the Y axis as well
-        animator.addAnimation("idle_up", 0, 0, 1, 1.0f)
-        animator.addAnimation("idle_down", 0, 0, 0, 1.0f)
-        animator.addAnimation("idle_left", 0, 0, 1, 1.0f)
-        animator.addAnimation("idle_right", 0, 0, 0, 1.0f)
+        animator.addAnimation("idle_up", 3, 3, 1, 1.0f)
+        animator.addAnimation("idle_down", 3, 3, 0, 1.0f)
+        animator.addAnimation("idle_left", 3, 3, 1, 1.0f)
+        animator.addAnimation("idle_right", 3, 3, 0, 1.0f)
         animator.setAnimation("idle_up")
 
-        attackTimeoutValue = 100
+        attackTimeoutValue = 30
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {

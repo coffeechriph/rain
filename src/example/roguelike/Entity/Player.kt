@@ -41,6 +41,10 @@ class Player() : Entity() {
 
     var baseHealth = 100
     var healthDamaged = 0
+        set (value) {
+            field = value
+            regenHealthTimeout = 40
+        }
     val baseStamina = 5
     val baseStrength = 5
     val baseAgility = 5
@@ -48,6 +52,7 @@ class Player() : Entity() {
 
     var currentLevel = 1
     private var regenHealthTimeout = 0
+    private var inCombat = false
 
     fun setPosition(pos: Vector2i) {
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%752)
@@ -135,9 +140,14 @@ class Player() : Entity() {
             inventory.visible = !inventory.visible
         }
 
-        if (healthDamaged > 0 && regenHealthTimeout == 0) {
-            healthDamaged -= 1
-            regenHealthTimeout = 20
+        if (healthDamaged > 0 && regenHealthTimeout == 0 && !inCombat) {
+            healthDamaged -= 4
+            regenHealthTimeout = 40
+            inventory.updateEquippedItems()
+            inCombat = true
+        }
+        else if (regenHealthTimeout <= 0) {
+            inCombat = false
             inventory.updateEquippedItems()
         }
 

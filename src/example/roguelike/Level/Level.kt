@@ -847,8 +847,9 @@ class Level(val player: Player) {
         healthBarSystem.clear()
 
         for (i in 0 until random.nextInt(50) + 10) {
-            val kracGuy = Krac()
-            kracGuy.enemyType = random.nextInt(2)
+            val enemy = random.nextInt(2)
+
+            val kracGuy = if (enemy == 0) {MiniKrac()} else {MiniKrac()}
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
@@ -857,9 +858,9 @@ class Level(val player: Player) {
                     .build()
 
             val levelFactor = player.currentLevel*player.currentLevel
-            kracGuy.strength = random.nextInt(levelFactor) + levelFactor*5
-            kracGuy.agility = random.nextInt(levelFactor) + levelFactor*2
-            kracGuy.health = 100 + random.nextInt(levelFactor)
+            kracGuy.strength = (random.nextInt(levelFactor) + levelFactor*5 * kracGuy.strengthFactor).toInt()
+            kracGuy.agility = (random.nextInt(levelFactor) + levelFactor*2 * kracGuy.agilityFactor).toInt()
+            kracGuy.health = (100 + random.nextInt(levelFactor) * kracGuy.healthFactor).toInt()
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
             kracGuy.collider.setDamping(100.0f)

@@ -18,7 +18,10 @@ open class Enemy : Entity() {
     var strength = 1
     var agility = 1
     var health = 100
-    var enemyType = 0
+
+    var strengthFactor = 1.0f
+    var agilityFactor = 1.0f
+    var healthFactor = 1.0f
 
     var healthBar = HealthBar()
     var traversing = false
@@ -31,6 +34,7 @@ open class Enemy : Entity() {
     lateinit var sprite: Sprite
     lateinit var animator: Animator
 
+    protected var attackTimeoutValue = 30
     protected var attackTimeout = 0
 
     // TODO: Constant window size
@@ -72,7 +76,7 @@ open class Enemy : Entity() {
             player.healthDamaged += damage.toInt()
 
             // TODO: Make this time based
-            attackTimeout = 30
+            attackTimeout = attackTimeoutValue
         }
     }
 
