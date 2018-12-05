@@ -38,6 +38,9 @@ open class Enemy : Entity() {
     protected var attackTimeout = 0
     var walkingSpeedFactor = 1.0f
         protected set
+    var pushBack = 0
+    var pushBackImmune = false
+    var pushDirection = Vector2i(0,0)
 
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {
@@ -46,6 +49,8 @@ open class Enemy : Entity() {
         cellX = pos.x / 1280
         cellY = pos.y / 768
         collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%768)
+        transform.x = collider.getPosition().x
+        transform.y = collider.getPosition().y
     }
 
     fun damage(random: Random, player: Player) {

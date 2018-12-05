@@ -94,7 +94,7 @@ class Level(val player: Player) {
                     val path = navMesh.findPath(Vector2i(worldX.toInt(), worldY.toInt()), Vector2i(px.toInt(), py.toInt()))
                     if (path.size > 2) {
                         enemy.path = path
-                        enemy.pathIndex = 1
+                        enemy.pathIndex = 0
                         enemy.traversing = true
                         enemy.traverseSleep = System.currentTimeMillis()
 
@@ -113,60 +113,52 @@ class Level(val player: Player) {
                             transform!!.x = (p.x * 64).toFloat() % 1280 + 32
                             transform.y = (p.y * 64).toFloat() % 768 + 32
                             transform.z = 10.0f
-                            transform.sx = 64.0f
-                            transform.sy = 64.0f
+                            transform.sx = 12.0f
+                            transform.sy = 12.0f
                         }
                     }
                 }
             }
             else if (enemy.path.size > 0 && enemy.pathIndex < enemy.path.size) {
-                val ax = player.transform.x - enemy.transform.x
-                val ay = player.transform.y - enemy.transform.y
-                val currAngle = Math.atan2(ay.toDouble(), ax.toDouble()).toFloat()
-                if (Math.abs(enemy.lastPlayerAngle-currAngle) >= Math.PI*0.3f) {
-                    enemy.traversing = false
-                }
-                else {
+                // Move to first tile
                     val target = Vector2i(enemy.path[enemy.pathIndex])
-                    target.mul(64)
-                    target.x %= 1280
-                    target.y %= 768
+                    target.x *= 64
+                    target.y *= 64
                     val dx2 = (target.x + 32) - enemy.transform.x
                     val dy2 = (target.y + 32) - enemy.transform.y
-                    val ln = Math.sqrt((dx2 * dx2 + dy2 * dy2).toDouble())
-
-                    if (ln <= 0.5f) {
-                        enemy.collider.setVelocity(0.0f, 0.0f)
-                        enemy.pathIndex += 1
-                        if (enemy.pathIndex >= enemy.path.size) {
-                            enemy.traversing = false
-                        }
+                    val ln = Math.sqrt((dx2*dx2+dy2*dy2).toDouble());
+                    var vx: Float
+                    var vy: Float
+                    if (ln == 0.0) {
+                        vx = dx2
+                        vy = dy2
                     }
                     else {
-                        val vx = dx2 / ln
-                        val vy = dy2 / ln
-                        enemy.collider.setVelocity(vx.toFloat() * 90.0f * enemy.walkingSpeedFactor, vy.toFloat() * 90.0f * enemy.walkingSpeedFactor)
-                        val tx = enemy.transform.x - target.x
-                        val ty = enemy.transform.y - target.y
-                        val td = Math.sqrt((tx*tx+ty*ty).toDouble())
-                        if (td <= 8.0f) {
-                            enemy.pathIndex += 1
-                            if (enemy.pathIndex >= enemy.path.size) {
-                                enemy.traversing = false
-                            }
-                        }
-                        else if (System.currentTimeMillis() - enemy.traverseSleep >= 500 && enemy.pathIndex >= 3) {
-                            enemy.traversing = false
-                        }
+                        vx = (dx2 / ln).toFloat()
+                        vy = (dy2 / ln).toFloat()
+                    }
 
-                        val kx = player.transform.x - enemy.transform.x
-                        val ky = player.transform.y - enemy.transform.y
-                        val dd = Math.sqrt((kx*kx+ky*ky).toDouble())
-                        if (dd <= 50.0f) {
+                    if (enemy.pushBack == 0) {
+                        enemy.pushBackImmune = false
+                        enemy.collider.setVelocity(vx * enemy.walkingSpeedFactor * 100, vy * enemy.walkingSpeedFactor * 100)
+                    }
+                    else if (enemy.pushBack > 5) {
+                        enemy.collider.setVelocity(enemy.pushDirection.x.toFloat() * 100, enemy.pushDirection.y.toFloat() * 100)
+                        enemy.pushBack -= 1
+                    }
+                    else {
+                        enemy.pushBack -= 1
+                        enemy.collider.setVelocity(0.0f, 0.0f)
+                    }
+                    val dx3 = (target.x + 32) - enemy.transform.x
+                    val dy3 = (target.y + 32) - enemy.transform.y
+                    val ln2 = Math.sqrt((dx3*dx3+dy3*dy3).toDouble());
+                    if (ln2 <= 8.0f) {
+                        enemy.pathIndex += 1
+                        if (enemy.pathIndex >= enemy.path.size - 1) {
                             enemy.traversing = false
                         }
                     }
-                }
             }
             else {
                 enemy.traversing = false
@@ -241,7 +233,7 @@ class Level(val player: Player) {
         firstBuild = true
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
-        texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
+        texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles-debug.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
         material = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f,1.0f, 1.0f))
         itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f, 1.0f, 1.0f))
@@ -321,6 +313,14 @@ class Level(val player: Player) {
             if (cx >= width * 64.0f) {
                 cx = 0.0f
                 cy += 64.0f
+            }
+        }
+
+        for (container in containers) {
+            if (container.cellX == cellX && container.cellY == cellY) {
+                val ix: Int = (container.transform.x/64).toInt()
+                val iy: Int = (container.transform.y/64).toInt()
+                navMesh.map[ix + iy*width] = 127.toByte()
             }
         }
 

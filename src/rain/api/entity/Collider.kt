@@ -17,6 +17,10 @@ class Collider internal constructor(private val body: Body, internal val transfo
         body.isActive = c
     }
 
+    fun applyForceToCenter(x: Float, y: Float) {
+        body.applyLinearImpulse(x, y, body.worldCenter.x, body.worldCenter.y, true)
+    }
+
     fun setFriction(friction: Float) {
         if (body.fixtureList.size == 1) {
             body.fixtureList[0].friction = friction

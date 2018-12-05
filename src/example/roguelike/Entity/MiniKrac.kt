@@ -1,5 +1,6 @@
 package example.roguelike.Entity
 
+import org.joml.Vector2i
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -21,6 +22,15 @@ class MiniKrac: Enemy() {
         if (entity is Attack && entity.attacker is Player) {
             val player = entity.attacker as Player
             damage(random, player)
+        }
+        else if (entity is Enemy && !entity.pushBackImmune) {
+            val dx = (entity.transform.x - transform.x) * 400
+            val dy = (entity.transform.y - transform.y) * 400
+            entity.pushBack = 8
+            entity.pushDirection = Vector2i(dx.toInt(),dy.toInt())
+            entity.traversing = false
+            entity.pushBackImmune = true
+            pushBackImmune = true
         }
     }
 
