@@ -108,7 +108,6 @@ class Inventory(val gui: Gui, val player: Player) {
                 for (i in 0 until items.size) {
                     itemButtons[i].active = i == selectedItemIndex
                 }
-                updateSelectedItemDesc(selectedItemIndex)
             }
         }
         else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
@@ -117,12 +116,12 @@ class Inventory(val gui: Gui, val player: Player) {
                 for (i in 0 until items.size) {
                     itemButtons[i].active = i == selectedItemIndex
                 }
-                updateSelectedItemDesc(selectedItemIndex)
             }
         }
 
         if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
             updateEquippedItems()
+            updateSelectedItemDesc(selectedItemIndex)
         }
         else if(dropButton.active) {
             if (selectedItem != ItemNone) {

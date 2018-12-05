@@ -31,6 +31,7 @@ class NavMesh(val width: Int, val height: Int) {
     // Note: The idea here is to have multiple nav meshes where each mesh would allow for a particular
     // unit (for example) to traverse at different places.
     val map = ByteArray(width*height)
+    var allowDiagonals = true
     private val nodes = Array(width*height){Node(null,0, 0, 0, 0)}
     private val openList = ArrayList<Node>()
     private val closedList = ArrayList<Node>()
@@ -133,17 +134,19 @@ class NavMesh(val width: Int, val height: Int) {
                 list.add(nodes[index])
             }
 
-            if (y > 0) {
-                val index2 = (x - 1) + (y - 1) * width
-                if (map[index2] != 127.toByte()) {
-                    list.add(nodes[index2])
+            if (allowDiagonals) {
+                if (y > 0) {
+                    val index2 = (x - 1) + (y - 1) * width
+                    if (map[index2] != 127.toByte()) {
+                        list.add(nodes[index2])
+                    }
                 }
-            }
 
-            if (y < height - 1) {
-                val index2 = (x - 1) + (y + 1) * width
-                if (map[index2] != 127.toByte()) {
-                    list.add(nodes[index2])
+                if (y < height - 1) {
+                    val index2 = (x - 1) + (y + 1) * width
+                    if (map[index2] != 127.toByte()) {
+                        list.add(nodes[index2])
+                    }
                 }
             }
         }
@@ -154,17 +157,19 @@ class NavMesh(val width: Int, val height: Int) {
                 list.add(nodes[index])
             }
 
-            if (y > 0) {
-                val index2 = (x + 1) + (y - 1) * width
-                if (map[index2] != 127.toByte()) {
-                    list.add(nodes[index2])
+            if (allowDiagonals) {
+                if (y > 0) {
+                    val index2 = (x + 1) + (y - 1) * width
+                    if (map[index2] != 127.toByte()) {
+                        list.add(nodes[index2])
+                    }
                 }
-            }
 
-            if (y < height - 1) {
-                val index2 = (x + 1) + (y + 1) * width
-                if (map[index2] != 127.toByte()) {
-                    list.add(nodes[index2])
+                if (y < height - 1) {
+                    val index2 = (x + 1) + (y + 1) * width
+                    if (map[index2] != 127.toByte()) {
+                        list.add(nodes[index2])
+                    }
                 }
             }
         }

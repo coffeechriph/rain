@@ -112,13 +112,12 @@ class GameState(stateManager: StateManager): State(stateManager) {
             stateManager.startState("menu")
         }
 
-        level.update()
-
         if (player.playerMovedCell) {
             level.switchCell(resourceFactory, player.cellX, player.cellY)
             player.playerMovedCell = false
         }
 
+        level.update()
         inventory.update(input)
 
         if (player.transform.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && player.transform.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&

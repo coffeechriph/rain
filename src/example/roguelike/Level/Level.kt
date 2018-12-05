@@ -82,35 +82,40 @@ class Level(val player: Player) {
             if (!enemy.traversing) {
                 navMeshSystem.clear()
                 enemy.collider.setVelocity(0.0f,0.0f)
-                if (enemy.transform.x < player.transform.x - 16.0f || enemy.transform.x > player.transform.x + 16.0f
-                || enemy.transform.y < player.transform.y - 16.0f || enemy.transform.y > player.transform.y + 16.0f) {
-                    val worldX = enemy.transform.x / 64 + (enemy.cellX * width)
-                    val worldY = enemy.transform.y / 64 + (enemy.cellY * height)
-                    val px = player.transform.x / 64 + (player.cellX * width)
-                    val py = player.transform.y / 64 + (player.cellY * height)
+                val kx = player.transform.x - enemy.transform.x
+                val ky = player.transform.y - enemy.transform.y
+                val dd = Math.sqrt((kx*kx+ky*ky).toDouble())
+                if (dd > 50.0f) {
+                    val worldX = enemy.transform.x / 64
+                    val worldY = enemy.transform.y / 64
+                    val px = player.transform.x / 64
+                    val py = player.transform.y / 64
 
                     val path = navMesh.findPath(Vector2i(worldX.toInt(), worldY.toInt()), Vector2i(px.toInt(), py.toInt()))
-                    enemy.path = path
-                    enemy.pathIndex = 1
-                    enemy.traversing = true
-                    enemy.traverseSleep = System.currentTimeMillis()
+                    if (path.size > 2) {
+                        enemy.path = path
+                        enemy.pathIndex = 1
+                        enemy.traversing = true
+                        enemy.traverseSleep = System.currentTimeMillis()
 
-                    val dx = player.transform.x - enemy.transform.x
-                    val dy = player.transform.y - enemy.transform.y
-                    enemy.lastPlayerAngle = Math.atan2(dy.toDouble(), dx.toDouble()).toFloat()
+                        val dx2 = player.transform.x - enemy.transform.x
+                        val dy2 = player.transform.y - enemy.transform.y
+                        enemy.lastPlayerAngle = Math.atan2(dy2.toDouble(), dx2.toDouble()).toFloat()
 
-                    for (p in path) {
-                        val i = Entity()
-                        navMeshSystem.newEntity(i)
-                                .attachTransformComponent()
-                                .attachSpriteComponent(itemMaterial)
-                                .build()
-                        val transform = navMeshSystem.findTransformComponent(i.getId())
-                        transform!!.x = (p.x*64).toFloat() % 1280 + 32
-                        transform.y = (p.y*64).toFloat() % 768 + 32
-                        transform.z = 10.0f
-                        transform.sx = 64.0f
-                        transform.sy = 64.0f
+                        // TODO: Remove
+                        for (p in path) {
+                            val i = Entity()
+                            navMeshSystem.newEntity(i)
+                                    .attachTransformComponent()
+                                    .attachSpriteComponent(itemMaterial)
+                                    .build()
+                            val transform = navMeshSystem.findTransformComponent(i.getId())
+                            transform!!.x = (p.x * 64).toFloat() % 1280 + 32
+                            transform.y = (p.y * 64).toFloat() % 768 + 32
+                            transform.z = 10.0f
+                            transform.sx = 64.0f
+                            transform.sy = 64.0f
+                        }
                     }
                 }
             }
@@ -126,10 +131,11 @@ class Level(val player: Player) {
                     target.mul(64)
                     target.x %= 1280
                     target.y %= 768
-                    val dx = target.x - enemy.transform.x
-                    val dy = target.y - enemy.transform.y
-                    val ln = Math.sqrt((dx * dx + dy * dy).toDouble())
-                    if (ln <= 0) {
+                    val dx2 = (target.x + 32) - enemy.transform.x
+                    val dy2 = (target.y + 32) - enemy.transform.y
+                    val ln = Math.sqrt((dx2 * dx2 + dy2 * dy2).toDouble())
+
+                    if (ln <= 0.5f) {
                         enemy.collider.setVelocity(0.0f, 0.0f)
                         enemy.pathIndex += 1
                         if (enemy.pathIndex >= enemy.path.size) {
@@ -137,19 +143,26 @@ class Level(val player: Player) {
                         }
                     }
                     else {
-                        val vx = dx / ln
-                        val vy = dy / ln
-                        enemy.collider.setVelocity(vx.toFloat() * 120.0f * enemy.walkingSpeedFactor, vy.toFloat() * 120.0f * enemy.walkingSpeedFactor)
-                        if (enemy.transform.x >= target.x - 64 && enemy.transform.x <= target.x + 64 &&
-                                enemy.transform.y >= target.y - 64 && enemy.transform.y <= target.y + 64 ||
-                                enemy.transform.x >= player.transform.x - 32.0f && enemy.transform.x <= player.transform.x + 32.0f
-                                && enemy.transform.y >= player.transform.y - 32.0f && enemy.transform.y <= player.transform.y + 32.0f) {
+                        val vx = dx2 / ln
+                        val vy = dy2 / ln
+                        enemy.collider.setVelocity(vx.toFloat() * 90.0f * enemy.walkingSpeedFactor, vy.toFloat() * 90.0f * enemy.walkingSpeedFactor)
+                        val tx = enemy.transform.x - target.x
+                        val ty = enemy.transform.y - target.y
+                        val td = Math.sqrt((tx*tx+ty*ty).toDouble())
+                        if (td <= 8.0f) {
                             enemy.pathIndex += 1
                             if (enemy.pathIndex >= enemy.path.size) {
                                 enemy.traversing = false
                             }
                         }
                         else if (System.currentTimeMillis() - enemy.traverseSleep >= 500 && enemy.pathIndex >= 3) {
+                            enemy.traversing = false
+                        }
+
+                        val kx = player.transform.x - enemy.transform.x
+                        val ky = player.transform.y - enemy.transform.y
+                        val dd = Math.sqrt((kx*kx+ky*ky).toDouble())
+                        if (dd <= 50.0f) {
                             enemy.traversing = false
                         }
                     }
@@ -237,7 +250,8 @@ class Level(val player: Player) {
         this.width = width
         this.height = height
         map = IntArray(mapWidth*mapHeight)
-        navMesh = NavMesh(mapWidth, mapHeight)
+        navMesh = NavMesh(width, height)
+        navMesh.allowDiagonals = false
 
         val enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
@@ -279,6 +293,7 @@ class Level(val player: Player) {
             detailIndices[i] = mapDetailIndices[sx + sy*mapWidth]
 
             if (map[sx + sy*mapWidth] == 1) {
+                navMesh.map[i] = 127
                 val e = Entity()
                 collisionSystem.newEntity(e)
                         .attachTransformComponent()
@@ -287,10 +302,13 @@ class Level(val player: Player) {
                 val tr = collisionSystem.findTransformComponent(e.getId())
                 val cl = collisionSystem.findColliderComponent(e.getId())!!
                 cl.setPosition(cx + 32.0f, cy + 32.0f)
-                cl.setFriction(0.5f)
+                cl.setFriction(0.15f)
                 tr!!.sx = 64.0f
                 tr.sy = 64.0f
                 tr.z = 13.0f
+            }
+            else {
+                navMesh.map[i] = 0
             }
 
             sx += 1
@@ -303,6 +321,13 @@ class Level(val player: Player) {
             if (cx >= width * 64.0f) {
                 cx = 0.0f
                 cy += 64.0f
+            }
+        }
+
+        // TODO: Remove me
+        for (i in 0 until width*height) {
+            if (navMesh.map[i] == 127.toByte()) {
+                backIndices[i] = TileIndex(7, 0)
             }
         }
 
@@ -331,10 +356,6 @@ class Level(val player: Player) {
         generate(7)
         addWallBlockersAtEdges()
         buildRooms()
-
-        for (i in 0 until map.size) {
-            navMesh.map[i] = (map[i] * 127).toByte()
-        }
 
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
@@ -883,7 +904,7 @@ class Level(val player: Player) {
             kracGuy.health = (100 + random.nextInt(levelFactor) * kracGuy.healthFactor).toInt()
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
-            kracGuy.collider.setDamping(100.0f)
+            kracGuy.collider.setDamping(0.0f)
             kracGuy.collider.setFriction(0.0f)
             kracGuy.healthBar.parentTransform = et
 
@@ -920,8 +941,6 @@ class Level(val player: Player) {
             container.collider.setDensity(1000.0f)
             container.collider.setFriction(1.0f)
             containers.add(container)
-
-            navMesh.map[tile.x + tile.y * mapWidth] = 127
         }
     }
 }
