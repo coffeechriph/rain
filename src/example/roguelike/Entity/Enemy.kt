@@ -41,6 +41,8 @@ open class Enemy : Entity() {
     var pushBack = 0
     var pushBackImmune = false
     var pushDirection = Vector2i(0,0)
+    var lastX = -1
+    var lastY = -1
 
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {

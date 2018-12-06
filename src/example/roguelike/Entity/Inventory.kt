@@ -124,6 +124,7 @@ class Inventory(val gui: Gui, val player: Player) {
             updateSelectedItemDesc(selectedItemIndex)
         }
         else if(dropButton.active) {
+            selectedItem = items[selectedItemIndex]
             if (selectedItem != ItemNone) {
                 if (selectedItem == equippedWeapon) {
                     equippedWeapon = ItemNone

@@ -119,7 +119,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachBoxColliderComponent(width: Float, height: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
+        fun attachBoxColliderComponent(width: Float, height: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody, aliveOnStart: Boolean = true): Builder<T> {
             val transform = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
 
@@ -140,6 +140,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             fixtureDef.density = 1.0f
             fixtureDef.restitution = 0.0f
             body.createFixture(fixtureDef)
+            body.isActive = aliveOnStart
 
             body.userData = entity
             val collider = Collider(body, transform)
@@ -148,7 +149,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachCircleColliderComponent(radius: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
+        fun attachCircleColliderComponent(radius: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody, aliveOnStart: Boolean = true): Builder<T> {
             val transform = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
 
@@ -169,6 +170,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             fixtureDef.density = 1.0f
             fixtureDef.restitution = 0.0f
             body.createFixture(fixtureDef)
+            body.isActive = aliveOnStart
 
             body.userData = entity
             val collider = Collider(body, transform)
@@ -177,7 +179,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachPolygonColliderComponent(vertices: FloatArray, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody): Builder<T> {
+        fun attachPolygonColliderComponent(vertices: FloatArray, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody, aliveOnStart: Boolean = true): Builder<T> {
             val transform = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
 
@@ -198,6 +200,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             fixtureDef.density = 1.0f
             fixtureDef.restitution = 0.0f
             body.createFixture(fixtureDef)
+            body.isActive = aliveOnStart
 
             body.userData = entity
             val collider = Collider(body, transform)
