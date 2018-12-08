@@ -1,6 +1,7 @@
 package rain.util
 
 import org.lwjgl.BufferUtils
+import rain.log
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -51,6 +52,7 @@ fun readFileAsByteBuffer(filePath: String): ByteBuffer {
         buf.put(data)
         buf.flip()
         fileStream.close()
+        log("Loaded $filePath with size ${data.size} bytes.")
         return buf
     }
 

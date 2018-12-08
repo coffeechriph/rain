@@ -9,18 +9,21 @@ import rain.api.gfx.TextureFilter
 
 class Gui(private val resourceFactory: ResourceFactory, private val renderer: Renderer) {
     private val containers = ArrayList<Container>()
-    private lateinit var material: Material
+    private lateinit var componentMaterial: Material
+    private lateinit var textMaterial: Material
     lateinit var font: Font
 
     fun init() {
-        val guiSkin = resourceFactory.loadTexture2d("guiTexture","./data/textures/skin.png", TextureFilter.NEAREST)
         font = Font("./data/fonts/FreeSans.ttf")
         font.buildBitmap(resourceFactory, 1024, 1024, 20.0f)
-        material = resourceFactory.createMaterial("guiMaterial","./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", arrayOf(guiSkin, font.texture), Vector3f(1.0f, 1.0f, 1.0f))
+        textMaterial = resourceFactory.createMaterial("guiTextMaterial","./data/shaders/text.vert.spv", "./data/shaders/text.frag.spv", font.texture, Vector3f(1.0f, 1.0f, 1.0f))
+
+        val guiSkin = resourceFactory.loadTexture2d("guiTexture","./data/textures/skin.png", TextureFilter.NEAREST)
+        componentMaterial = resourceFactory.createMaterial("guiMaterial","./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", guiSkin, Vector3f(1.0f, 1.0f, 1.0f))
     }
 
     fun newContainer(x: Float, y: Float, w: Float, h: Float): Container {
-        val c = Container(material, resourceFactory, font)
+        val c = Container(componentMaterial, textMaterial, resourceFactory, font)
         c.transform.x = x
         c.transform.y = y
         c.transform.sx = w
@@ -51,6 +54,9 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
 
     fun clear() {
         containers.clear()
-        //font.destroy()
+
+        if (::font.isInitialized) {
+            font.destroy()
+        }
     }
 }

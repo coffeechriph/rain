@@ -13,7 +13,8 @@ void main() {
       discard;
     }
     else {
-      color = texture(texSampler, Uv);
+      color.a = texture(texSampler, Uv).r;
+      color.rgb = vec3(1.0);
 
       if (color.a < 0.01f) {
           discard;

@@ -6,6 +6,7 @@ import org.lwjgl.vulkan.VK10.*
 import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
 import rain.assertion
+import rain.log
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanVertexBuffer: VertexBuffer {
@@ -87,6 +88,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
             vertexSize += attribute.count
         }
 
+        log("Vertex count: ${vertices.size}, vertex size: $vertexSize")
         vertexCount = vertices.size / vertexSize
         this.vertexSize = vertexSize
         this.vk = vk

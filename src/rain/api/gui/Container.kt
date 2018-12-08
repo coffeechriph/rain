@@ -17,7 +17,7 @@ import kotlin.math.floor
 // TODO: We want a nice way to hide/show single components
 // TODO: The problem currently is that if every component is hidden we can't update the vertex buffers as they
 // TODO: Would be empty..
-class Container(private val material: Material, val resourceFactory: ResourceFactory, val font: Font) {
+class Container(private val material: Material, private val textMateiral: Material, val resourceFactory: ResourceFactory, val font: Font) {
     val transform = Transform()
     var isDirty = false
     var visible = true
@@ -37,15 +37,13 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     private lateinit var componentBuffer: VertexBuffer
     private lateinit var textBuffer: VertexBuffer
 
-    private fun getUniformData(textureIndex: Int): ByteBuffer {
+    private fun getUniformData(): ByteBuffer {
         val uniformData = memAlloc(18 * 4)
         val f = uniformData.asFloatBuffer()
-        f.put(transform.x)
-        f.put(transform.y)
-        f.put(transform.sx)
-        f.put(transform.sy)
-        f.put(textureIndex.toFloat())
-        f.put(floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f))
+        f.put(0, transform.x)
+        f.put(1, transform.y)
+        f.put(2, transform.sx)
+        f.put(3, transform.sy)
         f.flip()
 
         return uniformData
@@ -105,7 +103,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     private fun buildComponentVertices(renderer: Renderer) {
-        val depth = renderer.getDepthRange().y - 0.1f
+        val depth = renderer.getDepthRange().y - 0.15f
         val list = ArrayList<Float>()
 
         for (component in components) {
@@ -178,7 +176,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     }
 
     private fun buildTextVertices(renderer: Renderer) {
-        val depth = renderer.getDepthRange().y
+        val depth = renderer.getDepthRange().y - 0.1f
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
         val list = ArrayList<Float>()
@@ -262,7 +260,7 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
 
         if (list.size > 0) {
             if (!::textBuffer.isInitialized) {
-                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
+                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
             }
 
             textBuffer.update(list.toFloatArray())
@@ -323,11 +321,11 @@ class Container(private val material: Material, val resourceFactory: ResourceFac
     fun render(renderer: Renderer) {
         if (visible) {
             if (::componentBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(transform, material, getUniformData(0), componentBuffer))
+                renderer.submitDraw(Drawable(transform, material, getUniformData(), componentBuffer))
             }
 
             if (::textBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(transform, material, getUniformData(1), textBuffer))
+                renderer.submitDraw(Drawable(transform, textMateiral, getUniformData(), textBuffer))
             }
         }
     }
