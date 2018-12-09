@@ -54,10 +54,10 @@ class Inventory(val gui: Gui, val player: Player) {
         container.background = true
         container.visible = false
 
-        dropButton.x = 235.0f
-        dropButton.y = 145.0f
-        dropButton.w = 200.0f
-        dropButton.h = 20.0f
+        dropButton.x = 230.0f
+        dropButton.y = 142.0f
+        dropButton.w = 268.0f
+        dropButton.h = 30.0f
         dropButton.text = "Drop"
         container.addComponent(dropButton)
 
@@ -123,7 +123,7 @@ class Inventory(val gui: Gui, val player: Player) {
             updateEquippedItems()
             updateSelectedItemDesc(selectedItemIndex)
         }
-        else if(dropButton.active) {
+        else if(dropButton.active && selectedItemIndex < items.size-1) {
             selectedItem = items[selectedItemIndex]
             if (selectedItem != ItemNone) {
                 if (selectedItem == equippedWeapon) {

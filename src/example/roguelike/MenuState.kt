@@ -35,6 +35,9 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         scene.setActiveCamera(camera)
 
         menuContainer = gui.newContainer(0.0f, 0.0f, 1280.0f, 768.0f)
+        menuContainer.skin.backgroundColors["button"] = Vector3f(143.0f / 255.0f, 114.0f / 255.0f, 73.0f / 255.0f)
+        menuContainer.skin.foregroundColors["text"] = Vector3f(240.0f / 255.0f, 207.0f / 255.0f, 117.0f / 255.0f)
+
         startGameButton = ToggleButton()
         startGameButton.x = 1280.0f / 2.0f - 100.0f
         startGameButton.y = 280.0f

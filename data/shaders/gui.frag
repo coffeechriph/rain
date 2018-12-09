@@ -3,7 +3,7 @@
 layout(location = 0) out vec4 color;
 layout(binding = 0) uniform sampler2D texSampler;
 
-layout(location = 0) in vec2 Uv;
+layout(location = 0) in vec3 Color;
 layout(location = 1) in vec2 fpos;
 layout(location = 2) in vec4 containerData;
 
@@ -13,10 +13,6 @@ void main() {
       discard;
     }
     else {
-      color = texture(texSampler, Uv);
-
-      if (color.a < 0.01f) {
-          discard;
-      }
+      color = vec4(Color, 1.0f);
     }
 }

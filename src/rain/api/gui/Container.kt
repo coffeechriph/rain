@@ -17,7 +17,7 @@ import kotlin.math.floor
 // TODO: We want a nice way to hide/show single components
 // TODO: The problem currently is that if every component is hidden we can't update the vertex buffers as they
 // TODO: Would be empty..
-class Container(private val material: Material, private val textMateiral: Material, val resourceFactory: ResourceFactory, val font: Font) {
+class Container(private val material: Material, private val textMaterial: Material, val resourceFactory: ResourceFactory, val font: Font) {
     val transform = Transform()
     var isDirty = false
     var visible = true
@@ -31,6 +31,7 @@ class Container(private val material: Material, private val textMateiral: Materi
             field = value
             isDirty = true
         }
+    var skin = Skin()
     private val components = ArrayList<GuiC>()
     private val textfields = ArrayList<Text>()
     private var lastTriggeredComponent: GuiC? = null
@@ -113,19 +114,19 @@ class Container(private val material: Material, private val textMateiral: Materi
             val h = component.h
 
             if (component is Button || component is ToggleButton) {
-                val px = if (component.active) {
-                    0.5f
+                val color = if (component.active) {
+                    skin.activeColors["button"]
                 } else {
-                    0.0f
-                }
+                    skin.backgroundColors["button"]
+                }!!
 
                 list.addAll(listOf(
-                        x, y, depth, px, 0.0f,
-                        x, y + h, depth, px, 0.5f,
-                        x + w, y + h, depth, px + 0.25f, 0.5f,
-                        x + w, y + h, depth, px + 0.25f, 0.5f,
-                        x + w, y, depth, px + 0.25f, 0.0f,
-                        x, y, depth, px, 0.0f))
+                        x, y, depth, color.x, color.y, color.z,
+                        x, y + h, depth, color.x, color.y, color.z,
+                        x + w, y + h, depth, color.x, color.y, color.z,
+                        x + w, y + h, depth, color.x, color.y, color.z,
+                        x + w, y, depth, color.x, color.y, color.z,
+                        x, y, depth, color.x, color.y, color.z))
             }
         }
 
@@ -141,14 +142,14 @@ class Container(private val material: Material, private val textMateiral: Materi
                 val x = text.x
                 val y = text.y
                 val h = text.h
-                // TODO: Support different styled backgrounds
+                val color = skin.backgroundColors["text"]!!
                 list.addAll(listOf(
-                        x, y, depth, 0.0f, 0.0f,
-                        x, y + h, depth, 0.0f, 0.5f,
-                        x + w, y + h, depth, 0.25f, 0.5f,
-                        x + w, y + h, depth, 0.25f, 0.5f,
-                        x + w, y, depth, 0.25f, 0.0f,
-                        x, y, depth, 0.0f, 0.0f))
+                        x, y, depth, color.x, color.y, color.z,
+                        x, y + h, depth, color.x, color.y, color.z,
+                        x + w, y + h, depth, color.x, color.y, color.z,
+                        x + w, y + h, depth, color.x, color.y, color.z,
+                        x + w, y, depth, color.x, color.y, color.z,
+                        x, y, depth, color.x, color.y, color.z))
             }
         }
 
@@ -156,19 +157,19 @@ class Container(private val material: Material, private val textMateiral: Materi
         if (background) {
             val w = transform.sx
             val h = transform.sy
-
+            val color = skin.backgroundColors["container"]!!
             list.addAll(listOf(
-                    0.0f, 0.0f, depth, 0.0f, 0.0f,
-                    0.0f, h, depth, 0.0f, 0.5f,
-                    w, h, depth, 0.25f, 0.5f,
-                    w, h, depth, 0.25f, 0.5f,
-                    w, 0.0f, depth, 0.25f, 0.0f,
-                    0.0f, 0.0f, depth, 0.0f, 0.0f))
+                    0.0f, 0.0f, depth, color.x, color.y, color.z,
+                    0.0f, h, depth, color.x, color.y, color.z,
+                    w, h, depth, color.x, color.y, color.z,
+                    w, h, depth, color.x, color.y, color.z,
+                    w, 0.0f, depth, color.x, color.y, color.z,
+                    0.0f, 0.0f, depth, color.x, color.y, color.z))
         }
 
         if (list.size > 0) {
             if (!::componentBuffer.isInitialized) {
-                componentBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
+                componentBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 3)))
             }
 
             componentBuffer.update(list.toFloatArray())
@@ -178,6 +179,8 @@ class Container(private val material: Material, private val textMateiral: Materi
     private fun buildTextVertices(renderer: Renderer) {
         val depth = renderer.getDepthRange().y - 0.1f
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
+        val color = skin.foregroundColors["text"]!!
+        println("Color text: ${color.x}, ${color.y}, ${color.z}")
 
         val list = ArrayList<Float>()
         for (text in textfields) {
@@ -247,12 +250,12 @@ class Container(private val material: Material, private val textMateiral: Materi
                     val uy2 = vertList[i*8+7]
 
                     list.addAll(listOf(
-                            cx1, cy1, depth, ux1, uy1,
-                            cx1, cy2, depth, ux1, uy2,
-                            cx2, cy2, depth, ux2, uy2,
-                            cx2, cy2, depth, ux2, uy2,
-                            cx2, cy1, depth, ux2, uy1,
-                            cx1, cy1, depth, ux1, uy1
+                            cx1, cy1, depth, ux1, uy1, color.x, color.y, color.z,
+                            cx1, cy2, depth, ux1, uy2, color.x, color.y, color.z,
+                            cx2, cy2, depth, ux2, uy2, color.x, color.y, color.z,
+                            cx2, cy2, depth, ux2, uy2, color.x, color.y, color.z,
+                            cx2, cy1, depth, ux2, uy1, color.x, color.y, color.z,
+                            cx1, cy1, depth, ux1, uy1, color.x, color.y, color.z
                     ))
                 }
             }
@@ -260,7 +263,7 @@ class Container(private val material: Material, private val textMateiral: Materi
 
         if (list.size > 0) {
             if (!::textBuffer.isInitialized) {
-                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
+                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2), VertexAttribute(2, 3)))
             }
 
             textBuffer.update(list.toFloatArray())
@@ -325,7 +328,7 @@ class Container(private val material: Material, private val textMateiral: Materi
             }
 
             if (::textBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(transform, textMateiral, getUniformData(), textBuffer))
+                renderer.submitDraw(Drawable(transform, textMaterial, getUniformData(), textBuffer))
             }
         }
     }
