@@ -15,7 +15,7 @@ void main() {
     }
     else {
       color.a = texture(texSampler, Uv).r;
-      color.rgb = vec3(Color.y, Color.z, Color.x);
+      color.rgb = vec3(Color.x, Color.y, Color.z);
 
       if (color.a < 0.01f) {
           discard;

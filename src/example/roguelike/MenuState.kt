@@ -36,6 +36,8 @@ class MenuState(stateManager: StateManager): State(stateManager) {
 
         menuContainer = gui.newContainer(0.0f, 0.0f, 1280.0f, 768.0f)
         menuContainer.skin.backgroundColors["button"] = Vector3f(143.0f / 255.0f, 114.0f / 255.0f, 73.0f / 255.0f)
+        menuContainer.skin.borderColors["button"] = Vector3f(143.0f / 255.0f * 0.5f, 114.0f / 255.0f * 0.5f, 73.0f / 255.0f * 0.5f)
+        menuContainer.skin.activeColors["button"] = Vector3f(143.0f / 255.0f * 1.25f, 114.0f / 255.0f * 1.25f, 73.0f / 255.0f * 1.25f)
         menuContainer.skin.foregroundColors["text"] = Vector3f(240.0f / 255.0f, 207.0f / 255.0f, 117.0f / 255.0f)
 
         startGameButton = ToggleButton()
@@ -92,6 +94,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
                 startGameButton.h = 60.0f + scale
                 startGameButton.x = 1280.0f / 2.0f - 100.0f - scale / 2.0f
                 startGameButton.y = 280.0f - scale / 2.0f
+                startGameButton.outlineWidth = 4
                 startGameButton.active = true
                 settingsButton.active = false
                 exitButton.active = false
@@ -100,11 +103,13 @@ class MenuState(stateManager: StateManager): State(stateManager) {
                 settingsButton.y = 370.0f
                 settingsButton.w = 200.0f
                 settingsButton.h = 60.0f
+                settingsButton.outlineWidth = 4
 
                 exitButton.x = 1280.0f / 2.0f - 100.0f
                 exitButton.y = 460.0f
                 exitButton.w = 200.0f
                 exitButton.h = 60.0f
+                exitButton.outlineWidth = 4
             }
             1 -> {
                 settingsButton.w = 200.0f + scale

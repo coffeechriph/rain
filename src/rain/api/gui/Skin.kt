@@ -12,9 +12,9 @@ class Skin {
         Pair("text", Vector3f(1.0f, 1.0f, 1.0f))
     )
     val borderColors: HashMap<String, Vector3f> = hashMapOf(
-        Pair("container", Vector3f(0.2f, 0.2f, 0.2f)),
-        Pair("button", Vector3f(0.2f, 0.2f, 0.2f)),
-        Pair("text", Vector3f(0.2f, 0.2f, 0.2f))
+        Pair("container", Vector3f(0.1f, 0.1f, 0.1f)),
+        Pair("button", Vector3f(0.1f, 0.1f, 0.1f)),
+        Pair("text", Vector3f(0.1f, 0.1f, 0.1f))
     )
     val activeColors: HashMap<String, Vector3f> = hashMapOf(
         Pair("button", Vector3f(0.5f, 0.5f, 0.5f))

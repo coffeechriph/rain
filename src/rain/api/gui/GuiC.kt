@@ -6,6 +6,12 @@ open class GuiC() {
     var w = 0.0f
     var h = 0.0f
     var active = false
+    var outline = true
+        set(value) {
+            field = value
+            container.isDirty = true
+        }
+    var outlineWidth = 1
     var text = "Nothing"
     lateinit var container: Container
 

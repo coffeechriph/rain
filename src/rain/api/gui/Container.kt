@@ -22,14 +22,18 @@ class Container(private val material: Material, private val textMaterial: Materi
     var isDirty = false
     var visible = true
         set(value) {
+            if (field != value) {
+                isDirty = true
+            }
             field = value
-            isDirty = true
         }
 
     var background = false
         set(value) {
+            if (field != value) {
+                isDirty = true
+            }
             field = value
-            isDirty = true
         }
     var skin = Skin()
     private val components = ArrayList<GuiC>()
@@ -120,13 +124,34 @@ class Container(private val material: Material, private val textMaterial: Materi
                     skin.backgroundColors["button"]
                 }!!
 
-                list.addAll(listOf(
-                        x, y, depth, color.x, color.y, color.z,
-                        x, y + h, depth, color.x, color.y, color.z,
-                        x + w, y + h, depth, color.x, color.y, color.z,
-                        x + w, y + h, depth, color.x, color.y, color.z,
-                        x + w, y, depth, color.x, color.y, color.z,
-                        x, y, depth, color.x, color.y, color.z))
+                if (!component.outline) {
+                    list.addAll(listOf(
+                            x, y, depth, color.x, color.y, color.z,
+                            x, y + h, depth, color.x, color.y, color.z,
+                            x + w, y + h, depth, color.x, color.y, color.z,
+                            x + w, y + h, depth, color.x, color.y, color.z,
+                            x + w, y, depth, color.x, color.y, color.z,
+                            x, y, depth, color.x, color.y, color.z))
+                }
+                else {
+                    val ow = component.outlineWidth / 2.0f
+                    list.addAll(listOf(
+                            x + ow, y + ow, depth, color.x, color.y, color.z,
+                            x + ow, y + h - ow, depth, color.x, color.y, color.z,
+                            x + w - ow, y + h - ow, depth, color.x, color.y, color.z,
+                            x + w - ow, y + h - ow, depth, color.x, color.y, color.z,
+                            x + w - ow, y + ow, depth, color.x, color.y, color.z,
+                            x + ow, y + ow, depth, color.x, color.y, color.z))
+
+                    val c = skin.borderColors["button"]!!
+                    list.addAll(listOf(
+                            x, y, depth-0.1f, c.x, c.y, c.z,
+                            x, y + h, depth-0.1f, c.x, c.y, c.z,
+                            x + w, y + h, depth-0.1f, c.x, c.y, c.z,
+                            x + w, y + h, depth-0.1f, c.x, c.y, c.z,
+                            x + w, y, depth-0.1f, c.x, c.y, c.z,
+                            x, y, depth-0.1f, c.x, c.y, c.z))
+                }
             }
         }
 
@@ -159,12 +184,12 @@ class Container(private val material: Material, private val textMaterial: Materi
             val h = transform.sy
             val color = skin.backgroundColors["container"]!!
             list.addAll(listOf(
-                    0.0f, 0.0f, depth, color.x, color.y, color.z,
-                    0.0f, h, depth, color.x, color.y, color.z,
-                    w, h, depth, color.x, color.y, color.z,
-                    w, h, depth, color.x, color.y, color.z,
-                    w, 0.0f, depth, color.x, color.y, color.z,
-                    0.0f, 0.0f, depth, color.x, color.y, color.z))
+                    0.0f, 0.0f, depth-0.15f, color.x, color.y, color.z,
+                    0.0f, h, depth-0.15f, color.x, color.y, color.z,
+                    w, h, depth-0.15f, color.x, color.y, color.z,
+                    w, h, depth-0.15f, color.x, color.y, color.z,
+                    w, 0.0f, depth-0.15f, color.x, color.y, color.z,
+                    0.0f, 0.0f, depth-0.15f, color.x, color.y, color.z))
         }
 
         if (list.size > 0) {
@@ -249,12 +274,12 @@ class Container(private val material: Material, private val textMaterial: Materi
                     val uy2 = vertList[i*8+7]
 
                     list.addAll(listOf(
-                            cx1, cy1, depth, ux1, uy1, color.x, color.y, color.z,
-                            cx1, cy2, depth, ux1, uy2, color.x, color.y, color.z,
-                            cx2, cy2, depth, ux2, uy2, color.x, color.y, color.z,
-                            cx2, cy2, depth, ux2, uy2, color.x, color.y, color.z,
-                            cx2, cy1, depth, ux2, uy1, color.x, color.y, color.z,
-                            cx1, cy1, depth, ux1, uy1, color.x, color.y, color.z
+                            cx1, cy1, depth, color.x, color.y, color.z, ux1, uy1,
+                            cx1, cy2, depth, color.x, color.y, color.z, ux1, uy2,
+                            cx2, cy2, depth, color.x, color.y, color.z, ux2, uy2,
+                            cx2, cy2, depth, color.x, color.y, color.z, ux2, uy2,
+                            cx2, cy1, depth, color.x, color.y, color.z, ux2, uy1,
+                            cx1, cy1, depth, color.x, color.y, color.z, ux1, uy1
                     ))
                 }
             }
@@ -262,7 +287,7 @@ class Container(private val material: Material, private val textMaterial: Materi
 
         if (list.size > 0) {
             if (!::textBuffer.isInitialized) {
-                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2), VertexAttribute(2, 3)))
+                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 3), VertexAttribute(2, 2)))
             }
 
             textBuffer.update(list.toFloatArray())
