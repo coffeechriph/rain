@@ -33,8 +33,6 @@ open class Rain {
         }
 
         gui = Gui(resourceFactory, vulkanRenderer)
-        //gui.init()
-
         stateManager = StateManager(resourceFactory, scene, gui, input)
     }
 

@@ -46,8 +46,10 @@ internal class UniformBuffer {
     }
 
     fun destroy(logicalDevice: LogicalDevice) {
-        for (b in buffer) {
-            vkDestroyBuffer(logicalDevice.device, b, null)
+        if (::buffer.isInitialized) {
+            for (b in buffer) {
+                vkDestroyBuffer(logicalDevice.device, b, null)
+            }
         }
     }
 }

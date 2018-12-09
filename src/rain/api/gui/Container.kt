@@ -180,7 +180,6 @@ class Container(private val material: Material, private val textMaterial: Materi
         val depth = renderer.getDepthRange().y - 0.1f
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
         val color = skin.foregroundColors["text"]!!
-        println("Color text: ${color.x}, ${color.y}, ${color.z}")
 
         val list = ArrayList<Float>()
         for (text in textfields) {

@@ -2,8 +2,8 @@ package rain.vulkan
 
 import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
-import rain.assertion
 import rain.api.gfx.*
+import rain.assertion
 import rain.log
 import java.nio.ByteBuffer
 
@@ -39,7 +39,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     }
 
     // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
-    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d, color: Vector3f): Material {
+    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, color: Vector3f): Material {
         log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
@@ -49,10 +49,11 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
         fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
 
-        shaders.put(vertex.id, vertex)
-        shaders.put(fragment.id, fragment)
+        shaders[vertex.id] = vertex
+        shaders[fragment.id] = fragment
 
-        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, Array(1){texture2d}, color, logicalDevice, physicalDevice.memoryProperties)
+        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L)}}
+        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, textures, color, logicalDevice, physicalDevice.memoryProperties)
         materials.add(material)
 
         return material
@@ -68,10 +69,11 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
         fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
 
-        shaders.put(vertex.id, vertex)
-        shaders.put(fragment.id, fragment)
+        shaders[vertex.id] = vertex
+        shaders[fragment.id] = fragment
 
-        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, texture2d, color, logicalDevice, physicalDevice.memoryProperties)
+        val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L)} }
+        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, textures, color, logicalDevice, physicalDevice.memoryProperties)
         materials.add(material)
 
         return material

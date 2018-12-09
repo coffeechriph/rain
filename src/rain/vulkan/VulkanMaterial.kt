@@ -18,15 +18,17 @@ texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: Lo
     }
 
     init {
-        val textureDataBuffer = memAlloc(2 * texture2d.size * 4)
-        val textureDataBufferF = textureDataBuffer.asFloatBuffer()
+        if (texture2d.isNotEmpty()) {
+            val textureDataBuffer = memAlloc(2 * texture2d.size * 4)
+            val textureDataBufferF = textureDataBuffer.asFloatBuffer()
 
-        for (i in 0 until texture2d.size) {
-            textureDataBufferF.put(0, texture2d[i].getTexCoordWidth())
-            textureDataBufferF.put(1, texture2d[i].getTexCoordHeight())
+            for (i in 0 until texture2d.size) {
+                textureDataBufferF.put(0, texture2d[i].getTexCoordWidth())
+                textureDataBufferF.put(1, texture2d[i].getTexCoordHeight())
+            }
+            textureDataUBO.create(logicalDevice, memoryProperties, BufferMode.SINGLE_BUFFER, textureDataBuffer.remaining().toLong())
+            textureDataUBO.update(logicalDevice, textureDataBuffer, 0)
         }
-        textureDataUBO.create(logicalDevice, memoryProperties, BufferMode.SINGLE_BUFFER, textureDataBuffer.remaining().toLong())
-        textureDataUBO.update(logicalDevice, textureDataBuffer, 0)
 
         val sceneDataBuffer = memAlloc(16 * 4)
         val sceneDataBufferF = sceneDataBuffer.asFloatBuffer()
@@ -45,13 +47,17 @@ texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: Lo
 
         descriptorPool
             .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_VERTEX_BIT)
-            .withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
-            .build(logicalDevice)
+
+        if (texture2d.isNotEmpty()) {
+            descriptorPool.withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+        }
+
+        descriptorPool.build(logicalDevice)
     }
 
     fun destroy() {
         sceneData.destroy(logicalDevice)
         textureDataUBO.destroy(logicalDevice)
-        //descriptorPool.destroy(logicalDevice)
+        descriptorPool.destroy(logicalDevice)
     }
 }
