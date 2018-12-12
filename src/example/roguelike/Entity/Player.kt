@@ -6,11 +6,11 @@ import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
 
-class Player() : Entity() {
-    private var left_active = false
-    private var right_active = false
-    private var up_active = false
-    private var down_active = false
+class Player : Entity() {
+    private var leftActive = false
+    private var rightActive = false
+    private var upActive = false
+    private var downActive = false
 
     var playerMovedCell = false
     var cellX = 0
@@ -101,19 +101,19 @@ class Player() : Entity() {
 
         var velX = 0.0f
         var velY = 0.0f
-        if (left_active) {
+        if (leftActive) {
             velX -= 120.0f
         }
 
-        if (right_active) {
+        if (rightActive) {
             velX += 120.0f
         }
 
-        if (up_active) {
+        if (upActive) {
             velY -= 120.0f
         }
 
-        if (down_active) {
+        if (downActive) {
             velY += 120.0f
         }
 
@@ -166,27 +166,27 @@ class Player() : Entity() {
 
     private fun setDirectionBasedOnInput(input: Input) {
         if (input.keyState(Input.Key.KEY_A) == Input.InputState.PRESSED) {
-            left_active = true
+            leftActive = true
         } else if (input.keyState(Input.Key.KEY_A) == Input.InputState.RELEASED) {
-            left_active = false
+            leftActive = false
         }
 
         if (input.keyState(Input.Key.KEY_D) == Input.InputState.PRESSED) {
-            right_active = true
+            rightActive = true
         } else if (input.keyState(Input.Key.KEY_D) == Input.InputState.RELEASED) {
-            right_active = false
+            rightActive = false
         }
 
         if (input.keyState(Input.Key.KEY_W) == Input.InputState.PRESSED) {
-            up_active = true
+            upActive = true
         } else if (input.keyState(Input.Key.KEY_W) == Input.InputState.RELEASED) {
-            up_active = false
+            upActive = false
         }
 
         if (input.keyState(Input.Key.KEY_S) == Input.InputState.PRESSED) {
-            down_active = true
+            downActive = true
         } else if (input.keyState(Input.Key.KEY_S) == Input.InputState.RELEASED) {
-            down_active = false
+            downActive = false
         }
     }
 

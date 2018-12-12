@@ -6,13 +6,13 @@ plugins {
 apply plugin: 'kotlin'
 apply plugin: 'application'
 group '1'
-version '1.0-SNAPSHOT'
+version '1.0'
 mainClassName = "example.roguelike.MainKt"
 applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
 
 sourceCompatibility = '11'
 targetCompatibility= '11'
-project.ext.lwjglVersion = "3.2.1-SNAPSHOT"
+project.ext.lwjglVersion = "3.2.1"
 project.ext.jomlVersion = "1.9.11"
 project.ext.lwjglNatives = "natives-macos"
 
@@ -22,7 +22,7 @@ repositories {
 }
 
 ext {
-    gdxVersion = '1.9.9-SNAPSHOT'
+    gdxVersion = '1.9.9'
 }
 
 dependencies {
