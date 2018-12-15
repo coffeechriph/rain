@@ -4,6 +4,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
+import org.joml.Vector2f
 import org.joml.Vector2i
 import rain.assertion
 import rain.api.gfx.Material
@@ -17,11 +18,13 @@ class EntitySystem<T: Entity>(val scene: Scene) {
     private var spriteComponents = ArrayList<Sprite?>()
     private var animatorComponents = ArrayList<Animator?>()
     private var colliderComponents = ArrayList<Collider?>()
+    private var particleEmitters = ArrayList<ParticleEmitter?>()
 
     private var spriteComponentsMap = HashMap<Long, Sprite?>()
     private var transformComponentsMap = HashMap<Long, Transform?>()
     private var colliderComponentsMap = HashMap<Long, Collider?>()
     private var animatorComponentsMap = HashMap<Long, Animator?>()
+    private var particleEmittersMap = HashMap<Long, ParticleEmitter?>()
     private var entityWrappersMap = HashMap<Long, T?>()
 
     fun newEntity(entity: T): Builder<T> {
@@ -58,6 +61,12 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             animatorComponentsMap.remove(entity.getId())
         }
 
+        val particleEmitter = particleEmittersMap[entity.getId()]
+        if (particleEmitter != null) {
+            particleEmitters.remove(particleEmitter)
+            particleEmittersMap.remove(entity.getId())
+        }
+
         entityWrappersMap.remove(entity.getId())
         entityWrappers.remove(entity)
     }
@@ -73,6 +82,8 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         entityWrappersMap.clear()
         animatorComponents.clear()
         animatorComponentsMap.clear()
+        particleEmitters.clear()
+        particleEmittersMap.clear()
 
         for (collider in colliderComponents) {
             scene.physicWorld.destroyBody(collider!!.getBody())
@@ -206,6 +217,19 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             val collider = Collider(body, transform)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
+            return this
+        }
+
+        fun attachParticleEmitter(): Builder<T> {
+            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
+
+            if (system.particleEmittersMap.containsKey(entityId)) {
+                assertion("A entity may only have 1 particleEmitter component attached at once!")
+            }
+
+            val emitter = ParticleEmitter(entityId, 10, 32.0f, 10.0f, Vector2f(0.0f, -1.0f))
+            system.particleEmitters.add(emitter)
+            system.particleEmittersMap[entityId] = emitter
             return this
         }
 
