@@ -8,6 +8,7 @@ import org.joml.Vector2f
 import org.joml.Vector2i
 import rain.assertion
 import rain.api.gfx.Material
+import rain.api.gfx.ResourceFactory
 import rain.api.scene.Scene
 
 class EntitySystem<T: Entity>(val scene: Scene) {
@@ -220,14 +221,14 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachParticleEmitter(): Builder<T> {
+        fun attachParticleEmitter(resourceFactory: ResourceFactory): Builder<T> {
             val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
 
             if (system.particleEmittersMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = ParticleEmitter(entityId, 10, 32.0f, 10.0f, Vector2f(0.0f, -1.0f))
+            val emitter = ParticleEmitter(resourceFactory, transform, 100, 32.0f, 4.0f, Vector2f(0.0f, -4.0f), 32.0f)
             system.particleEmitters.add(emitter)
             system.particleEmittersMap[entityId] = emitter
             return this
@@ -260,6 +261,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return colliderComponentsMap[entityId]
     }
 
+    fun findEmitterComponent(entityId: Long): ParticleEmitter? {
+        return particleEmittersMap[entityId]
+    }
+
     internal fun findEntity(entityId: Long): T? {
         return entityWrappersMap[entityId]
     }
@@ -278,6 +283,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
 
     internal fun getAnimatorList(): List<Animator?> {
         return animatorComponents
+    }
+
+    internal fun getParticleEmitterList(): List<ParticleEmitter?> {
+        return particleEmitters
     }
 
     private fun uniqueId(): Long {

@@ -88,7 +88,7 @@ internal class Pipeline {
                 // No depth test/write and no stencil used
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO)
                 .depthTestEnable(true)
-                .depthWriteEnable(true)
+                .depthWriteEnable(material.depthWriteEnabled)
                 .depthCompareOp(VK_COMPARE_OP_LESS)
                 .depthBoundsTestEnable(false)
                 .stencilTestEnable(false)

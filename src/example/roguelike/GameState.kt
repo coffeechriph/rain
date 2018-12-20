@@ -50,6 +50,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .attachSpriteComponent(mobMaterial)
                 .attachAnimatorComponent()
                 .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
+                .attachParticleEmitter(resourceFactory)
                 .build()
         scene.addSystem(playerSystem)
         level = Level(player)

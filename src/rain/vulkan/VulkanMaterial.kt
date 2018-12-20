@@ -8,7 +8,7 @@ import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
 
 internal class VulkanMaterial(val id: Long, val name: String, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val
-texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties) : Material {
+texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, val depthWriteEnabled: Boolean = true) : Material {
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer()
     internal val sceneData = UniformBuffer()

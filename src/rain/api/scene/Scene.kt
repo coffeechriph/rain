@@ -4,6 +4,8 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
 import org.joml.Vector2f
+import org.joml.Vector3f
+import org.lwjgl.vulkan.VK10
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -19,6 +21,7 @@ class Scene {
     private var physicsContactListener = PhysicsContactListener()
 
     private var camera = Camera(Vector2f(0.0f, 20.0f))
+    private lateinit var emitterMaterial: Material
 
     fun<T: Entity> addSystem(system: EntitySystem<T>) {
         entitySystems.add(system as EntitySystem<Entity>)
@@ -47,6 +50,7 @@ class Scene {
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
+        this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv", null, Vector3f(1.0f, 1.0f, 1.0f), false)
 
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)
@@ -94,6 +98,11 @@ class Scene {
                 }
 
                 submitListSorted.add(Drawable(sprite.transform, sprite.material, sprite.getUniformData(), quadVertexBuffer))
+            }
+
+            for (emitter in system.getParticleEmitterList()) {
+                emitter!!.update(system, deltaTime)
+                submitListSorted.add(Drawable(emitter.transform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer))
             }
 
             for (collider in system.getColliderList()) {
