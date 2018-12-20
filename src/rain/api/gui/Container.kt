@@ -348,11 +348,11 @@ class Container(private val material: Material, private val textMaterial: Materi
     fun render(renderer: Renderer) {
         if (visible) {
             if (::componentBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(transform, material, getUniformData(), componentBuffer))
+                renderer.submitDraw(Drawable(transform, material, getUniformData(), componentBuffer, null))
             }
 
             if (::textBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(transform, textMaterial, getUniformData(), textBuffer))
+                renderer.submitDraw(Drawable(transform, textMaterial, getUniformData(), textBuffer, null))
             }
         }
     }

@@ -8,11 +8,11 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
-import rain.assertion
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
-import rain.log
 import rain.api.scene.Camera
+import rain.assertion
+import rain.log
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -257,8 +257,16 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         for (draw in drawOpsQueue) {
             val mat = draw.material as VulkanMaterial
             val buffer = draw.vertexBuffer as VulkanVertexBuffer
+
+            val indices = if (draw.indexBuffer != null) {
+                draw.indexBuffer as VulkanIndexBuffer
+            } else {
+                null
+            }
+
             var found = false
             for (pipeline in pipelines) {
+                // TODO: Ensure same index buffer as well!
                 if (pipeline.vertexBuffer.id == buffer.id && pipeline.material.id == mat.id) {
                     pipeline.submitDrawInstance(draw)
                     found = true
@@ -267,7 +275,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
             if (!found) {
                 val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, buffer, mat, mat.descriptorPool)
+                pipeline.create(logicalDevice, renderpass, buffer, indices, mat, mat.descriptorPool)
                 pipeline.submitDrawInstance(draw)
                 pipelines.add(pipeline)
             }

@@ -6,10 +6,10 @@ import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2f
 import org.joml.Vector2i
-import rain.assertion
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.scene.Scene
+import rain.assertion
 
 class EntitySystem<T: Entity>(val scene: Scene) {
     private var entityId: Long = 0
@@ -228,7 +228,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = ParticleEmitter(resourceFactory, transform, 100, 32.0f, 4.0f, Vector2f(0.0f, -4.0f), 32.0f)
+            val emitter = ParticleEmitter(resourceFactory, transform, 400, 64.0f, 2.0f, Vector2f(0.0f, -1.6f), 16.0f)
             system.particleEmitters.add(emitter)
             system.particleEmittersMap[entityId] = emitter
             return this

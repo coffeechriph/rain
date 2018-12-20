@@ -5,7 +5,6 @@ import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.vulkan.VK10
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -50,7 +49,8 @@ class Scene {
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
-        this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv", null, Vector3f(1.0f, 1.0f, 1.0f), false)
+        this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv",
+                null, Vector3f(1.0f, 1.0f, 1.0f), false)
 
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)
@@ -63,8 +63,9 @@ class Scene {
         renderer.setActiveCamera(camera)
 
         val submitListSorted = ArrayList<Drawable>()
+        var submitListParticles = ArrayList<Drawable>()
         for (tilemap in tilemaps) {
-            submitListSorted.add(Drawable(tilemap.transform, tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer))
+            submitListSorted.add(Drawable(tilemap.transform, tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, null))
         }
 
         for (system in entitySystems) {
@@ -97,12 +98,12 @@ class Scene {
                     continue
                 }
 
-                submitListSorted.add(Drawable(sprite.transform, sprite.material, sprite.getUniformData(), quadVertexBuffer))
+                submitListSorted.add(Drawable(sprite.transform, sprite.material, sprite.getUniformData(), quadVertexBuffer, null))
             }
 
             for (emitter in system.getParticleEmitterList()) {
-                emitter!!.update(system, deltaTime)
-                submitListSorted.add(Drawable(emitter.transform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer))
+                emitter!!.update(system, deltaTime * 0.5f)
+                submitListParticles.add(Drawable(emitter.transform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.indexBuffer))
             }
 
             for (collider in system.getColliderList()) {
@@ -114,6 +115,9 @@ class Scene {
 
         submitListSorted.sortBy { drawable -> drawable.transform.z }
         for (drawable in submitListSorted) {
+            renderer.submitDraw(drawable)
+        }
+        for (drawable in submitListParticles) {
             renderer.submitDraw(drawable)
         }
     }

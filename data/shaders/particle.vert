@@ -11,6 +11,8 @@ layout(push_constant) uniform ModelMatrix {
     vec2 velocity;
     float time;
     float particleLifetime;
+    vec4 startColor;
+    vec4 endColor;
     float particleSize;
 } inData;
 
@@ -19,6 +21,7 @@ layout(set = 0, binding = 0) uniform SceneData {
 } sceneData;
 
 layout (location = 0) out float alpha;
+layout (location = 1) out vec4 color;
 
 void main() {
     float ftime = inData.time + pos.z;
@@ -30,5 +33,6 @@ void main() {
     float scale = inData.particleSize * (1.0 - alpha);
     px *= scale;
     py *= scale;
-    gl_Position = sceneData.projectionMatrix * inData.matrix * vec4(px, py, 1.0, 1.0);
+    color = mix(inData.startColor, inData.endColor, alpha);
+    gl_Position = sceneData.projectionMatrix * inData.matrix * vec4(px, py, py, 1.0);
 }

@@ -17,12 +17,14 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     private val textures: MutableMap<String, VulkanTexture2d>
     private val shaders: MutableMap<Long, ShaderModule>
     private val buffers: MutableList<VulkanVertexBuffer>
+    private val indexBuffers: MutableList<VulkanIndexBuffer>
 
     init {
         this.materials = ArrayList()
         this.textures = HashMap()
         this.shaders = HashMap()
         this.buffers = ArrayList()
+        this.indexBuffers = ArrayList()
         this.logicalDevice = vk.logicalDevice
         this.physicalDevice = vk.physicalDevice
         this.queue = vk.deviceQueue
@@ -35,6 +37,14 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         val buffer = VulkanVertexBuffer(uniqueId())
         buffer.create(vk, commandPool, vertices, attributes, state)
         buffers.add(buffer)
+        return buffer
+    }
+
+    override fun createIndexBuffer(indices: IntArray, state: VertexBufferState): IndexBuffer {
+        log("Creating index buffer of size ${indices.size*4} bytes.")
+        val buffer = VulkanIndexBuffer(uniqueId())
+        buffer.create(vk, commandPool, indices, state)
+        indexBuffers.add(buffer)
         return buffer
     }
 

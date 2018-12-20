@@ -3,8 +3,8 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.assertion
 import rain.api.gfx.Drawable
+import rain.assertion
 import java.nio.LongBuffer
 import java.util.*
 
@@ -16,6 +16,9 @@ internal class Pipeline {
         private set
 
     lateinit var vertexBuffer: VulkanVertexBuffer
+        private set
+
+    var indexBuffer: VulkanIndexBuffer? = null
         private set
 
     private lateinit var pOffset: LongBuffer // Used to temporarily store return values from vulkan
@@ -31,7 +34,8 @@ internal class Pipeline {
         nextFrameDrawQueue.add(draw)
     }
 
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, material: VulkanMaterial, descriptorPool: DescriptorPool) {
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, vertexBuffer: VulkanVertexBuffer, indexBuffer: VulkanIndexBuffer?, material:
+    VulkanMaterial, descriptorPool: DescriptorPool) {
         var err: Int
         // Vertex input state
         // Describes the topoloy used with this pipeline
@@ -123,7 +127,7 @@ internal class Pipeline {
         // They include a ModelMatrix and a tile offset for the current texture used
         val pushConstantRange = VkPushConstantRange.calloc(1)
                 .stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
-                .size(18 * 4)
+                .size(32 * 4)
                 .offset(0)
 
         // Create the pipeline layout that is used to generate the rendering pipelines that
@@ -166,6 +170,7 @@ internal class Pipeline {
         pBuffer = memAllocLong(1)
         pOffset = memAllocLong(1)
         this.vertexBuffer = vertexBuffer
+        this.indexBuffer = indexBuffer
         this.vertesShaderId = material.vertexShader.id
         this.fragmentShaderId = material.fragmentShader.id
         this.descriptorPool = descriptorPool
@@ -199,6 +204,10 @@ internal class Pipeline {
         pBuffer.put(0, vertexBuffer.buffer)
         vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
 
+        if (indexBuffer != null) {
+            vkCmdBindIndexBuffer(cmdBuffer.buffer, indexBuffer!!.buffer, 0, VK_INDEX_TYPE_UINT32)
+        }
+
         val pDescriptorSet = memAllocLong(descriptorPool.descriptorSets.size)
         for (i in 0 until descriptorPool.descriptorSets.size) {
             if (descriptorPool.descriptorSets[i].bufferMode == BufferMode.SINGLE_BUFFER) {
@@ -217,7 +226,14 @@ internal class Pipeline {
             val pushData = drawable.uniformData
 
             vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-            vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
+
+            // TODO: Might want to avoid this if statement
+            if (drawable.indexBuffer == null) {
+                vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
+            }
+            else {
+                vkCmdDrawIndexed(cmdBuffer.buffer, indexBuffer!!.indexCount, 1, 0, 0, 0)
+            }
         }
     }
 }
