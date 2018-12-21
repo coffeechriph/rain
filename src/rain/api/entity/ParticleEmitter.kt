@@ -3,6 +3,7 @@ package rain.api.entity
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil
 import rain.api.gfx.IndexBuffer
 import rain.api.gfx.ResourceFactory
@@ -12,48 +13,37 @@ import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import java.util.*
 
-class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transform: Transform, numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, particleSpread: Float) {
+class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transform: Transform, private val numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, particleSpread: Float) {
     var vertexBuffer: VertexBuffer
         private set
     var indexBuffer: IndexBuffer
         private set
-    var startColor = Vector3f(1.0f, 0.0f, 0.0f)
-    var endColor = Vector3f(0.0f, 1.0f, 0.0f)
+    var startColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f)
+    var endColor = Vector4f(0.0f, 1.0f, 0.0f, 0.0f)
 
     private var particles: FloatArray = FloatArray(numParticles*12)
     private var indices: IntArray = IntArray(numParticles*6)
+    private var offsets: FloatArray = FloatArray(numParticles)
     private var tick = 0.0f
 
-    private val modelMatrixBuffer = MemoryUtil.memAlloc(29 * 4)
+    private val modelMatrixBuffer = MemoryUtil.memAlloc(24 * 4)
     private val modelMatrix = Matrix4f()
 
     init {
-        var index = 0
-        val factor = numParticles / particleLifetime
-        val spread = particleSpread / particleSize
         val random = Random()
 
-        for (i in 0 until numParticles) {
-            val ox = (random.nextFloat() - 0.5f) * spread
-            particles[index] = -0.5f + ox
-            particles[index+1] = -0.5f
-            particles[index+2] = i.toFloat() / factor
-
-            particles[index+3] = -0.5f + ox
-            particles[index+4] = 0.5f
-            particles[index+5] = i.toFloat() / factor
-
-            particles[index+6] = 0.5f + ox
-            particles[index+7] = 0.5f
-            particles[index+8] = i.toFloat() / factor
-
-            particles[index+9] = 0.5f + ox
-            particles[index+10] = -0.5f
-            particles[index+11] = i.toFloat() / factor
-            index += 12
+        if (directionType == DirectionType.LINEAR) {
+            for (i in 0 until numParticles) {
+                offsets[i] = ((random.nextFloat() - 0.5f) * particleSpread)
+            }
+        }
+        else {
+            for (i in 0 until numParticles) {
+                offsets[i] = (random.nextDouble()*Math.PI*2).toFloat()
+            }
         }
 
-        index = 0
+        var index = 0
         var vi = 0
         for (i in 0 until numParticles) {
             indices[index] = vi
@@ -78,24 +68,92 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
 
         val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
         val fbuf = buffer.asFloatBuffer()
-        fbuf.put(16, particleVelocity.x)
-        fbuf.put(17, particleVelocity.y)
-        fbuf.put(18, tick)
-        fbuf.put(19, particleLifetime)
-        fbuf.put(20, startColor.x)
-        fbuf.put(21, startColor.y)
-        fbuf.put(22, startColor.z)
-        fbuf.put(23, 0.0f)
-        fbuf.put(24, endColor.x)
-        fbuf.put(25, endColor.y)
-        fbuf.put(26, endColor.z)
-        fbuf.put(27, 1.0f)
-        fbuf.put(28, particleSize)
+        fbuf.put(16, startColor.x)
+        fbuf.put(17, startColor.y)
+        fbuf.put(18, startColor.z)
+        fbuf.put(19, startColor.w)
+        fbuf.put(20, endColor.x)
+        fbuf.put(21, endColor.y)
+        fbuf.put(22, endColor.z)
+        fbuf.put(23, endColor.w)
         return modelMatrixBuffer
     }
 
     fun update(entitySystem: EntitySystem<Entity>, deltaTime: Float) {
         tick += deltaTime
-        tick %= particleLifetime
+
+        val psize = particleSize * 0.5f
+        val factor = particleLifetime / numParticles
+
+        if (directionType == DirectionType.LINEAR) {
+            updateParticlesLinear(factor, psize)
+        }
+        else {
+            updateParticlesCircular(factor, psize)
+        }
+
+        vertexBuffer.update(particles)
+    }
+
+    private fun updateParticlesLinear(factor: Float, psize: Float) {
+        var index1 = 0
+        val vx = particleVelocity.x
+        val vy = particleVelocity.y
+
+        for (i in 0 until numParticles) {
+            val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
+            val x1 = -psize * k + vx * k + offsets[i]
+            val x2 = psize * k + vx * k + offsets[i]
+            val y1 = -psize * k + vy * k
+            val y2 = psize * k + vy * k
+
+            particles[index1] = x1
+            particles[index1 + 1] = y1
+            particles[index1 + 2] = k
+
+            particles[index1 + 3] = x1
+            particles[index1 + 4] = y2
+            particles[index1 + 5] = k
+
+            particles[index1 + 6] = x2
+            particles[index1 + 7] = y2
+            particles[index1 + 8] = k
+
+            particles[index1 + 9] = x2
+            particles[index1 + 10] = y1
+            particles[index1 + 11] = k
+            index1 += 12
+        }
+    }
+
+    private fun updateParticlesCircular(factor: Float, psize: Float) {
+        var index1 = 0
+        for (i in 0 until numParticles) {
+            val vx = (Math.sin(offsets[i].toDouble()) * particleVelocity.x).toFloat()
+            val vy = (Math.cos(offsets[i].toDouble()) * particleVelocity.y).toFloat()
+
+            val k = ((((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime)
+            val x1 = -psize * k + vx * k
+            val x2 = psize * k + vx * k
+            val y1 = -psize * k + vy * k
+            val y2 = psize * k + vy * k
+
+            particles[index1] = x1
+            particles[index1 + 1] = y1
+            particles[index1 + 2] = k
+
+            particles[index1 + 3] = x1
+            particles[index1 + 4] = y2
+            particles[index1 + 5] = k
+
+            particles[index1 + 6] = x2
+            particles[index1 + 7] = y2
+            particles[index1 + 8] = k
+
+            particles[index1 + 9] = x2
+            particles[index1 + 10] = y1
+            particles[index1 + 11] = k
+            index1 += 12
+        }
     }
 }

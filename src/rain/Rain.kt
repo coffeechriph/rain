@@ -51,8 +51,8 @@ open class Rain {
         init()
 
         while (context.pollEvents()) {
+            timer.update()
             if (!stateManager.switchState) {
-                timer.update()
                 context.title = "FPS: " + timer.framesPerSecond
                 vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
                 context.windowDirty = false

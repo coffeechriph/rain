@@ -228,7 +228,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = ParticleEmitter(resourceFactory, transform, 6, 64.0f, 2.0f, Vector2f(0.0f, -1.6f), 16.0f)
+            val emitter = ParticleEmitter(resourceFactory, transform, 1000, 16.0f, 2.0f, Vector2f(100.0f, 100.0f), DirectionType.CIRCULAR, 32.0f)
             system.particleEmitters.add(emitter)
             system.particleEmittersMap[entityId] = emitter
             return this
