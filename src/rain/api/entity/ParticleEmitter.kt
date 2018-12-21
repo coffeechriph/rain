@@ -2,7 +2,6 @@ package rain.api.entity
 
 import org.joml.Matrix4f
 import org.joml.Vector2f
-import org.joml.Vector3f
 import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil
 import rain.api.gfx.IndexBuffer
@@ -13,7 +12,9 @@ import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import java.util.*
 
-class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transform: Transform, private val numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, particleSpread: Float) {
+class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transform: Transform, private val numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
+    data class Particle (var x: Float, var y: Float, var i: Float)
+
     var vertexBuffer: VertexBuffer
         private set
     var indexBuffer: IndexBuffer
@@ -21,9 +22,10 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
     var startColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f)
     var endColor = Vector4f(0.0f, 1.0f, 0.0f, 0.0f)
 
-    private var particles: FloatArray = FloatArray(numParticles*12)
+    private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
+    private var bufferData: FloatArray = FloatArray(numParticles*12)
     private var indices: IntArray = IntArray(numParticles*6)
-    private var offsets: FloatArray = FloatArray(numParticles)
+    private var offsets: FloatArray
     private var tick = 0.0f
 
     private val modelMatrixBuffer = MemoryUtil.memAlloc(24 * 4)
@@ -33,13 +35,17 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
         val random = Random()
 
         if (directionType == DirectionType.LINEAR) {
+            offsets = FloatArray(numParticles*2)
             for (i in 0 until numParticles) {
-                offsets[i] = ((random.nextFloat() - 0.5f) * particleSpread)
+                offsets[i*2] = ((random.nextFloat() - 0.5f) * particleSpread)
+                offsets[i*2+1] = ((random.nextFloat() - 0.5f) * particleSpread)
             }
         }
         else {
+            offsets = FloatArray(numParticles*2)
             for (i in 0 until numParticles) {
-                offsets[i] = (random.nextDouble()*Math.PI*2).toFloat()
+                offsets[i*2] = (random.nextDouble()*Math.PI*2).toFloat()
+                offsets[i*2+1] = random.nextFloat()
             }
         }
 
@@ -57,7 +63,7 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
             vi += 4
         }
 
-        vertexBuffer = resourceFactory.createVertexBuffer(particles, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3)))
+        vertexBuffer = resourceFactory.createVertexBuffer(bufferData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3)))
         indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
     }
 
@@ -87,12 +93,10 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
 
         if (directionType == DirectionType.LINEAR) {
             updateParticlesLinear(factor, psize)
-        }
-        else {
+        } else {
             updateParticlesCircular(factor, psize)
         }
-
-        vertexBuffer.update(particles)
+        vertexBuffer.update(bufferData)
     }
 
     private fun updateParticlesLinear(factor: Float, psize: Float) {
@@ -102,57 +106,89 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
 
         for (i in 0 until numParticles) {
             val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
-            val x1 = -psize * k + vx * k + offsets[i]
-            val x2 = psize * k + vx * k + offsets[i]
-            val y1 = -psize * k + vy * k
-            val y2 = psize * k + vy * k
+            particles[i].x = vx * k + offsets[i*2]
+            particles[i].y = vy * k + offsets[i*2+1]
+            particles[i].i = k
+        }
 
-            particles[index1] = x1
-            particles[index1 + 1] = y1
-            particles[index1 + 2] = k
+        particles.sortBy { p -> p.i }
 
-            particles[index1 + 3] = x1
-            particles[index1 + 4] = y2
-            particles[index1 + 5] = k
+        for (i in 0 until numParticles) {
+            val k = particles[i].i
 
-            particles[index1 + 6] = x2
-            particles[index1 + 7] = y2
-            particles[index1 + 8] = k
+            bufferData[index1] = particles[i].x - psize*k
+            bufferData[index1 + 1] = particles[i].y - psize*k
+            bufferData[index1 + 2] = k
 
-            particles[index1 + 9] = x2
-            particles[index1 + 10] = y1
-            particles[index1 + 11] = k
+            bufferData[index1 + 3] = particles[i].x - psize*k
+            bufferData[index1 + 4] = particles[i].y + psize*k
+            bufferData[index1 + 5] = k
+
+            bufferData[index1 + 6] = particles[i].x + psize*k
+            bufferData[index1 + 7] = particles[i].y + psize*k
+            bufferData[index1 + 8] = k
+
+            bufferData[index1 + 9] = particles[i].x + psize*k
+            bufferData[index1 + 10] = particles[i].y - psize*k
+            bufferData[index1 + 11] = k
             index1 += 12
         }
+
+        /*for (i in 0 until numParticles) {
+            val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
+            val x1 = -psize * k + vx * k + offsets[i*2]
+            val x2 = psize * k + vx * k + offsets[i*2]
+            val y1 = -psize * k + vy * k + offsets[i*2+1]
+            val y2 = psize * k + vy * k + offsets[i*2+1]
+
+            bufferData[index1] = x1
+            bufferData[index1 + 1] = y1
+            bufferData[index1 + 2] = k
+
+            bufferData[index1 + 3] = x1
+            bufferData[index1 + 4] = y2
+            bufferData[index1 + 5] = k
+
+            bufferData[index1 + 6] = x2
+            bufferData[index1 + 7] = y2
+            bufferData[index1 + 8] = k
+
+            bufferData[index1 + 9] = x2
+            bufferData[index1 + 10] = y1
+            bufferData[index1 + 11] = k
+            index1 += 12
+        }*/
     }
 
     private fun updateParticlesCircular(factor: Float, psize: Float) {
         var index1 = 0
         for (i in 0 until numParticles) {
-            val vx = (Math.sin(offsets[i].toDouble()) * particleVelocity.x).toFloat()
-            val vy = (Math.cos(offsets[i].toDouble()) * particleVelocity.y).toFloat()
+            val ax = Math.sin(offsets[i*2].toDouble()).toFloat()
+            val ay = Math.cos(offsets[i*2].toDouble()).toFloat()
+            val vx = (ax * particleVelocity.x)
+            val vy = (ay * particleVelocity.y)
 
             val k = ((((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime)
-            val x1 = -psize * k + vx * k
-            val x2 = psize * k + vx * k
-            val y1 = -psize * k + vy * k
-            val y2 = psize * k + vy * k
+            val x1 = -psize * k + vx * k + ax * particleSpread * offsets[i*2+1]
+            val x2 = psize * k + vx * k + ax * particleSpread * offsets[i*2+1]
+            val y1 = -psize * k + vy * k + ay * particleSpread * offsets[i*2+1]
+            val y2 = psize * k + vy * k + ay * particleSpread * offsets[i*2+1]
 
-            particles[index1] = x1
-            particles[index1 + 1] = y1
-            particles[index1 + 2] = k
+            bufferData[index1] = x1
+            bufferData[index1 + 1] = y1
+            bufferData[index1 + 2] = k
 
-            particles[index1 + 3] = x1
-            particles[index1 + 4] = y2
-            particles[index1 + 5] = k
+            bufferData[index1 + 3] = x1
+            bufferData[index1 + 4] = y2
+            bufferData[index1 + 5] = k
 
-            particles[index1 + 6] = x2
-            particles[index1 + 7] = y2
-            particles[index1 + 8] = k
+            bufferData[index1 + 6] = x2
+            bufferData[index1 + 7] = y2
+            bufferData[index1 + 8] = k
 
-            particles[index1 + 9] = x2
-            particles[index1 + 10] = y1
-            particles[index1 + 11] = k
+            bufferData[index1 + 9] = x2
+            bufferData[index1 + 10] = y1
+            bufferData[index1 + 11] = k
             index1 += 12
         }
     }

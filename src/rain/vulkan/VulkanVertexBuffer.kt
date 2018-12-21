@@ -7,6 +7,7 @@ import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
 import rain.assertion
 import rain.log
+import java.nio.ByteBuffer
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanVertexBuffer: VertexBuffer {
@@ -16,6 +17,8 @@ internal class VulkanVertexBuffer: VertexBuffer {
     var buffer: Long = 0
         private set
     var bufferSize: Long = 0
+        private set
+    private var bufferMemory: Long = 0
         private set
     var vertexCount: Int = 0
         private set
@@ -29,6 +32,8 @@ internal class VulkanVertexBuffer: VertexBuffer {
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
 
+    private lateinit var dataBuffer: ByteBuffer
+
     constructor(id: Long) {
         this.id = id
     }
@@ -40,15 +45,21 @@ internal class VulkanVertexBuffer: VertexBuffer {
         }
         else {
             vertexCount = vertices.size / vertexSize
-            if (this.buffer > 0L) {
-                vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
-                this.buffer = 0L
-            }
-
             if (bufferState == VertexBufferState.STATIC) {
+                if (this.buffer > 0L) {
+                    vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
+                    this.buffer = 0L
+                }
+
                 createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
             } else {
-                createVertexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, vertices)
+                if (vertices.size > dataBuffer.capacity()) {
+                    assertion("Can't allocate more space when updating vertex buffer!")
+                }
+
+                val fb = dataBuffer.asFloatBuffer()
+                fb.put(vertices)
+                mapDataWithoutStaging(vk.logicalDevice, bufferMemory, bufferSize, dataBuffer)
             }
         }
     }
@@ -97,12 +108,20 @@ internal class VulkanVertexBuffer: VertexBuffer {
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {
         val buffer = createBuffer(logicalDevice, (vertices.size * 4).toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
-        val vertexBuffer = memAlloc(vertices.size * 4)
-        val fb = vertexBuffer.asFloatBuffer()
+        dataBuffer = memAlloc(vertices.size * 4)
+        val fb = dataBuffer.asFloatBuffer()
         fb.put(vertices)
 
+        mapDataWithoutStaging(logicalDevice, buffer.bufferMemory, buffer.bufferSize, dataBuffer)
+
+        this.buffer = buffer.buffer
+        this.bufferSize = buffer.bufferSize
+        this.bufferMemory = buffer.bufferMemory
+    }
+
+    private fun mapDataWithoutStaging(logicalDevice: LogicalDevice, bufferMemory: Long, bufferSize: Long, vertexBuffer: ByteBuffer) {
         val pData = memAllocPointer(1)
-        val err = vkMapMemory(logicalDevice.device, buffer.bufferMemory, 0, buffer.bufferSize, 0, pData)
+        val err = vkMapMemory(logicalDevice.device, bufferMemory, 0, bufferSize, 0, pData)
 
         val data = pData.get(0)
         memFree(pData)
@@ -111,11 +130,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         }
 
         memCopy(memAddress(vertexBuffer), data, vertexBuffer.remaining().toLong())
-        memFree(vertexBuffer)
-        vkUnmapMemory(logicalDevice.device, buffer.bufferMemory)
-
-        this.buffer = buffer.buffer
-        this.bufferSize = buffer.bufferSize
+        vkUnmapMemory(logicalDevice.device, bufferMemory)
     }
 
     private fun createVertexBufferWithStaging(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {

@@ -5,7 +5,4 @@ layout (location = 0) in vec4 inColor;
 
 void main() {
     color = inColor;
-    if (color.w < 0.01f) {
-        discard;
-    }
 }

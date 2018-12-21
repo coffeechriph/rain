@@ -50,7 +50,7 @@ class Scene {
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
         this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv",
-                null, Vector3f(1.0f, 1.0f, 1.0f), false)
+                null, Vector3f(1.0f, 1.0f, 1.0f))
 
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)
