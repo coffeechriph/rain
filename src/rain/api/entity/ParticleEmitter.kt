@@ -25,7 +25,7 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
     var sizeIncrease = 16.0f
 
     private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
-    private var bufferData: FloatArray = FloatArray(numParticles*12)
+    private var bufferData: FloatArray = FloatArray(numParticles*20)
     private var indices: IntArray = IntArray(numParticles*6)
     private var offsets: FloatArray
     private var tick = 0.0f
@@ -65,7 +65,7 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
             vi += 4
         }
 
-        vertexBuffer = resourceFactory.createVertexBuffer(bufferData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3)))
+        vertexBuffer = resourceFactory.createVertexBuffer(bufferData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
         indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
     }
 
@@ -114,7 +114,7 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
             particles[i].i = k
         }
 
-        particles.sortBy { p -> p.i }
+        particles.sortByDescending { p -> p.i }
 
         for (i in 0 until numParticles) {
             val k = particles[i].i
@@ -122,19 +122,27 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
             bufferData[index1] = particles[i].x - psize*k - startSize*0.5f
             bufferData[index1 + 1] = particles[i].y - psize*k - startSize*0.5f
             bufferData[index1 + 2] = k
+            bufferData[index1 + 3] = 0.0f
+            bufferData[index1 + 4] = 0.0f
 
-            bufferData[index1 + 3] = particles[i].x - psize*k - startSize*0.5f
-            bufferData[index1 + 4] = particles[i].y + psize*k + startSize*0.5f
-            bufferData[index1 + 5] = k
+            bufferData[index1 + 5] = particles[i].x - psize*k - startSize*0.5f
+            bufferData[index1 + 6] = particles[i].y + psize*k + startSize*0.5f
+            bufferData[index1 + 7] = k
+            bufferData[index1 + 8] = 0.0f
+            bufferData[index1 + 9] = 1.0f
 
-            bufferData[index1 + 6] = particles[i].x + psize*k + startSize*0.5f
-            bufferData[index1 + 7] = particles[i].y + psize*k + startSize*0.5f
-            bufferData[index1 + 8] = k
+            bufferData[index1 + 10] = particles[i].x + psize*k + startSize*0.5f
+            bufferData[index1 + 11] = particles[i].y + psize*k + startSize*0.5f
+            bufferData[index1 + 12] = k
+            bufferData[index1 + 13] = 1.0f
+            bufferData[index1 + 14] = 1.0f
 
-            bufferData[index1 + 9] = particles[i].x + psize*k + startSize*0.5f
-            bufferData[index1 + 10] = particles[i].y - psize*k - startSize*0.5f
-            bufferData[index1 + 11] = k
-            index1 += 12
+            bufferData[index1 + 15] = particles[i].x + psize*k + startSize*0.5f
+            bufferData[index1 + 16] = particles[i].y - psize*k - startSize*0.5f
+            bufferData[index1 + 17] = k
+            bufferData[index1 + 18] = 1.0f
+            bufferData[index1 + 19] = 0.0f
+            index1 += 20
         }
     }
 
@@ -157,22 +165,30 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
         for (i in 0 until numParticles) {
             val k = particles[i].i
 
-            bufferData[index1] = particles[i].x - psize*k
-            bufferData[index1 + 1] = particles[i].y - psize*k
+            bufferData[index1] = particles[i].x - psize*k - startSize*0.5f
+            bufferData[index1 + 1] = particles[i].y - psize*k - startSize*0.5f
             bufferData[index1 + 2] = k
+            bufferData[index1 + 3] = 0.0f
+            bufferData[index1 + 4] = 0.0f
 
-            bufferData[index1 + 3] = particles[i].x - psize*k
-            bufferData[index1 + 4] = particles[i].y + psize*k
-            bufferData[index1 + 5] = k
+            bufferData[index1 + 5] = particles[i].x - psize*k - startSize*0.5f
+            bufferData[index1 + 6] = particles[i].y + psize*k + startSize*0.5f
+            bufferData[index1 + 7] = k
+            bufferData[index1 + 8] = 0.0f
+            bufferData[index1 + 9] = 1.0f
 
-            bufferData[index1 + 6] = particles[i].x + psize*k
-            bufferData[index1 + 7] = particles[i].y + psize*k
-            bufferData[index1 + 8] = k
+            bufferData[index1 + 10] = particles[i].x + psize*k + startSize*0.5f
+            bufferData[index1 + 11] = particles[i].y + psize*k + startSize*0.5f
+            bufferData[index1 + 12] = k
+            bufferData[index1 + 13] = 1.0f
+            bufferData[index1 + 14] = 1.0f
 
-            bufferData[index1 + 9] = particles[i].x + psize*k
-            bufferData[index1 + 10] = particles[i].y - psize*k
-            bufferData[index1 + 11] = k
-            index1 += 12
+            bufferData[index1 + 15] = particles[i].x + psize*k + startSize*0.5f
+            bufferData[index1 + 16] = particles[i].y - psize*k - startSize*0.5f
+            bufferData[index1 + 17] = k
+            bufferData[index1 + 18] = 1.0f
+            bufferData[index1 + 19] = 0.0f
+            index1 += 20
         }
     }
 }

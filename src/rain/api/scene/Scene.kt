@@ -3,8 +3,10 @@ package rain.api.scene
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
+import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.lwjgl.system.MemoryUtil
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -15,6 +17,7 @@ class Scene {
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
+    private val simpleDraws = ArrayList<SimpleDraw>()
     lateinit var physicWorld: World
         private set
     private var physicsContactListener = PhysicsContactListener()
@@ -34,6 +37,10 @@ class Scene {
         cameras.add(camera)
     }
 
+    fun addSimpleDraw(simpleDraw: SimpleDraw) {
+        simpleDraws.add(simpleDraw)
+    }
+
     fun setActiveCamera(camera: Camera) {
         this.camera = camera
     }
@@ -49,8 +56,9 @@ class Scene {
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
+        val fireTexture = resourceFactory.loadTexture2d("fireTexture", "./data/textures/fire.png", TextureFilter.NEAREST)
         this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv",
-                null, Vector3f(1.0f, 1.0f, 1.0f))
+                fireTexture, Vector3f(1.0f, 1.0f, 1.0f))
 
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)
@@ -66,6 +74,19 @@ class Scene {
         var submitListParticles = ArrayList<Drawable>()
         for (tilemap in tilemaps) {
             submitListSorted.add(Drawable(tilemap.transform, tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, null))
+        }
+
+        for (simpleDraw in simpleDraws) {
+            val modelMatrix = Matrix4f()
+            modelMatrix.identity()
+            modelMatrix.rotateZ(simpleDraw.transform.rot)
+            modelMatrix.translate(simpleDraw.transform.x, simpleDraw.transform.y, simpleDraw.transform.z)
+            modelMatrix.scale(simpleDraw.transform.sx, simpleDraw.transform.sy, 0.0f)
+
+            val byteBuffer = MemoryUtil.memAlloc(16 * 4)
+            modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+
+            submitListSorted.add(Drawable(simpleDraw.transform, simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, null))
         }
 
         for (system in entitySystems) {

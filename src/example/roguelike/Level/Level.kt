@@ -7,11 +7,10 @@ import org.joml.Vector3f
 import org.joml.Vector4i
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
-import rain.api.gfx.Material
-import rain.api.gfx.ResourceFactory
-import rain.api.gfx.Texture2d
-import rain.api.gfx.TextureFilter
+import rain.api.entity.Transform
+import rain.api.gfx.*
 import rain.api.scene.*
+import rain.vulkan.VertexAttribute
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.sign
@@ -37,6 +36,10 @@ class Level(val player: Player) {
         private set
     var detailTilemap = Tilemap()
         private set
+    private lateinit var lightMap: VertexBuffer
+    private lateinit var lightVertices: FloatArray
+    private lateinit var lightValues: FloatArray
+    private lateinit var lightMapMaterial: Material
 
     private lateinit var material: Material
     private lateinit var itemMaterial: Material
@@ -277,6 +280,14 @@ class Level(val player: Player) {
         torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture, Vector3f(1.0f, 1.0f, 1.0f))
         torchSystem = EntitySystem(scene)
         scene.addSystem(torchSystem)
+
+        lightVertices = FloatArray(width*height*3*6){0.0f}
+        lightValues = FloatArray(width*height){0.1f}
+        lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 1)))
+        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", null, Vector3f(1.0f, 1.0f, 1.0f))
+        val lightTransform = Transform()
+        lightTransform.z = 10.0f
+        scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -352,6 +363,8 @@ class Level(val player: Player) {
             }
         }
 
+        generateLightMap()
+
         if (firstBuild) {
             backTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, backIndices)
             frontTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, frontIndices)
@@ -369,6 +382,157 @@ class Level(val player: Player) {
             backTilemap.update(backIndices)
             frontTilemap.update(frontIndices)
             detailTilemap.update(detailIndices)
+        }
+    }
+
+    private fun generateLightMap() {
+        // Clear old light values
+        for (i in 0 until lightValues.size) {
+            lightValues[i] = 0.1f
+        }
+
+        // Put out light values
+        for (torch in torchSystem.getEntityList()) {
+            val t = torchSystem.findTransformComponent(torch!!.getId())!!
+            val x = (t.x / 64.0f).toInt()
+            val y = (t.y / 64.0f).toInt()
+            lightValues[x + y * width] = 1.0f
+            spreadLight(x, y, 1.0f)
+        }
+
+        var x = 0.0f
+        var y = 0.0f
+        var index = 0
+        for (i in 0 until lightValues.size) {
+            lightVertices[index] = x
+            lightVertices[index+1] = y
+            lightVertices[index+2] = lightValues[i]
+
+            lightVertices[index+3] = x
+            lightVertices[index+4] = y+64.0f
+            lightVertices[index+5] = lightValues[i]
+
+            lightVertices[index+6] = x+64.0f
+            lightVertices[index+7] = y+64.0f
+            lightVertices[index+8] = lightValues[i]
+
+            lightVertices[index+9] = x+64.0f
+            lightVertices[index+10] = y+64.0f
+            lightVertices[index+11] = lightValues[i]
+
+            lightVertices[index+12] = x+64.0f
+            lightVertices[index+13] = y
+            lightVertices[index+14] = lightValues[i]
+
+            lightVertices[index+15] = x
+            lightVertices[index+16] = y
+            lightVertices[index+17] = lightValues[i]
+
+            index += 18
+            x += 64.0f
+            if (x >= width*64.0f) {
+                x = 0.0f
+                y += 64.0f
+            }
+        }
+
+        lightMap.update(lightVertices)
+    }
+
+    private fun spreadLight(x: Int, y: Int, value: Float) {
+        if (value <= 0.0f) {
+            return
+        }
+
+        val att = if (map[x + y * width] == 1) {0.2f} else {0.1f}
+        lightValues[x + y*width] = value
+
+        if (x > 0) {
+            if (lightValues[(x-1) + y * width] < value - att) {
+                if (map[(x-1) + y * width] == 1) {
+                    spreadLight(x - 1, y, value - att*1.5f)
+                }
+                else {
+                    spreadLight(x - 1, y, value - att)
+                }
+            }
+
+            if (y > 0) {
+                if (lightValues[(x-1) + (y-1) * width] < value - att) {
+                    if (map[(x-1) + (y-1) * width] == 1) {
+                        spreadLight(x - 1, y - 1, value - att*1.5f)
+                    }
+                    else {
+                        spreadLight(x - 1, y, value - att)
+                    }
+                }
+            }
+
+            if (y < height - 1) {
+                if (lightValues[(x-1) + (y+1) * width] < value - att) {
+                    if (map[(x-1) + (y+1) * width] == 1) {
+                        spreadLight(x - 1, y + 1, value - att*1.5f)
+                    }
+                    else {
+                        spreadLight(x - 1, y + 1, value - att)
+                    }
+                }
+            }
+        }
+
+        if (x < width - 1) {
+            if (lightValues[(x+1) + y * width] < value - att) {
+                if (map[(x+1) + y * width] == 1) {
+                    spreadLight(x + 1, y, value - att*1.5f)
+                }
+                else {
+                    spreadLight(x+1, y, value - att)
+                }
+            }
+
+            if (y > 0) {
+                if (lightValues[(x+1) + (y-1) * width] < value - att) {
+                    if (map[(x+1) + (y-1) * width] == 1) {
+                        spreadLight(x + 1, y - 1, value - att*1.5f)
+                    }
+                    else {
+                        spreadLight(x + 1, y - 1, value - att)
+                    }
+                }
+            }
+
+            if (y < height - 1) {
+                if (lightValues[(x+1) + (y+1) * width] < value - att) {
+                    if (map[(x+1) + (y+1) * width] == 1) {
+                        spreadLight(x + 1, y + 1, value - att*1.5f)
+                    }
+                    else {
+                        spreadLight(x + 1, y + 1, value - att)
+                    }
+                }
+            }
+        }
+
+        if (y > 0) {
+            if (lightValues[x + (y-1) * width] < value - att) {
+                if (map[x + (y-1) * width] == 1) {
+                    spreadLight(x, y - 1, value - att*1.5f)
+                }
+                else {
+                    spreadLight(x, y - 1, value - att)
+                }
+            }
+        }
+
+        if (y < height - 1) {
+            if (lightValues[x + (y+1) * width] < value - att) {
+                if (map[x + (y+1) * width] == 1) {
+                    spreadLight(x, y + 1, value - att*1.5f)
+                }
+                else {
+                    spreadLight(x, y + 1, value - att)
+                }
+            }
         }
     }
 
