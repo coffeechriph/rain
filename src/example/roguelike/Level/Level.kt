@@ -65,7 +65,16 @@ class Level(val player: Player) {
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
 
+    private var delayLightUpdate = 0
     fun update() {
+        if (delayLightUpdate == 0) {
+            generateLightMap()
+            delayLightUpdate = 1
+        }
+        else {
+            delayLightUpdate -= 1
+        }
+
         // TODO: Not working...
         for (enemy in enemies) {
             if (!enemy.collider.isActive()) {
@@ -400,6 +409,10 @@ class Level(val player: Player) {
             spreadLight(x, y, 1.0f)
         }
 
+        val px = ((player.transform.x) / 64.0f).toInt()
+        val py = ((player.transform.y) / 64.0f).toInt()
+        spreadLight(px, py, 0.5f)
+
         var x = 0.0f
         var y = 0.0f
         var index = 0
@@ -444,36 +457,29 @@ class Level(val player: Player) {
             return
         }
 
-        val att = if (map[x + y * width] == 1) {0.2f} else {0.1f}
-        lightValues[x + y*width] = value
+        val att = 0.2f
+        if (x >= 0 && x < width && y >= 0 && y < height && lightValues[x + y * width] < value) {
+            lightValues[x + y * width] = value
+        }
 
         if (x > 0) {
             if (lightValues[(x-1) + y * width] < value - att) {
-                if (map[(x-1) + y * width] == 1) {
-                    spreadLight(x - 1, y, value - att*1.5f)
-                }
-                else {
+                if (navMesh.map[(x-1) + y * width] != 127.toByte()) {
                     spreadLight(x - 1, y, value - att)
                 }
             }
 
             if (y > 0) {
                 if (lightValues[(x-1) + (y-1) * width] < value - att) {
-                    if (map[(x-1) + (y-1) * width] == 1) {
-                        spreadLight(x - 1, y - 1, value - att*1.5f)
-                    }
-                    else {
-                        spreadLight(x - 1, y, value - att)
+                    if (navMesh.map[(x-1) + (y-1) * width] != 127.toByte()) {
+                        spreadLight(x - 1, y - 1, value - att)
                     }
                 }
             }
 
             if (y < height - 1) {
                 if (lightValues[(x-1) + (y+1) * width] < value - att) {
-                    if (map[(x-1) + (y+1) * width] == 1) {
-                        spreadLight(x - 1, y + 1, value - att*1.5f)
-                    }
-                    else {
+                    if (navMesh.map[(x-1) + (y+1) * width] != 127.toByte()) {
                         spreadLight(x - 1, y + 1, value - att)
                     }
                 }
@@ -482,20 +488,14 @@ class Level(val player: Player) {
 
         if (x < width - 1) {
             if (lightValues[(x+1) + y * width] < value - att) {
-                if (map[(x+1) + y * width] == 1) {
-                    spreadLight(x + 1, y, value - att*1.5f)
-                }
-                else {
-                    spreadLight(x+1, y, value - att)
+                if (navMesh.map[(x+1) + y * width] != 127.toByte()) {
+                    spreadLight(x + 1, y, value - att)
                 }
             }
 
             if (y > 0) {
                 if (lightValues[(x+1) + (y-1) * width] < value - att) {
-                    if (map[(x+1) + (y-1) * width] == 1) {
-                        spreadLight(x + 1, y - 1, value - att*1.5f)
-                    }
-                    else {
+                    if (navMesh.map[(x+1) + (y-1) * width] != 127.toByte()) {
                         spreadLight(x + 1, y - 1, value - att)
                     }
                 }
@@ -503,10 +503,7 @@ class Level(val player: Player) {
 
             if (y < height - 1) {
                 if (lightValues[(x+1) + (y+1) * width] < value - att) {
-                    if (map[(x+1) + (y+1) * width] == 1) {
-                        spreadLight(x + 1, y + 1, value - att*1.5f)
-                    }
-                    else {
+                    if (navMesh.map[(x+1) + (y+1) * width] != 127.toByte()) {
                         spreadLight(x + 1, y + 1, value - att)
                     }
                 }
@@ -515,10 +512,7 @@ class Level(val player: Player) {
 
         if (y > 0) {
             if (lightValues[x + (y-1) * width] < value - att) {
-                if (map[x + (y-1) * width] == 1) {
-                    spreadLight(x, y - 1, value - att*1.5f)
-                }
-                else {
+                if (navMesh.map[x + (y-1) * width] != 127.toByte()) {
                     spreadLight(x, y - 1, value - att)
                 }
             }
@@ -526,10 +520,7 @@ class Level(val player: Player) {
 
         if (y < height - 1) {
             if (lightValues[x + (y+1) * width] < value - att) {
-                if (map[x + (y+1) * width] == 1) {
-                    spreadLight(x, y + 1, value - att*1.5f)
-                }
-                else {
+                if (navMesh.map[x + (y+1) * width] != 127.toByte()) {
                     spreadLight(x, y + 1, value - att)
                 }
             }
