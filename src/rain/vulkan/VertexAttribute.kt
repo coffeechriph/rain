@@ -1,3 +1,8 @@
 package rain.vulkan
 
-data class VertexAttribute(val location: Int, val count: Int)
+enum class DataType {
+    FLOAT,
+    INT
+}
+
+data class VertexAttribute(val location: Int, val count: Int, val dataType: DataType = DataType.FLOAT)

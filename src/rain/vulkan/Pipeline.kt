@@ -229,7 +229,7 @@ internal class Pipeline {
 
             // TODO: Might want to avoid this if statement
             if (drawable.indexBuffer == null) {
-                vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0);
+                vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0)
             }
             else {
                 vkCmdDrawIndexed(cmdBuffer.buffer, indexBuffer!!.indexCount, 1, 0, 0, 0)

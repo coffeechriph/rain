@@ -279,7 +279,7 @@ class Level(val player: Player) {
         scene.addSystem(torchSystem)
 
         random = Random(3)
-        for (i in 0 until 1) {
+        for (i in 0 until 0) {
             val it = Item(ItemType.NONE, "", 0, 0, 0, 0)
             torchSystem.newEntity(it)
                     .attachTransformComponent()

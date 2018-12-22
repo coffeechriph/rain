@@ -19,7 +19,6 @@ internal class VulkanVertexBuffer: VertexBuffer {
     var bufferSize: Long = 0
         private set
     private var bufferMemory: Long = 0
-        private set
     var vertexCount: Int = 0
         private set
     private var vertexSize = 0
@@ -52,13 +51,14 @@ internal class VulkanVertexBuffer: VertexBuffer {
                 }
                 createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
             } else {
-                if (vertices.size > dataBuffer.capacity()) {
-                    assertion("Can't allocate more space when updating vertex buffer!")
+                if (vertices.size >= dataBuffer.capacity()/4) {
+                    createVertexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, vertices)
                 }
-
-                val fb = dataBuffer.asFloatBuffer()
-                fb.put(vertices)
-                mapDataWithoutStaging(vk.logicalDevice, bufferMemory, bufferSize, dataBuffer)
+                else {
+                    val fb = dataBuffer.asFloatBuffer()
+                    fb.put(vertices)
+                    mapDataWithoutStaging(vk.logicalDevice, bufferMemory, bufferSize, dataBuffer)
+                }
             }
         }
     }
@@ -198,14 +198,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         var index = 0
         var lastCount = 0
         for (attr in attributes) {
-            val format = when(attr.count) {
-                1 -> VK_FORMAT_R32_SFLOAT
-                2 -> VK_FORMAT_R32G32_SFLOAT
-                3 -> VK_FORMAT_R32G32B32_SFLOAT
-                4 -> VK_FORMAT_R32G32B32A32_SFLOAT
-                else -> throw IllegalArgumentException("Unsupported number of components for vertex attribute: ${attr.count}")
-            }
-
+            val format = getFormat(attr.dataType, attr.count)
             desc.get(index)
                     .binding(0)
                     .location(attr.location)
@@ -217,5 +210,28 @@ internal class VulkanVertexBuffer: VertexBuffer {
         }
 
         return desc
+    }
+
+    private fun getFormat(dataType: DataType, count: Int): Int {
+        if (dataType == DataType.FLOAT) {
+            return when(count) {
+                1 -> VK_FORMAT_R32_SFLOAT
+                2 -> VK_FORMAT_R32G32_SFLOAT
+                3 -> VK_FORMAT_R32G32B32_SFLOAT
+                4 -> VK_FORMAT_R32G32B32A32_SFLOAT
+                else -> throw IllegalArgumentException("Unsupported number of components for vertex attribute: ${count}")
+            }
+        }
+        else if (dataType == DataType.INT) {
+            return when(count) {
+                1 -> VK_FORMAT_R32_SINT
+                2 -> VK_FORMAT_R32G32_SINT
+                3 -> VK_FORMAT_R32G32B32_SINT
+                4 -> VK_FORMAT_R32G32B32A32_SINT
+                else -> throw IllegalArgumentException("Unsupported number of components for vertex attribute: ${count}")
+            }
+        }
+
+        assertion("Data type $dataType not supported!")
     }
 }
