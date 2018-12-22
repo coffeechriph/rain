@@ -1,5 +1,6 @@
 package example.roguelike.Entity
 
+import org.joml.Vector3f
 import rain.api.Input
 import rain.api.gui.*
 import rain.api.gui.Container
@@ -35,8 +36,8 @@ class Inventory(val gui: Gui, val player: Player) {
     private lateinit var itemDescStamina: Text
     private lateinit var itemDescStrength: Text
     private lateinit var itemDescLuck: Text
-    private val startX = 1280 / 2.0f - 115.0f
-    private val startY = 0.0f
+    private val startX = 1280 / 2.0f - 250.0f
+    private val startY = 20.0f
     private var container: Container
     private var statContainer: Container
     private var lastButtonClicked: ToggleButton? = null
@@ -54,6 +55,12 @@ class Inventory(val gui: Gui, val player: Player) {
         container.background = true
         container.visible = false
 
+        container.skin.backgroundColors["container"] = Vector3f(113.0f / 255.0f, 84.0f / 255.0f, 43.0f / 255.0f)
+        container.skin.backgroundColors["button"] = Vector3f(143.0f / 255.0f, 114.0f / 255.0f, 73.0f / 255.0f)
+        container.skin.borderColors["button"] = Vector3f(240.0f / 255.0f, 207.0f / 255.0f, 117.0f / 255.0f)
+        container.skin.activeColors["button"] = Vector3f(143.0f / 255.0f * 1.25f, 114.0f / 255.0f * 1.25f, 73.0f / 255.0f * 1.25f)
+        container.skin.foregroundColors["text"] = Vector3f(240.0f / 255.0f, 207.0f / 255.0f, 117.0f / 255.0f)
+
         dropButton.x = 230.0f
         dropButton.y = 142.0f
         dropButton.w = 268.0f
@@ -63,20 +70,28 @@ class Inventory(val gui: Gui, val player: Player) {
 
         statContainer = gui.newContainer(0.0f, 768.0f - 120.0f, 100.0f, 120.0f)
         statContainer.visible = true
+        statContainer.skin.foregroundColors["text"] = Vector3f(240.0f / 255.0f, 207.0f / 255.0f, 117.0f / 255.0f)
 
         player.health = player.baseHealth - player.healthDamaged + (player.stamina * 1.5f).toInt()
-        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
-        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
-        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f, background = true)
-        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f, background = true)
-        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f, background = true)
+        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f)
+        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f)
+        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
+        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
+        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
 
-        equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f, background = true)
-        equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f, background = true)
-        equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 215.0f, background = true)
-        equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 235.0f, background = true)
-        equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 255.0f, background = true)
-        equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 275.0f, background = true)
+        equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f)
+        equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f)
+        equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 215.0f)
+        equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 235.0f)
+        equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 255.0f)
+        equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 275.0f)
+
+        if (::headerText.isInitialized) {
+            container.removeText(headerText)
+        }
+
+        headerText = container.addText("<Inventory: 0>", 0.0f, 0.0f)
+        headerText.x = 250.0f - headerText.w/2.0f
     }
 
     fun addItem(item: Item) {
@@ -90,16 +105,16 @@ class Inventory(val gui: Gui, val player: Player) {
         itemButtons.add(button)
         container.addComponent(button)
 
+        if (items.size == 1) {
+            updateSelectedItemDesc(0)
+        }
+
         if (::headerText.isInitialized) {
             container.removeText(headerText)
         }
 
-        headerText = container.addText("<Inventory: ${items.size}>", 0.0f, 0.0f, background = true)
-        headerText.x = 115.0f - headerText.w/2.0f
-
-        if (items.size == 1) {
-            updateSelectedItemDesc(0)
-        }
+        headerText = container.addText("<Inventory: ${items.size}>", 0.0f, 0.0f)
+        headerText.x = 250.0f - headerText.w/2.0f
     }
 
     fun update(input: Input) {
@@ -109,6 +124,7 @@ class Inventory(val gui: Gui, val player: Player) {
                 for (i in 0 until items.size) {
                     itemButtons[i].active = i == selectedItemIndex
                 }
+                updateSelectedItemDesc(selectedItemIndex)
             }
         }
         else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
@@ -117,6 +133,7 @@ class Inventory(val gui: Gui, val player: Player) {
                 for (i in 0 until items.size) {
                     itemButtons[i].active = i == selectedItemIndex
                 }
+                updateSelectedItemDesc(selectedItemIndex)
             }
         }
 
@@ -199,12 +216,12 @@ class Inventory(val gui: Gui, val player: Player) {
             container.removeText(itemDescLuck)
         }
 
-        itemDescName = container.addText("Name: ${selectedItem.name}", 230.0f, 20.0f, background = true)
-        itemDescType = container.addText("Type: ${selectedItem.type.name}", 230.0f, 40.0f, background = true)
-        itemDescStamina = container.addText("Stamina: ${selectedItem.stamina}", 230.0f, 60.0f, background = true)
-        itemDescStrength = container.addText("Strength: ${selectedItem.strength}", 230.0f, 80.0f, background = true)
-        itemDescAgility = container.addText("Agility: ${selectedItem.agility}", 230.0f, 100.0f, background = true)
-        itemDescLuck = container.addText("Luck: ${selectedItem.luck}", 230.0f, 120.0f, background = true)
+        itemDescName = container.addText("Name: ${selectedItem.name}", 230.0f, 20.0f)
+        itemDescType = container.addText("Type: ${selectedItem.type.name}", 230.0f, 40.0f)
+        itemDescStamina = container.addText("Stamina: ${selectedItem.stamina}", 230.0f, 60.0f)
+        itemDescStrength = container.addText("Strength: ${selectedItem.strength}", 230.0f, 80.0f)
+        itemDescAgility = container.addText("Agility: ${selectedItem.agility}", 230.0f, 100.0f)
+        itemDescLuck = container.addText("Luck: ${selectedItem.luck}", 230.0f, 120.0f)
     }
 
     fun updateEquippedItems() {
@@ -220,12 +237,12 @@ class Inventory(val gui: Gui, val player: Player) {
         statContainer.removeText(agilityText)
         statContainer.removeText(luckText)
 
-        equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f, background = true)
-        equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f, background = true)
-        equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 215.0f, background = true)
-        equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 235.0f, background = true)
-        equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 255.0f, background = true)
-        equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 275.0f, background = true)
+        equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f)
+        equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f)
+        equippedChestText = container.addText("Chest: ${equippedChest.name}", 230.0f, 215.0f)
+        equippedGlovesText = container.addText("Gloves: ${equippedGloves.name}", 230.0f, 235.0f)
+        equippedBootsText = container.addText("Boots: ${equippedBoots.name}", 230.0f, 255.0f)
+        equippedLegsText = container.addText("Legs: ${equippedLegs.name}", 230.0f, 275.0f)
 
         player.stamina = player.baseStamina + equippedWeapon.stamina + equippedHead.stamina + equippedChest.stamina + equippedGloves.stamina +
                 equippedBoots.stamina + equippedLegs.stamina
@@ -239,16 +256,16 @@ class Inventory(val gui: Gui, val player: Player) {
         player.luck = player.baseLuck + equippedWeapon.luck + equippedHead.luck + equippedChest.luck + equippedGloves.luck +
                 equippedBoots.luck + equippedLegs.luck
 
-        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
-        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f, background = true)
-        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f, background = true)
-        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f, background = true)
+        staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f)
+        strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
+        agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
+        luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
         updateHealthText()
     }
 
     fun updateHealthText() {
         player.health = player.baseHealth - player.healthDamaged + (player.stamina * 1.5f).toInt()
         statContainer.removeText(healthText)
-        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
+        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f)
     }
 }
