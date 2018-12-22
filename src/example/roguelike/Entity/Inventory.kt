@@ -64,6 +64,7 @@ class Inventory(val gui: Gui, val player: Player) {
         statContainer = gui.newContainer(0.0f, 768.0f - 120.0f, 100.0f, 120.0f)
         statContainer.visible = true
 
+        player.health = player.baseHealth - player.healthDamaged + (player.stamina * 1.5f).toInt()
         healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
         staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
         strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f, background = true)
@@ -120,8 +121,20 @@ class Inventory(val gui: Gui, val player: Player) {
         }
 
         if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
-            updateEquippedItems()
-            updateSelectedItemDesc(selectedItemIndex)
+            if (items.size > 0) {
+                when (selectedItem.type) {
+                    ItemType.CHEST -> equippedChest = selectedItem
+                    ItemType.GLOVES -> equippedGloves = selectedItem
+                    ItemType.MELEE -> equippedWeapon = selectedItem
+                    ItemType.RANGED -> equippedWeapon = selectedItem
+                    ItemType.LEGS -> equippedLegs = selectedItem
+                    ItemType.BOOTS -> equippedBoots = selectedItem
+                    ItemType.HEAD -> equippedHead = selectedItem
+                }
+
+                updateEquippedItems()
+                updateSelectedItemDesc(selectedItemIndex)
+            }
         }
         else if(dropButton.active && selectedItemIndex < items.size-1) {
             selectedItem = items[selectedItemIndex]
@@ -195,16 +208,6 @@ class Inventory(val gui: Gui, val player: Player) {
     }
 
     fun updateEquippedItems() {
-        when (selectedItem.type) {
-            ItemType.CHEST -> equippedChest = selectedItem
-            ItemType.GLOVES -> equippedGloves = selectedItem
-            ItemType.MELEE -> equippedWeapon = selectedItem
-            ItemType.RANGED -> equippedWeapon = selectedItem
-            ItemType.LEGS -> equippedLegs = selectedItem
-            ItemType.BOOTS -> equippedBoots = selectedItem
-            ItemType.HEAD -> equippedHead = selectedItem
-        }
-
         container.removeText(equippedWeaponText)
         container.removeText(equippedHeadText)
         container.removeText(equippedChestText)
@@ -212,7 +215,6 @@ class Inventory(val gui: Gui, val player: Player) {
         container.removeText(equippedBootsText)
         container.removeText(equippedLegsText)
 
-        statContainer.removeText(healthText)
         statContainer.removeText(staminaText)
         statContainer.removeText(strengthText)
         statContainer.removeText(agilityText)
@@ -237,12 +239,16 @@ class Inventory(val gui: Gui, val player: Player) {
         player.luck = player.baseLuck + equippedWeapon.luck + equippedHead.luck + equippedChest.luck + equippedGloves.luck +
                 equippedBoots.luck + equippedLegs.luck
 
-        player.health = player.baseHealth - player.healthDamaged + (player.stamina * 1.5f).toInt()
-
-        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
         staminaText = statContainer.addText("Stamina: ${player.stamina}", 0.0f, 20.0f, background = true)
         strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f, background = true)
         agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f, background = true)
         luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f, background = true)
+        updateHealthText()
+    }
+
+    fun updateHealthText() {
+        player.health = player.baseHealth - player.healthDamaged + (player.stamina * 1.5f).toInt()
+        statContainer.removeText(healthText)
+        healthText = statContainer.addText("Health: ${player.health}", 0.0f, 0.0f, background = true)
     }
 }

@@ -107,7 +107,7 @@ class Level(val player: Player) {
             val dy = player.transform.y - enemy.transform.y
             if (Math.sqrt((dx * dx + dy * dy).toDouble()) <= 64.0) {
                 enemy.attack(random, player)
-                player.inventory.updateEquippedItems()
+                player.inventory.updateHealthText()
             }
 
             enemy.healthBar.transform.sx = enemy.health / 2.0f

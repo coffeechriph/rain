@@ -154,8 +154,12 @@ class Player : Entity() {
         else {
             if (healthDamaged > 0 && regenHealthTimeout == 0) {
                 healthDamaged -= 4
+                if (healthDamaged < 0) {
+                    healthDamaged = 0
+                }
+
                 regenHealthTimeout = 80
-                inventory.updateEquippedItems()
+                inventory.updateHealthText()
             }
 
             if (regenHealthTimeout > 0) {
