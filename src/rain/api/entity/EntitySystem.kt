@@ -221,17 +221,14 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachParticleEmitter(resourceFactory: ResourceFactory): Builder<T> {
+        fun attachParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float): Builder<T> {
             val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
 
             if (system.particleEmittersMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = ParticleEmitter(resourceFactory, transform, 15, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f)
-            emitter.startSize = 5.0f
-            emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
-            emitter.endColor.set(1.0f, 0.3f, 0.0f, 0.5f)
+            val emitter = ParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread)
             system.particleEmitters.add(emitter)
             system.particleEmittersMap[entityId] = emitter
             return this
