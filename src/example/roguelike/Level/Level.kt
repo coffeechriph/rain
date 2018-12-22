@@ -43,7 +43,7 @@ class Level(val player: Player) {
     private lateinit var texture: Texture2d
     private lateinit var torchTexture: Texture2d
     private lateinit var torchMaterial: Material
-    private lateinit var torchSystem: EntitySystem<Item>
+    private lateinit var torchSystem: EntitySystem<Entity>
     private var firstBuild = true
 
     private var mapBackIndices = Array(0){ TileIndex(0, 0) }
@@ -277,20 +277,6 @@ class Level(val player: Player) {
         torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture, Vector3f(1.0f, 1.0f, 1.0f))
         torchSystem = EntitySystem(scene)
         scene.addSystem(torchSystem)
-
-        random = Random(3)
-        for (i in 0 until 0) {
-            val it = Item(ItemType.NONE, "", 0, 0, 0, 0)
-            torchSystem.newEntity(it)
-                    .attachTransformComponent()
-                    .attachSpriteComponent(torchMaterial)
-                    .attachParticleEmitter(resourceFactory)
-                    .attachBoxColliderComponent(8.0f, 8.0f)
-                    .build()
-            it.collider.setPosition(640.0f, 700.0f)
-            it.transform.z = 5.0f
-
-        }
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -303,6 +289,7 @@ class Level(val player: Player) {
         var cx = 0.0f
         var cy = 0.0f
         collisionSystem.clear()
+        torchSystem.clear()
         for (i in 0 until width*height) {
             if (sx + sy*mapWidth >= map.size) {
                 break
@@ -326,6 +313,19 @@ class Level(val player: Player) {
                 tr!!.sx = 64.0f
                 tr.sy = 64.0f
                 tr.z = 13.0f
+
+                if (backIndices[i].x == 1) {
+                    val et = Entity()
+                    torchSystem.newEntity(et)
+                            .attachTransformComponent()
+                            .attachSpriteComponent(torchMaterial)
+                            .attachParticleEmitter(resourceFactory)
+                            .build()
+                    val etTransform = torchSystem.findTransformComponent(et.getId())
+                    etTransform!!.setPosition(cx + 32, cy + 32, 12.0f)
+                    etTransform.sx = 48.0f
+                    etTransform.sy = 48.0f
+                }
             }
             else {
                 navMesh.map[i] = 0
@@ -381,7 +381,7 @@ class Level(val player: Player) {
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapDetailIndices = Array(mapWidth*mapHeight){ TileIndexNone }
-        populateTilemap()
+        populateTilemap(resourceFactory)
 
         // Set position of start and exit
         val startRoom = rooms[0]
@@ -443,7 +443,7 @@ class Level(val player: Player) {
         }
     }
 
-    private fun populateTilemap() {
+    private fun populateTilemap(resourceFactory: ResourceFactory) {
         for (room in rooms) {
             val tileY = room.type.ordinal
 
