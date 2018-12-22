@@ -41,6 +41,9 @@ class Level(val player: Player) {
     private lateinit var material: Material
     private lateinit var itemMaterial: Material
     private lateinit var texture: Texture2d
+    private lateinit var torchTexture: Texture2d
+    private lateinit var torchMaterial: Material
+    private lateinit var torchSystem: EntitySystem<Item>
     private var firstBuild = true
 
     private var mapBackIndices = Array(0){ TileIndex(0, 0) }
@@ -54,7 +57,6 @@ class Level(val player: Player) {
     private lateinit var collisionSystem: EntitySystem<Entity>
     private lateinit var containerSystem: EntitySystem<Container>
     private lateinit var levelItemSystem: EntitySystem<Item>
-    private lateinit var navMeshSystem: EntitySystem<Entity>
     private var containers = ArrayList<Container>()
     private lateinit var navMesh: NavMesh
     var startPosition = Vector2i()
@@ -78,32 +80,6 @@ class Level(val player: Player) {
             enemy.lastY = y
         }
 
-        // TODO: Remove
-        var px = 0
-        var py = 0
-        navMeshSystem.clear()
-        for (i in 0 until width*height) {
-            if (navMesh.map[i] == 127.toByte()) {
-                val i = Entity()
-                navMeshSystem.newEntity(i)
-                        .attachTransformComponent()
-                        .attachSpriteComponent(itemMaterial)
-                        .build()
-                val transform = navMeshSystem.findTransformComponent(i.getId())
-                transform!!.x = (px * 64).toFloat() % 1280 + 32
-                transform.y = (py * 64).toFloat() % 768 + 32
-                transform.z = 10.0f
-                transform.sx = 12.0f
-                transform.sy = 12.0f
-            }
-
-            px += 1
-            if (px >= width) {
-                px = 0
-                py += 1
-            }
-        }
-
         for (enemy in enemies) {
             enemy.sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
             enemy.healthBar.sprite.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
@@ -123,7 +99,6 @@ class Level(val player: Player) {
             enemy.healthBar.transform.sx = enemy.health / 2.0f
 
             if (!enemy.traversing) {
-                navMeshSystem.clear()
                 enemy.collider.setVelocity(0.0f,0.0f)
                 val kx = player.transform.x - enemy.transform.x
                 val ky = player.transform.y - enemy.transform.y
@@ -298,8 +273,24 @@ class Level(val player: Player) {
         levelItemSystem = EntitySystem(scene)
         scene.addSystem(levelItemSystem)
 
-        navMeshSystem = EntitySystem(scene)
-        scene.addSystem(navMeshSystem)
+        torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
+        torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        torchSystem = EntitySystem(scene)
+        scene.addSystem(torchSystem)
+
+        random = Random(3)
+        for (i in 0 until 1) {
+            val it = Item(ItemType.NONE, "", 0, 0, 0, 0)
+            torchSystem.newEntity(it)
+                    .attachTransformComponent()
+                    .attachSpriteComponent(torchMaterial)
+                    .attachParticleEmitter(resourceFactory)
+                    .attachBoxColliderComponent(8.0f, 8.0f)
+                    .build()
+            it.collider.setPosition(640.0f, 700.0f)
+            it.transform.z = 5.0f
+
+        }
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {

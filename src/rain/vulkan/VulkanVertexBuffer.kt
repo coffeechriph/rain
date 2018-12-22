@@ -50,7 +50,6 @@ internal class VulkanVertexBuffer: VertexBuffer {
                     vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
                     this.buffer = 0L
                 }
-
                 createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
             } else {
                 if (vertices.size > dataBuffer.capacity()) {
@@ -104,6 +103,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         this.vertexSize = vertexSize
         this.vk = vk
         this.commandPool = commandPool
+        this.bufferState = state
     }
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {

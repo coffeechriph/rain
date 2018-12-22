@@ -21,6 +21,8 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
         private set
     var startColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f)
     var endColor = Vector4f(0.0f, 1.0f, 0.0f, 0.0f)
+    var startSize = 0.0f
+    var sizeIncrease = 16.0f
 
     private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
     private var bufferData: FloatArray = FloatArray(numParticles*12)
@@ -96,6 +98,7 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
         } else {
             updateParticlesCircular(factor, psize)
         }
+
         vertexBuffer.update(bufferData)
     }
 
@@ -108,6 +111,44 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
             val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
             particles[i].x = vx * k + offsets[i*2]
             particles[i].y = vy * k + offsets[i*2+1]
+            particles[i].i = k
+        }
+
+        particles.sortBy { p -> p.i }
+
+        for (i in 0 until numParticles) {
+            val k = particles[i].i
+
+            bufferData[index1] = particles[i].x - psize*k - startSize*0.5f
+            bufferData[index1 + 1] = particles[i].y - psize*k - startSize*0.5f
+            bufferData[index1 + 2] = k
+
+            bufferData[index1 + 3] = particles[i].x - psize*k - startSize*0.5f
+            bufferData[index1 + 4] = particles[i].y + psize*k + startSize*0.5f
+            bufferData[index1 + 5] = k
+
+            bufferData[index1 + 6] = particles[i].x + psize*k + startSize*0.5f
+            bufferData[index1 + 7] = particles[i].y + psize*k + startSize*0.5f
+            bufferData[index1 + 8] = k
+
+            bufferData[index1 + 9] = particles[i].x + psize*k + startSize*0.5f
+            bufferData[index1 + 10] = particles[i].y - psize*k - startSize*0.5f
+            bufferData[index1 + 11] = k
+            index1 += 12
+        }
+    }
+
+    private fun updateParticlesCircular(factor: Float, psize: Float) {
+        var index1 = 0
+        for (i in 0 until numParticles) {
+            val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
+            val ax = Math.sin(offsets[i*2].toDouble()).toFloat()
+            val ay = Math.cos(offsets[i*2].toDouble()).toFloat()
+            val vx = (ax * particleVelocity.x)
+            val vy = (ay * particleVelocity.y)
+
+            particles[i].x = vx * k + offsets[i*2] + ax * particleSpread * offsets[i*2+1]
+            particles[i].y = vy * k + offsets[i*2+1] + ay * particleSpread * offsets[i*2+1]
             particles[i].i = k
         }
 
@@ -130,64 +171,6 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
 
             bufferData[index1 + 9] = particles[i].x + psize*k
             bufferData[index1 + 10] = particles[i].y - psize*k
-            bufferData[index1 + 11] = k
-            index1 += 12
-        }
-
-        /*for (i in 0 until numParticles) {
-            val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
-            val x1 = -psize * k + vx * k + offsets[i*2]
-            val x2 = psize * k + vx * k + offsets[i*2]
-            val y1 = -psize * k + vy * k + offsets[i*2+1]
-            val y2 = psize * k + vy * k + offsets[i*2+1]
-
-            bufferData[index1] = x1
-            bufferData[index1 + 1] = y1
-            bufferData[index1 + 2] = k
-
-            bufferData[index1 + 3] = x1
-            bufferData[index1 + 4] = y2
-            bufferData[index1 + 5] = k
-
-            bufferData[index1 + 6] = x2
-            bufferData[index1 + 7] = y2
-            bufferData[index1 + 8] = k
-
-            bufferData[index1 + 9] = x2
-            bufferData[index1 + 10] = y1
-            bufferData[index1 + 11] = k
-            index1 += 12
-        }*/
-    }
-
-    private fun updateParticlesCircular(factor: Float, psize: Float) {
-        var index1 = 0
-        for (i in 0 until numParticles) {
-            val ax = Math.sin(offsets[i*2].toDouble()).toFloat()
-            val ay = Math.cos(offsets[i*2].toDouble()).toFloat()
-            val vx = (ax * particleVelocity.x)
-            val vy = (ay * particleVelocity.y)
-
-            val k = ((((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime)
-            val x1 = -psize * k + vx * k + ax * particleSpread * offsets[i*2+1]
-            val x2 = psize * k + vx * k + ax * particleSpread * offsets[i*2+1]
-            val y1 = -psize * k + vy * k + ay * particleSpread * offsets[i*2+1]
-            val y2 = psize * k + vy * k + ay * particleSpread * offsets[i*2+1]
-
-            bufferData[index1] = x1
-            bufferData[index1 + 1] = y1
-            bufferData[index1 + 2] = k
-
-            bufferData[index1 + 3] = x1
-            bufferData[index1 + 4] = y2
-            bufferData[index1 + 5] = k
-
-            bufferData[index1 + 6] = x2
-            bufferData[index1 + 7] = y2
-            bufferData[index1 + 8] = k
-
-            bufferData[index1 + 9] = x2
-            bufferData[index1 + 10] = y1
             bufferData[index1 + 11] = k
             index1 += 12
         }
