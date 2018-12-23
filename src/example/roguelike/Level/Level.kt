@@ -1134,7 +1134,7 @@ class Level(val player: Player) {
         containerSystem.clear()
 
         for (i in 0 until random.nextInt(50) + 100) {
-            val container = Container()
+            val container = Container(random.nextInt(2))
             containerSystem.newEntity(container)
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)

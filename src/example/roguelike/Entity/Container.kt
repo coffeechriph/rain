@@ -5,7 +5,7 @@ import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
 
-class Container : Entity() {
+class Container(val containerType: Int) : Entity() {
     var health = 0
     var open = false
     var looted = false
@@ -40,11 +40,11 @@ class Container : Entity() {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         if (open) {
             sprite.textureTileOffset.x = 1
-            sprite.textureTileOffset.y = 4
+            sprite.textureTileOffset.y = containerType+4
         }
         else {
             sprite.textureTileOffset.x = 0
-            sprite.textureTileOffset.y = 4
+            sprite.textureTileOffset.y = containerType+4
         }
     }
 }

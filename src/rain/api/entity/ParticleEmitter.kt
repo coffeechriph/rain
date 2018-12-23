@@ -22,7 +22,6 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val transfor
     var startColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f)
     var endColor = Vector4f(0.0f, 1.0f, 0.0f, 0.0f)
     var startSize = 0.0f
-    var sizeIncrease = 16.0f
 
     private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
     private var bufferData: FloatArray = FloatArray(numParticles*20)
