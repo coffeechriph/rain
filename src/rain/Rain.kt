@@ -1,5 +1,6 @@
 package rain
 
+import org.lwjgl.glfw.GLFW
 import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
@@ -12,7 +13,7 @@ import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
 
 open class Rain {
-    private val context = Window()
+    private val window = Window()
     private val vk = Vk()
     private val timer = Timer()
     private lateinit var vulkanRenderer: VulkanRenderer
@@ -24,8 +25,19 @@ open class Rain {
         private set
     val scene = Scene()
 
+    var showMouse = true
+        set(value) {
+            val flag = if (value) {
+                GLFW.GLFW_CURSOR_NORMAL
+            } else {
+                GLFW.GLFW_CURSOR_HIDDEN
+            }
+            GLFW.glfwSetInputMode(window.windowPointer, GLFW.GLFW_CURSOR, flag)
+            field = value
+        }
+
     fun create(width: Int, height: Int, title: String, api: Api) {
-        context.create(width, height, title, input)
+        window.create(width, height, title, input)
 
         when(api) {
             Api.VULKAN -> createVulkanApi()
@@ -37,8 +49,8 @@ open class Rain {
     }
 
     private fun createVulkanApi() {
-        vk.create(context.windowPointer)
-        vulkanRenderer = VulkanRenderer(vk, context)
+        vk.create(window.windowPointer)
+        vulkanRenderer = VulkanRenderer(vk, window)
         vulkanRenderer.create()
         resourceFactory = VulkanResourceFactory(vk, vulkanRenderer)
     }
@@ -50,12 +62,12 @@ open class Rain {
         scene.init(resourceFactory)
         init()
 
-        while (context.pollEvents()) {
+        while (window.pollEvents()) {
             timer.update()
             if (!stateManager.switchState) {
-                context.title = "FPS: " + timer.framesPerSecond
-                vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || context.windowDirty
-                context.windowDirty = false
+                window.title = "FPS: " + timer.framesPerSecond
+                vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
+                window.windowDirty = false
 
                 gui.update(input)
                 scene.update(vulkanRenderer, input, timer.deltaTime)
@@ -84,7 +96,7 @@ open class Rain {
         }
 
         vulkanRenderer.destroy()
-        context.destroy();
+        window.destroy();
         endLog()
     }
 }

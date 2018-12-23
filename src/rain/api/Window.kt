@@ -1,4 +1,4 @@
-package rain.api;
+package rain.api
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -11,8 +11,8 @@ internal class Window {
     var title: String = ""
         get() = this.toString()
         set(value) {
-            glfwSetWindowTitle(windowPointer, value);
-            field = value;
+            glfwSetWindowTitle(windowPointer, value)
+            field = value
         }
     var windowDirty = false
 
@@ -32,7 +32,7 @@ internal class Window {
             log("Vulkan is supported!")
         }
 
-        glfwDefaultWindowHints();
+        glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
 
@@ -79,15 +79,15 @@ internal class Window {
 
     fun pollEvents(): Boolean {
         glfwPollEvents()
-        return !glfwWindowShouldClose(windowPointer);
+        return !glfwWindowShouldClose(windowPointer)
     }
 
     fun destroy() {
-        glfwFreeCallbacks(windowPointer);
-        glfwDestroyWindow(windowPointer);
+        glfwFreeCallbacks(windowPointer)
+        glfwDestroyWindow(windowPointer)
 
-        glfwTerminate();
-        glfwSetErrorCallback(null)?.free();
+        glfwTerminate()
+        glfwSetErrorCallback(null)?.free()
     }
 }
 

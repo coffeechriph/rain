@@ -85,18 +85,26 @@ class Player : Entity() {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         transform.z = 1.0f + transform.y * 0.001f
 
-        setDirectionBasedOnInput(input)
+        if (!inventory.visible) {
+            setDirectionBasedOnInput(input)
 
-        if (attack.isReady() && !inventory.visible) {
-            if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
-                attack.attack(Direction.LEFT)
-            } else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
-                attack.attack(Direction.RIGHT)
-            } else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
-                attack.attack(Direction.UP)
-            } else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
-                attack.attack(Direction.DOWN)
+            if (attack.isReady()) {
+                if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
+                    attack.attack(Direction.LEFT)
+                } else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
+                    attack.attack(Direction.RIGHT)
+                } else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
+                    attack.attack(Direction.UP)
+                } else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
+                    attack.attack(Direction.DOWN)
+                }
             }
+        }
+        else {
+            leftActive = false
+            rightActive = false
+            upActive = false
+            downActive = false
         }
 
         var velX = 0.0f
