@@ -150,10 +150,9 @@ class Inventory(val gui: Gui, val player: Player) {
                 }
 
                 updateEquippedItems()
-                updateSelectedItemDesc(selectedItemIndex)
             }
         }
-        else if(dropButton.active && selectedItemIndex < items.size-1) {
+        else if(input.keyState(Input.Key.KEY_D) == Input.InputState.PRESSED && selectedItemIndex < items.size) {
             selectedItem = items[selectedItemIndex]
             if (selectedItem != ItemNone) {
                 if (selectedItem == equippedWeapon) {
@@ -195,18 +194,21 @@ class Inventory(val gui: Gui, val player: Player) {
                 container.isDirty = true
 
                 updateEquippedItems()
-
-                if (items.size > 0) {
-                    updateSelectedItemDesc(selectedItemIndex)
-                }
+                updateSelectedItemDesc(selectedItemIndex)
             }
         }
     }
 
     private fun updateSelectedItemDesc(index: Int) {
-        lastButtonClicked = itemButtons[index]
-        itemButtons[index].active = true
-        selectedItem = items[index]
+        if (items.size > 0) {
+            lastButtonClicked = itemButtons[index]
+            itemButtons[index].active = true
+            selectedItem = items[index]
+        }
+        else {
+            selectedItem = ItemNone
+        }
+
         if (::itemDescName.isInitialized) {
             container.removeText(itemDescName)
             container.removeText(itemDescType)
