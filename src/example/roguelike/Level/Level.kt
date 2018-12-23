@@ -423,37 +423,56 @@ class Level(val player: Player) {
 
         var x = 0.0f
         var y = 0.0f
+        var ix = 0
+        var iy = 0
         var index = 0
         for (i in 0 until lightValues.size) {
+            val top = if (iy > 0) { lightValues[ix + (iy-1)*width] } else { lightValues[i] }
+            val bot = if (iy < height-1) { lightValues[ix + (iy+1)*width] } else { lightValues[i] }
+
+            val topleft = if (ix > 0 && iy > 0) { lightValues[(ix-1) + (iy-1)*width] } else { lightValues[i] }
+            val left = if (ix > 0) { lightValues[(ix-1) + iy*width] } else { lightValues[i] }
+            val botleft = if (ix > 0 && iy < height-1) { lightValues[(ix-1) + (iy+1)*width] } else { lightValues[i] }
+
+            val topRight = if (ix < width-1 && iy > 0) { lightValues[(ix+1) + (iy-1)*width] } else { lightValues[i] }
+            val right = if (ix < width-1) { lightValues[(ix+1) + iy*width] } else { lightValues[i] }
+            val botRight = if (ix < width-1 && iy < height-1) { lightValues[(ix+1) + (iy+1)*width] } else { lightValues[i] }
+
             lightVertices[index] = x
             lightVertices[index+1] = y
-            lightVertices[index+2] = lightValues[i]
+            lightVertices[index+2] = (lightValues[i]+topleft+left+top)*0.25f
 
             lightVertices[index+3] = x
             lightVertices[index+4] = y+64.0f
-            lightVertices[index+5] = lightValues[i]
+            lightVertices[index+5] = (lightValues[i]+botleft+left+bot)*0.25f
 
             lightVertices[index+6] = x+64.0f
             lightVertices[index+7] = y+64.0f
-            lightVertices[index+8] = lightValues[i]
+            lightVertices[index+8] = (lightValues[i]+botRight+right+bot)*0.25f
 
             lightVertices[index+9] = x+64.0f
             lightVertices[index+10] = y+64.0f
-            lightVertices[index+11] = lightValues[i]
+            lightVertices[index+11] = (lightValues[i]+botRight+right+bot)*0.25f
 
             lightVertices[index+12] = x+64.0f
             lightVertices[index+13] = y
-            lightVertices[index+14] = lightValues[i]
+            lightVertices[index+14] = (lightValues[i]+topRight+right+top)*0.25f
 
             lightVertices[index+15] = x
             lightVertices[index+16] = y
-            lightVertices[index+17] = lightValues[i]
+            lightVertices[index+17] = (lightValues[i]+topleft+left+top)*0.25f
 
             index += 18
             x += 64.0f
             if (x >= width*64.0f) {
                 x = 0.0f
                 y += 64.0f
+            }
+
+            ix += 1
+            if (ix >= width) {
+                ix = 0
+                iy += 1
             }
         }
 
