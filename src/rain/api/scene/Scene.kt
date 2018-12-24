@@ -123,8 +123,24 @@ class Scene {
             }
 
             for (emitter in system.getParticleEmitterList()) {
-                emitter!!.update(system, deltaTime * 0.5f)
-                submitListParticles.add(Drawable(emitter.transform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.indexBuffer))
+                if (!emitter!!.enabled) {
+                    continue
+                }
+
+                emitter.update(system, deltaTime * 0.5f)
+                submitListParticles.add(Drawable(emitter.parentTransform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.indexBuffer))
+            }
+
+            for (emitter in system.getBurstParticleEmitterList()) {
+                if (!emitter!!.enabled) {
+                    continue
+                }
+
+                emitter.update(system, deltaTime * 0.5f)
+
+                if (!emitter.burstFinished) {
+                    submitListParticles.add(Drawable(emitter.parentTransform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.indexBuffer))
+                }
             }
 
             for (collider in system.getColliderList()) {
@@ -138,6 +154,7 @@ class Scene {
         for (drawable in submitListSorted) {
             renderer.submitDraw(drawable)
         }
+
         for (drawable in submitListParticles) {
             renderer.submitDraw(drawable)
         }

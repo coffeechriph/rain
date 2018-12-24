@@ -20,12 +20,14 @@ class EntitySystem<T: Entity>(val scene: Scene) {
     private var animatorComponents = ArrayList<Animator?>()
     private var colliderComponents = ArrayList<Collider?>()
     private var particleEmitters = ArrayList<ParticleEmitter?>()
+    private var burstParticleEmitters = ArrayList<BurstParticleEmitter?>()
 
     private var spriteComponentsMap = HashMap<Long, Sprite?>()
     private var transformComponentsMap = HashMap<Long, Transform?>()
     private var colliderComponentsMap = HashMap<Long, Collider?>()
     private var animatorComponentsMap = HashMap<Long, Animator?>()
     private var particleEmittersMap = HashMap<Long, ParticleEmitter?>()
+    private var burstParticleEmitterMap = HashMap<Long, BurstParticleEmitter?>()
     private var entityWrappersMap = HashMap<Long, T?>()
 
     fun newEntity(entity: T): Builder<T> {
@@ -68,6 +70,12 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             particleEmittersMap.remove(entity.getId())
         }
 
+        val burstParticleEmitter = burstParticleEmitterMap[entity.getId()]
+        if (burstParticleEmitter != null) {
+            burstParticleEmitters.remove(burstParticleEmitter)
+            burstParticleEmitterMap.remove(entity.getId())
+        }
+
         entityWrappersMap.remove(entity.getId())
         entityWrappers.remove(entity)
     }
@@ -85,6 +93,8 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         animatorComponentsMap.clear()
         particleEmitters.clear()
         particleEmittersMap.clear()
+        burstParticleEmitters.clear()
+        burstParticleEmitterMap.clear()
 
         for (collider in colliderComponents) {
             scene.physicWorld.destroyBody(collider!!.getBody())
@@ -234,6 +244,19 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
+        fun attachBurstParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float): Builder<T> {
+            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
+
+            if (system.burstParticleEmitterMap.containsKey(entityId)) {
+                assertion("A entity may only have 1 particleEmitter component attached at once!")
+            }
+
+            val emitter = BurstParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread)
+            system.burstParticleEmitters.add(emitter)
+            system.burstParticleEmitterMap[entityId] = emitter
+            return this
+        }
+
         fun build(): Long {
             entity.init(system.scene, system)
             return system.entities[system.entities.size-1]
@@ -265,6 +288,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         return particleEmittersMap[entityId]
     }
 
+    fun findBurstEmitterComponent(entityId: Long): BurstParticleEmitter? {
+        return burstParticleEmitterMap[entityId]
+    }
+
     internal fun findEntity(entityId: Long): T? {
         return entityWrappersMap[entityId]
     }
@@ -287,6 +314,10 @@ class EntitySystem<T: Entity>(val scene: Scene) {
 
     internal fun getParticleEmitterList(): List<ParticleEmitter?> {
         return particleEmitters
+    }
+
+    internal fun getBurstParticleEmitterList(): List<BurstParticleEmitter?> {
+        return burstParticleEmitters
     }
 
     private fun uniqueId(): Long {

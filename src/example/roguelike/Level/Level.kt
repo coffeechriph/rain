@@ -298,7 +298,7 @@ class Level(val player: Player) {
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 1)))
         lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", null, Vector3f(1.0f, 1.0f, 1.0f))
         val lightTransform = Transform()
-        lightTransform.z = 10.0f
+        lightTransform.z = 4.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
     }
 

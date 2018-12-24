@@ -11,8 +11,9 @@ import rain.api.gfx.VertexBufferState
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.Comparator
 
-class ParticleEmitter constructor(resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
+class BurstParticleEmitter constructor(resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
     data class Particle (var x: Float, var y: Float, var i: Float)
 
     var vertexBuffer: VertexBuffer
@@ -24,6 +25,8 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val parentTr
     var endColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f)
     var startSize = 1.0f
     var enabled = true
+    var burstFinished = false
+    var particlesPerBurst = 0
 
     private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
     private var bufferData: FloatArray = FloatArray(numParticles*20)
@@ -110,7 +113,7 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val parentTr
         val vy = particleVelocity.y
 
         for (i in 0 until numParticles) {
-            val k = (((i.toFloat() * factor) + tick) % particleLifetime)
+            val k = ((((i/particlesPerBurst).toFloat() * factor) + tick) % particleLifetime)
             particles[i].x = vx * k + offsets[i*2]
             particles[i].y = vy * k + offsets[i*2+1]
             particles[i].i = k
