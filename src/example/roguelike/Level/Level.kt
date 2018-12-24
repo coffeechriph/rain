@@ -2,10 +2,7 @@ package example.roguelike.Level
 
 import com.badlogic.gdx.physics.box2d.BodyDef
 import example.roguelike.Entity.*
-import org.joml.Vector2f
-import org.joml.Vector2i
-import org.joml.Vector3f
-import org.joml.Vector4i
+import org.joml.*
 import rain.api.entity.DirectionType
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -13,11 +10,10 @@ import rain.api.entity.Transform
 import rain.api.gfx.*
 import rain.api.scene.*
 import rain.vulkan.VertexAttribute
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Random
 import kotlin.math.sign
 
-class Level(val player: Player) {
+class Level(val player: Player, val resourceFactory: ResourceFactory) {
     lateinit var map: IntArray
         private set
     var mapWidth = 0
@@ -194,9 +190,13 @@ class Level(val player: Player) {
         for (container in containers) {
             container.sprite.visible = container.cellX == player.cellX && container.cellY == player.cellY
             container.collider.setActive(container.sprite.visible)
+            val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
+            emitter.enabled = container.sprite.visible
 
             if (container.open && !container.looted) {
                 container.looted = true
+                val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
+                emitter.fireSingleBurst()
 
                 for (i in 0 until random.nextInt(5) + 1) {
                     val combination = ITEM_COMBINATIONS[random.nextInt(ITEM_COMBINATIONS.size)]
@@ -492,7 +492,7 @@ class Level(val player: Player) {
         val mx = player.cellX * width + x
         val my = player.cellY * height + y
 
-        if (x > 0 && y >= 0) {
+        if (x > 0 && y >= 0 && x < width) {
             if (lightValues[(x-1) + y * width] < value - att) {
                 if (map[(mx-1) + my * mapWidth] == 0) {
                     spreadLight(x - 1, y, value - att)
@@ -1139,7 +1139,15 @@ class Level(val player: Player) {
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)
                     .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
+                    .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f)
                     .build()
+            val emitter = containerSystem.findBurstEmitterComponent (container.getId())!!
+            emitter.burstFinished = true
+            emitter.singleBurst = true
+            emitter.particlesPerBurst = 5
+            emitter.startColor = Vector4f(0.4f, 0.4f, 0.4f, 1.0f)
+            emitter.endColor = Vector4f(0.4f, 0.4f, 0.4f, 0.0f)
+            emitter.transform.z = 12.0f
             val room = rooms[random.nextInt(rooms.size)]
             val tile = room.findNoneEdgeTile(random)
 

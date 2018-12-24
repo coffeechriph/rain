@@ -211,11 +211,20 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
         val projectionMatrixBuffer = memAlloc(16 * 4)
         camera.projection.get(projectionMatrixBuffer)
+
+        val obsoletePipelines = ArrayList<Pipeline>()
         for (pipeline in pipelines) {
+            if (!pipeline.vertexBuffer.isValid || !pipeline.material.isValid || (pipeline.indexBuffer != null && !pipeline.indexBuffer!!.isValid)) {
+                obsoletePipelines.add(pipeline)
+                continue
+            }
+
             pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer, nextImage)
             pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
+
+        pipelines.removeAll(obsoletePipelines)
 
         renderpass.end(renderCommandBuffers[frameIndex])
 

@@ -91,6 +91,15 @@ class EntitySystem<T: Entity>(val scene: Scene) {
         entityWrappersMap.clear()
         animatorComponents.clear()
         animatorComponentsMap.clear()
+
+        for (emitter in particleEmitters) {
+            emitter!!.clear()
+        }
+
+        for (emitter in burstParticleEmitters) {
+            emitter!!.clear()
+        }
+
         particleEmitters.clear()
         particleEmittersMap.clear()
         burstParticleEmitters.clear()

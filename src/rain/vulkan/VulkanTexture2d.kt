@@ -7,9 +7,9 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.assertion
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
+import rain.assertion
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
@@ -18,6 +18,8 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
     private var texture: Long = 0
     var textureView: Long = 0
     var textureSampler: Long = 0
+    var isValid = true
+        private set
 
     private var width = 0
     private var height = 0
@@ -208,5 +210,6 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
     fun destroy(logicalDevice: LogicalDevice) {
         vkDestroyImage(logicalDevice.device, texture, null)
         vkDestroySampler(logicalDevice.device, textureSampler, null)
+        isValid = false
     }
 }

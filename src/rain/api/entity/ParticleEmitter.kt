@@ -12,7 +12,9 @@ import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import java.util.*
 
-class ParticleEmitter constructor(resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
+class ParticleEmitter constructor(private val resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val
+particleSize:
+Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
     data class Particle (var x: Float, var y: Float, var i: Float)
 
     var vertexBuffer: VertexBuffer
@@ -86,6 +88,11 @@ class ParticleEmitter constructor(resourceFactory: ResourceFactory, val parentTr
         fbuf.put(22, endColor.z)
         fbuf.put(23, endColor.w)
         return modelMatrixBuffer
+    }
+
+    fun clear() {
+        resourceFactory.deleteVertexBuffer(vertexBuffer)
+        resourceFactory.deleteIndexBuffer(indexBuffer)
     }
 
     fun update(entitySystem: EntitySystem<Entity>, deltaTime: Float) {

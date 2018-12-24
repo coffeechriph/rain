@@ -41,6 +41,10 @@ class Scene {
         simpleDraws.add(simpleDraw)
     }
 
+    fun removeEntitySystem(system: EntitySystem<*>) {
+        entitySystems.remove(system)
+    }
+
     fun setActiveCamera(camera: Camera) {
         this.camera = camera
     }
@@ -164,6 +168,7 @@ class Scene {
         entitySystems.clear()
         tilemaps.clear()
         cameras.clear()
+        simpleDraws.clear()
 
         // The world needs to be alive - we just want to clear it from old colliders
         physicWorld.dispose()

@@ -10,7 +10,6 @@ import org.joml.Vector3f
 import rain.State
 import rain.StateManager
 import rain.api.Input
-import rain.api.entity.DirectionType
 import rain.api.entity.EntitySystem
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
@@ -51,14 +50,10 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .attachSpriteComponent(mobMaterial)
                 .attachAnimatorComponent()
                 .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
-                .attachBurstParticleEmitter(resourceFactory, 100, 32.0f, 1.0f, Vector2f(0.0f, -100.0f), DirectionType.LINEAR, 64.0f)
                 .build()
 
-        val e = playerSystem.findBurstEmitterComponent(player.getId())!!
-        e.transform.z = 5.0f
-        e.particlesPerBurst = 10
         scene.addSystem(playerSystem)
-        level = Level(player)
+        level = Level(player, resourceFactory)
 
         val attackTexture = resourceFactory.loadTexture2d("attackTexture","./data/textures/attack.png", TextureFilter.NEAREST)
         attackTexture.setTiledTexture(16,16)
@@ -114,6 +109,10 @@ class GameState(stateManager: StateManager): State(stateManager) {
     }
 
     override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
+        if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
+            val e = playerSystem.findBurstEmitterComponent(player.getId())!!
+            e.fireSingleBurst()
+        }
         if (player.health <= 0) {
             stateManager.startState("menu")
         }

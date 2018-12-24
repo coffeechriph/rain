@@ -154,6 +154,18 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         }
     }
 
+    override fun deleteVertexBuffer(vertexBuffer: VertexBuffer) {
+        val vbuf = vertexBuffer as VulkanVertexBuffer
+        vbuf.destroy(logicalDevice)
+        buffers.remove(vbuf)
+    }
+
+    override fun deleteIndexBuffer(indexBuffer: IndexBuffer) {
+        val ibuf = indexBuffer as VulkanIndexBuffer
+        ibuf.destroy(logicalDevice)
+        indexBuffers.remove(ibuf)
+    }
+
     override fun getMaterial(name: String): Material {
         for (material in materials) {
             if (material.name == name) {

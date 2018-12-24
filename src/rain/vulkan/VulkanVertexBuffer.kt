@@ -18,6 +18,8 @@ internal class VulkanVertexBuffer: VertexBuffer {
         private set
     var bufferSize: Long = 0
         private set
+    var isValid = true
+        private set
     private var bufferMemory: Long = 0
     var vertexCount: Int = 0
         private set
@@ -66,6 +68,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
     fun destroy(logicalDevice: LogicalDevice) {
         vkDestroyBuffer(logicalDevice.device, buffer, null)
         buffer = 0L
+        isValid = false
     }
 
     fun create(vk: Vk, commandPool: CommandPool, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {

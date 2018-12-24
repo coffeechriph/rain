@@ -17,6 +17,8 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
         private set
     var indexCount: Int = 0
         private set
+    var isValid = true
+        private set
 
     private var bufferState = VertexBufferState.STATIC
 
@@ -45,6 +47,7 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
     fun destroy(logicalDevice: LogicalDevice) {
         vkDestroyBuffer(logicalDevice.device, buffer, null)
         buffer = 0L
+        isValid = false
     }
 
     fun create(vk: Vk, commandPool: CommandPool, indicies: IntArray, state: VertexBufferState) {

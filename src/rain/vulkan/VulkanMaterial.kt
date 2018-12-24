@@ -12,6 +12,18 @@ texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: Lo
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer()
     internal val sceneData = UniformBuffer()
+    var isValid = true
+        private set
+        get() {
+            for (texture in texture2d) {
+                val t = texture as VulkanTexture2d
+                if (!t.isValid) {
+                    return false
+                }
+            }
+
+            return field
+        }
 
     override fun getTexture2d(): Array<Texture2d> {
         return texture2d
@@ -56,6 +68,7 @@ texture2d: Array<Texture2d>, internal val color: Vector3f, val logicalDevice: Lo
     }
 
     fun destroy() {
+        isValid = false
         sceneData.destroy(logicalDevice)
         textureDataUBO.destroy(logicalDevice)
         descriptorPool.destroy(logicalDevice)
