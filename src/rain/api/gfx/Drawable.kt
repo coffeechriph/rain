@@ -1,6 +1,5 @@
 package rain.api.gfx
 
-import rain.api.entity.Transform
 import java.nio.ByteBuffer
 
-data class Drawable(val transform: Transform, val material: Material, val uniformData: ByteBuffer, val vertexBuffer: VertexBuffer, val indexBuffer: IndexBuffer?)
+data class Drawable(val material: Material, val uniformData: ByteBuffer, val vertexBuffer: VertexBuffer, val z: Float, val indexBuffer: IndexBuffer? = null)

@@ -75,7 +75,7 @@ class Scene {
         val submitListSorted = ArrayList<Drawable>()
         var submitListParticles = ArrayList<Drawable>()
         for (tilemap in tilemaps) {
-            submitListSorted.add(Drawable(tilemap.transform, tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, null))
+            submitListSorted.add(Drawable(tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, tilemap.transform.z))
         }
 
         for (simpleDraw in simpleDraws) {
@@ -88,7 +88,7 @@ class Scene {
             val byteBuffer = MemoryUtil.memAlloc(16 * 4)
             modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
 
-            submitListSorted.add(Drawable(simpleDraw.transform, simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, null))
+            submitListSorted.add(Drawable(simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, simpleDraw.transform.z))
         }
 
         for (system in entitySystems) {
@@ -121,7 +121,7 @@ class Scene {
                     continue
                 }
 
-                submitListSorted.add(Drawable(sprite.transform, sprite.material, sprite.getUniformData(), quadVertexBuffer, null))
+                submitListSorted.add(Drawable(sprite.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
             }
 
             for (emitter in system.getParticleEmitterList()) {
@@ -130,7 +130,7 @@ class Scene {
                 }
 
                 emitter.update(system, deltaTime * 0.5f)
-                submitListParticles.add(Drawable(emitter.parentTransform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.indexBuffer))
+                submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
             }
 
             for (emitter in system.getBurstParticleEmitterList()) {
@@ -141,7 +141,7 @@ class Scene {
                 emitter.update(system, deltaTime * 0.5f)
 
                 if (!emitter.burstFinished) {
-                    submitListParticles.add(Drawable(emitter.parentTransform, emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.indexBuffer))
+                    submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
                 }
             }
 
@@ -152,7 +152,7 @@ class Scene {
             }
         }
 
-        submitListSorted.sortBy { drawable -> drawable.transform.z }
+        submitListSorted.sortBy { drawable -> drawable.z }
         for (drawable in submitListSorted) {
             renderer.submitDraw(drawable)
         }
