@@ -515,7 +515,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
 
-        if (x < width - 1 && y >= 0) {
+        if (x < width - 1 && y >= 0 && x >= 0) {
             if (lightValues[(x+1) + y * width] < value - att) {
                 if (map[(mx+1) + my * mapWidth] == 0) {
                     spreadLight(x + 1, y, value - att)
