@@ -10,10 +10,9 @@ import rain.log
 import java.nio.ByteBuffer
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
-internal class VulkanVertexBuffer: VertexBuffer {
+internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
     internal class Buffer(var buffer: Long, var bufferMemory: Long, var bufferSize: Long)
 
-    val id: Long
     var buffer: Long = 0
         private set
     var bufferSize: Long = 0
@@ -34,10 +33,6 @@ internal class VulkanVertexBuffer: VertexBuffer {
     private lateinit var commandPool: CommandPool
 
     private lateinit var dataBuffer: ByteBuffer
-
-    constructor(id: Long) {
-        this.id = id
-    }
 
     // TODO: Can we optimize this?
     override fun update(vertices: FloatArray) {
@@ -107,6 +102,7 @@ internal class VulkanVertexBuffer: VertexBuffer {
         this.vk = vk
         this.commandPool = commandPool
         this.bufferState = state
+        this.isValid = true
     }
 
     private fun createVertexBuffer(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, vertices: FloatArray) {

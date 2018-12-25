@@ -162,6 +162,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
         this.indexBuffer = indexBuffer
         this.vertesShaderId = material.vertexShader.id
         this.fragmentShaderId = material.fragmentShader.id
+        this.isValid = true
 
         shaderStages.free()
         multisampleState.free()

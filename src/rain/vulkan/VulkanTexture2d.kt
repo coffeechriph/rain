@@ -168,6 +168,8 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
             }
             this.textureSampler = sampler.get(0)
         }
+
+        this.isValid = true
     }
 
     private fun findTextureFormat(channels: Int): Int {

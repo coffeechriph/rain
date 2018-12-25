@@ -71,6 +71,7 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
         indexCount = indicies.size
         this.vk = vk
         this.commandPool = commandPool
+        this.isValid = true
     }
 
     private fun createIndexBuffer(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, indicies: IntArray) {
