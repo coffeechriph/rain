@@ -52,7 +52,7 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
                 }
                 createVertexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, vertices)
             } else {
-                if (vertices.size >= dataBuffer.capacity()/4) {
+                if (vertices.size > dataBuffer.capacity()/4) {
                     createVertexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, vertices)
                 }
                 else {
