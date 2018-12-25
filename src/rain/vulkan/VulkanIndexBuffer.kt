@@ -16,7 +16,7 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
         private set
     var indexCount: Int = 0
         private set
-    var isValid = true
+    var isValid = false
         private set
 
     private var bufferState = VertexBufferState.STATIC
@@ -25,6 +25,10 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
 
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
+
+    override fun valid(): Boolean {
+        return isValid
+    }
 
     override fun update(indices: IntArray) {
         if (indices.isEmpty()) {

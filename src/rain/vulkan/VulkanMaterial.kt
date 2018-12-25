@@ -11,7 +11,7 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer()
     internal val sceneData = UniformBuffer()
-    var isValid = true
+    var isValid = false
         private set
         get() {
             for (texture in texture2d) {
@@ -30,6 +30,10 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
 
     override fun getTexture2d(): Array<Texture2d> {
         return texture2d
+    }
+
+    override fun valid(): Boolean {
+        return isValid
     }
 
     init {
@@ -68,6 +72,7 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
         }
 
         descriptorPool.build(logicalDevice)
+        isValid = true
     }
 
     fun destroy() {

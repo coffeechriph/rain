@@ -18,7 +18,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
     private var texture: Long = 0
     var textureView: Long = 0
     var textureSampler: Long = 0
-    var isValid = true
+    var isValid = false
         private set
 
     private var width = 0
@@ -45,6 +45,10 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
     override fun setTiledTexture(tileWidth: Int, tileHeight: Int) {
         texCoordWidth = (tileWidth.toFloat() / width.toFloat())
         texCoordHeight = (tileHeight.toFloat() / height.toFloat())
+    }
+
+    override fun valid(): Boolean {
+        return isValid
     }
 
     fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String, filter: TextureFilter) {

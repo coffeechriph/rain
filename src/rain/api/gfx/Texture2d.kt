@@ -7,4 +7,5 @@ interface Texture2d {
 
     fun getTexCoordWidth(): Float
     fun getTexCoordHeight(): Float
+    fun valid(): Boolean
 }

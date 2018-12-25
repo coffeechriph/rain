@@ -17,7 +17,7 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
         private set
     var bufferSize: Long = 0
         private set
-    var isValid = true
+    var isValid = false
         private set
     private var bufferMemory: Long = 0
     var vertexCount: Int = 0
@@ -33,6 +33,10 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
     private lateinit var commandPool: CommandPool
 
     private lateinit var dataBuffer: ByteBuffer
+
+    override fun valid(): Boolean {
+        return isValid
+    }
 
     // TODO: Can we optimize this?
     override fun update(vertices: FloatArray) {

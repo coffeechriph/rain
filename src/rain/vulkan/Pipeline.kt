@@ -15,7 +15,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
     var pipelineLayout: Long = 0
         private set
 
-    var isValid = true
+    var isValid = false
         private set
         get() {
             if (!vertexBuffer.isValid) {

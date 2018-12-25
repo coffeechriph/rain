@@ -167,8 +167,6 @@ class Scene {
         tilemaps.clear()
         cameras.clear()
         simpleDraws.clear()
-
-        // The world needs to be alive - we just want to clear it from old colliders
         physicWorld.dispose()
     }
 }

@@ -10,7 +10,7 @@ internal class Renderpass {
     var renderpass: Long = 0
         private set
 
-    var isValid = true
+    var isValid = false
         private set
 
     private var clearValues = VkClearValue.calloc(2)

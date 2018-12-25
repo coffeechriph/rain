@@ -3,12 +3,32 @@ package rain.api.scene
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
 import rain.api.entity.Transform
-import rain.api.gfx.*
+import rain.api.gfx.Material
+import rain.api.gfx.ResourceFactory
+import rain.api.gfx.VertexBuffer
+import rain.api.gfx.VertexBufferState
 import rain.log
 import java.nio.ByteBuffer
 
 class Tilemap {
     private val modelMatrix = Matrix4f()
+    var tileNumX = 128
+        private set
+    var tileNumY = 128
+        private set
+    var tileWidth = 16.0f
+        private set
+    var tileHeight = 16.0f
+        private set
+    var transform = Transform()
+        private set
+
+    internal lateinit var vertexBuffer: VertexBuffer
+        private set
+    lateinit var material: Material
+        private set
+
+    private lateinit var vertices: ArrayList<Float>
 
     fun getUniformData(): ByteBuffer {
         if (transform.updated) {
@@ -23,24 +43,6 @@ class Tilemap {
         return byteBuffer
     }
 
-    var tileNumX = 128
-        private set
-    var tileNumY = 128
-        private set
-    var tileWidth = 16.0f
-        private set
-    var tileHeight = 16.0f
-        private set
-
-    internal lateinit var vertexBuffer: VertexBuffer
-        private set
-    lateinit var material: Material
-        private set
-    var transform = Transform()
-        private set
-
-    private lateinit var vertices: ArrayList<Float>
-
     fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32, tileNumY: Int = 32,
                tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileIndex>) {
         assert(map.size == tileNumX * tileNumY)
@@ -49,6 +51,8 @@ class Tilemap {
         var y = 0.0f
 
         vertices = ArrayList() // pos(vec2), uv(vec2). 6 vertices per tile
+        // TODO: We can optimize this by specifying x,y as 1 int32 and scale them in the shader by size
+        // This would allow us to have a tilemap with 65535 tiles on every axis
         for (i in 0 until tileNumX*tileNumY) {
             if (map[i] != TileIndexNone) {
                 val tileX = map[i].x
@@ -103,7 +107,6 @@ class Tilemap {
         this.material = material
     }
 
-    // TODO: Add a check to make sure that the vertexBuffer has already been created
     fun update(tileIndices: Array<TileIndex>) {
         assert(tileIndices.size == tileNumX * tileNumY)
 
@@ -156,7 +159,9 @@ class Tilemap {
             }
         }
 
-        vertexBuffer.update(vertices.toFloatArray())
+        if (vertexBuffer.valid()) {
+            vertexBuffer.update(vertices.toFloatArray())
+        }
     }
 
     fun destroy() {
