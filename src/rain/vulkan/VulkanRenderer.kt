@@ -70,6 +70,22 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     }
 
     override fun submitDraw(drawable: Drawable) {
+        val vbuf = drawable.vertexBuffer as VulkanVertexBuffer
+        if (!vbuf.isValid) {
+            assertion("Can't submit a drawable with invalid vertex buffer!")
+        }
+
+        val vmat = drawable.material as VulkanMaterial
+        if (!vmat.isValid) {
+            assertion("Can't submit a drawable with invalid material!")
+        }
+
+        if(drawable.indexBuffer != null) {
+            if (!(drawable.indexBuffer as VulkanIndexBuffer).isValid) {
+                assertion("Cant submit a drawable with invalid index buffer!")
+            }
+        }
+
         drawOpsQueue.add(drawable)
     }
 

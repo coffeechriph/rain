@@ -8,9 +8,13 @@ import rain.assertion
 import rain.util.readFileAsByteBuffer
 
 internal class ShaderModule(val id: Long) {
-    private var moduleId: Long = 0
+    var isValid = true
+        private set
+
     lateinit var createInfo: VkPipelineShaderStageCreateInfo
         private set
+
+    private var moduleId: Long = 0
 
     private fun load(logicalDevice: LogicalDevice, path: String): Long {
         val shaderCode = readFileAsByteBuffer(path)
@@ -29,6 +33,7 @@ internal class ShaderModule(val id: Long) {
         }
 
         moduleId = shaderModule
+        isValid = true
         return shaderModule
     }
 
@@ -42,5 +47,6 @@ internal class ShaderModule(val id: Long) {
 
     fun destroy(logicalDevice: LogicalDevice) {
         vkDestroyShaderModule(logicalDevice.device, moduleId, null)
+        isValid = false
     }
 }

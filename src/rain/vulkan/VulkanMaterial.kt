@@ -21,6 +21,10 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
                 }
             }
 
+            if (!vertexShader.isValid || !fragmentShader.isValid) {
+                return false
+            }
+
             return field
         }
 
