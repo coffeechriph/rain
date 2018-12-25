@@ -262,8 +262,8 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         maxCellY = mapHeight / height
         texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
-        material = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f,1.0f, 1.0f))
-        itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, Vector3f(1.0f, 1.0f, 1.0f))
+        material = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture)
+        itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture)
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
         this.width = width
@@ -274,8 +274,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
         val enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
-        enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture,
-                Vector3f(1.0f, 1.0f, 1.0f))
+        enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
         enemySystem = EntitySystem(scene)
         scene.addSystem(enemySystem)
 
@@ -289,14 +288,14 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         scene.addSystem(levelItemSystem)
 
         torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
-        torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture)
         torchSystem = EntitySystem(scene)
         scene.addSystem(torchSystem)
 
         lightVertices = FloatArray(width*height*3*6){0.0f}
         lightValues = FloatArray(width*height){0.1f}
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 1)))
-        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", null, Vector3f(1.0f, 1.0f, 1.0f))
+        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", null)
         val lightTransform = Transform()
         lightTransform.z = 4.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))

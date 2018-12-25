@@ -5,7 +5,6 @@ import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
 import org.joml.Matrix4f
 import org.joml.Vector2f
-import org.joml.Vector3f
 import org.lwjgl.system.MemoryUtil
 import rain.api.Input
 import rain.api.entity.Entity
@@ -61,8 +60,7 @@ class Scene {
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
         val fireTexture = resourceFactory.loadTexture2d("fireTexture", "./data/textures/fire.png", TextureFilter.NEAREST)
-        this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv",
-                fireTexture, Vector3f(1.0f, 1.0f, 1.0f))
+        this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv", fireTexture)
 
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)

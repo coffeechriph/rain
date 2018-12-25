@@ -66,8 +66,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
 
         bannerTexture = resourceFactory.loadTexture2d("bannerTexture", "./data/textures/banner.png", TextureFilter.NEAREST)
         bannerTexture.setTiledTexture(256,64)
-        bannerMaterial = resourceFactory.createMaterial("bannerMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", bannerTexture,
-                Vector3f(1.0f, 1.0f, 1.0f))
+        bannerMaterial = resourceFactory.createMaterial("bannerMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", bannerTexture)
         bannerEntity = Entity()
 
         bannerEntitySystem = EntitySystem(scene)

@@ -1,6 +1,5 @@
 package rain.api.gui
 
-import org.joml.Vector3f
 import rain.api.Input
 import rain.api.gfx.Material
 import rain.api.gfx.Renderer
@@ -15,10 +14,9 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
     fun init() {
         font = Font("./data/fonts/FreeSans.ttf")
         font.buildBitmap(resourceFactory, 1024, 1024, 20.0f)
-        textMaterial = resourceFactory.createMaterial("guiTextMaterial","./data/shaders/text.vert.spv", "./data/shaders/text.frag.spv", font.texture, Vector3f(1.0f, 1.0f, 1.0f))
+        textMaterial = resourceFactory.createMaterial("guiTextMaterial","./data/shaders/text.vert.spv", "./data/shaders/text.frag.spv", font.texture)
 
-        componentMaterial = resourceFactory.createMaterial("guiMaterial","./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", texture2d = null,
-                color = Vector3f(1.0f, 1.0f, 1.0f))
+        componentMaterial = resourceFactory.createMaterial("guiMaterial","./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", texture2d = null)
     }
 
     fun newContainer(x: Float, y: Float, w: Float, h: Float): Container {

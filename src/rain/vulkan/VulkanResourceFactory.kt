@@ -1,6 +1,5 @@
 package rain.vulkan
 
-import org.joml.Vector3f
 import org.lwjgl.vulkan.VK10
 import rain.api.gfx.*
 import rain.assertion
@@ -49,7 +48,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     }
 
     // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
-    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, color: Vector3f, depthWriteEnabled: Boolean): Material {
+    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, depthWriteEnabled: Boolean): Material {
         log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
@@ -63,13 +62,13 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         shaders[fragment.id] = fragment
 
         val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L)}}
-        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, textures, color, logicalDevice, physicalDevice.memoryProperties, depthWriteEnabled)
+        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, textures, logicalDevice, physicalDevice.memoryProperties, depthWriteEnabled)
         materials.add(material)
 
         return material
     }
 
-    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, color: Vector3f, depthWriteEnabled: Boolean): Material {
+    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, depthWriteEnabled: Boolean): Material {
         log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
         val vertex = ShaderModule(uniqueId())
         val fragment = ShaderModule(uniqueId())
@@ -83,7 +82,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         shaders[fragment.id] = fragment
 
         val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L)} }
-        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, textures, color, logicalDevice, physicalDevice.memoryProperties, depthWriteEnabled)
+        val material = VulkanMaterial(uniqueId(), name, vertex, fragment, textures, logicalDevice, physicalDevice.memoryProperties, depthWriteEnabled)
         materials.add(material)
 
         return material
