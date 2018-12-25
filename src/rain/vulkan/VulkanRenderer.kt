@@ -214,7 +214,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
         val obsoletePipelines = ArrayList<Pipeline>()
         for (pipeline in pipelines) {
-            if (!pipeline.vertexBuffer.isValid || !pipeline.material.isValid || (pipeline.indexBuffer != null && !pipeline.indexBuffer!!.isValid)) {
+            if (!pipeline.isValid) {
                 obsoletePipelines.add(pipeline)
                 continue
             }
@@ -276,15 +276,15 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
             var found = false
             for (pipeline in pipelines) {
                 // TODO: Ensure same index buffer as well!
-                if (pipeline.vertexBuffer.id == buffer.id && pipeline.material.id == mat.id) {
+                if (pipeline.matches(mat, buffer, indices)) {
                     pipeline.submitDrawInstance(draw)
                     found = true
                 }
             }
 
             if (!found) {
-                val pipeline = Pipeline()
-                pipeline.create(logicalDevice, renderpass, buffer, indices, mat, mat.descriptorPool)
+                val pipeline = Pipeline(mat, buffer)
+                pipeline.create(logicalDevice, renderpass, indices)
                 pipeline.submitDrawInstance(draw)
                 pipelines.add(pipeline)
             }
