@@ -26,7 +26,13 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
     var startSize = 1.0f
     var enabled = true
     var singleBurst = false
+        set(value) {
+            field = value
+            simulating = !singleBurst
+        }
     var burstFinished = false
+    var simulating = true
+        private set
     var particlesPerBurst = 1
 
     private var simIndex = 0
@@ -111,7 +117,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         val factor = particleLifetime / numParticles
 
         if (directionType == DirectionType.LINEAR) {
-            updateParticlesLinear(factor, psize)
+            updateParticlesLinear(psize)
         } else {
             updateParticlesCircular(factor, psize)
         }
@@ -129,12 +135,13 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             simIndex = 0
             simStartIndex = 0
             burstFinished = false
+            simulating = true
         }
     }
 
     // TODO: Velocity should be actual velocity and not the amount to travel during the lifetime
-    private fun updateParticlesLinear(factor: Float, psize: Float) {
-        if (burstFinished) {
+    private fun updateParticlesLinear(psize: Float) {
+        if (burstFinished || !simulating) {
             return
         }
 
@@ -199,6 +206,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
 
         if (simIndex in 1..simStartIndex) {
             burstFinished = true
+            simulating = false
         }
     }
 
@@ -308,6 +316,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
 
         if (simStartIndex >= simIndex) {
             burstFinished = true
+            simulating = false
         }
     }
 }

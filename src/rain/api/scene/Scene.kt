@@ -134,7 +134,7 @@ class Scene {
             }
 
             for (emitter in system.getBurstParticleEmitterList()) {
-                if (!emitter!!.enabled) {
+                if (!emitter!!.enabled || !emitter.simulating) {
                     continue
                 }
 
