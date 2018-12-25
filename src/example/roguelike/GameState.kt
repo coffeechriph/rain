@@ -104,10 +104,6 @@ class GameState(stateManager: StateManager): State(stateManager) {
     }
 
     override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
-        if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
-            val e = playerSystem.findBurstEmitterComponent(player.getId())!!
-            e.fireSingleBurst()
-        }
         if (player.health <= 0) {
             stateManager.startState("menu")
         }

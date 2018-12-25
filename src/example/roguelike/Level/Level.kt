@@ -491,7 +491,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         val mx = player.cellX * width + x
         val my = player.cellY * height + y
 
-        if (x > 0 && y >= 0 && x < width) {
+        if (x > 0 && y >= 0 && x < width && y < height - 1) {
             if (lightValues[(x-1) + y * width] < value - att) {
                 if (map[(mx-1) + my * mapWidth] == 0) {
                     spreadLight(x - 1, y, value - att)
@@ -1132,6 +1132,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         containers.clear()
         containerSystem.clear()
 
+        val ns = System.nanoTime()
         for (i in 0 until random.nextInt(50) + 100) {
             val container = Container(random.nextInt(2))
             containerSystem.newEntity(container)
@@ -1155,5 +1156,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             container.collider.setFriction(1.0f)
             containers.add(container)
         }
+        val mns = (System.nanoTime() - ns) / 1000_000
+        println("Milli: $mns")
     }
 }
