@@ -73,7 +73,7 @@ class Scene {
         renderer.setActiveCamera(camera)
 
         val submitListSorted = ArrayList<Drawable>()
-        var submitListParticles = ArrayList<Drawable>()
+        val submitListParticles = ArrayList<Drawable>()
         for (tilemap in tilemaps) {
             submitListSorted.add(Drawable(tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, tilemap.transform.z))
         }

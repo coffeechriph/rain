@@ -206,6 +206,34 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
             attachPrePresentBarrier(renderCommandBuffers[frameIndex], swapchain.images[nextImage])
         }
 
+        if (renderpass.isValid) {
+            drawRenderPass(nextImage)
+        }
+        else {
+            assertion("Renderpass is invalid when we want to use it!")
+        }
+
+        if (graphicsQueue[frameIndex].queue != presentQueue[frameIndex].queue) {
+            attachPostPresentBarrier(renderCommandBuffers[frameIndex], swapchain.images[nextImage])
+        }
+
+        renderCommandBuffers[frameIndex].end()
+
+        result = vkResetFences(logicalDevice.device, drawingFinishedFence[frameIndex])
+        if (result != VK_SUCCESS) {
+            log("Failed to reset fence!")
+        }
+        renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence[frameIndex])
+
+        presentImage(nextImage)
+
+        frameIndex++
+        if(frameIndex >= imageAcquiredSemaphore.size) {
+            frameIndex = 0
+        }
+    }
+
+    private fun drawRenderPass(nextImage: Int) {
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
 
         // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
@@ -227,25 +255,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         pipelines.removeAll(obsoletePipelines)
 
         renderpass.end(renderCommandBuffers[frameIndex])
-
-        if (graphicsQueue[frameIndex].queue != presentQueue[frameIndex].queue) {
-            attachPostPresentBarrier(renderCommandBuffers[frameIndex], swapchain.images[nextImage])
-        }
-
-        renderCommandBuffers[frameIndex].end()
-
-        result = vkResetFences(logicalDevice.device, drawingFinishedFence[frameIndex])
-        if (result != VK_SUCCESS) {
-            log("Failed to reset fence!")
-        }
-        renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence[frameIndex])
-
-        presentImage(nextImage)
-
-        frameIndex++
-        if(frameIndex >= imageAcquiredSemaphore.size) {
-            frameIndex = 0
-        }
     }
 
     fun removePipelinesWithMaterial(material: VulkanMaterial) {

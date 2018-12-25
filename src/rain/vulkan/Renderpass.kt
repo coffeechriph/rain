@@ -4,15 +4,13 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkClearValue
-import org.lwjgl.vulkan.VkRect2D
-import org.lwjgl.vulkan.VkRenderPassBeginInfo
-import org.lwjgl.vulkan.VkViewport
 import rain.assertion
-
 
 internal class Renderpass {
     var renderpass: Long = 0
+        private set
+
+    var isValid = true
         private set
 
     private var clearValues = VkClearValue.calloc(2)
@@ -125,5 +123,6 @@ internal class Renderpass {
 
     fun destroy(logicalDevice: LogicalDevice) {
         vkDestroyRenderPass(logicalDevice.device, renderpass, null)
+        isValid = false
     }
 }
