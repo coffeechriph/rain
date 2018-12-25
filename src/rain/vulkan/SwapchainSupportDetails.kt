@@ -8,12 +8,11 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR
 
 internal data class SwapChainSupportDetails(var capabilities: VkSurfaceCapabilitiesKHR, val formats: VkSurfaceFormatKHR.Buffer, val presentModes: Array<Int>)
 
-// TODO: Class mismatch - use PhysicalDevice
 internal fun querySwapChainSupport(device: VkPhysicalDevice, surface: Surface): SwapChainSupportDetails {
     val capabilities = VkSurfaceCapabilitiesKHR.calloc()
     KHRSurface.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface.surface, capabilities)
 
-    val details = MemoryStack.stackPush().use {
+    return MemoryStack.stackPush().use {
         val formatCount = it.mallocInt(1)
         KHRSurface.vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface.surface, formatCount, null)
 
@@ -30,5 +29,4 @@ internal fun querySwapChainSupport(device: VkPhysicalDevice, surface: Surface): 
 
         SwapChainSupportDetails(capabilities, pFormats, modeArray)
     }
-    return details
 }
