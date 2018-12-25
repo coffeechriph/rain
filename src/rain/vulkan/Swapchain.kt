@@ -21,22 +21,22 @@ internal class Swapchain {
     var swapchain: Long = 0
         private set
 
-    lateinit var images: LongArray
-        private set
-
-    lateinit var imageViews: LongArray
-        private set
-
     var framebuffers = LongArray(0)
         private set
 
     var extent: VkExtent2D = VkExtent2D.create()
         private set
 
+    lateinit var images: LongArray
+        private set
+
+    lateinit var imageViews: LongArray
+        private set
+
     internal var depthImage = 0L
-    internal var depthImageMemory = 0L
     internal var depthImageView = 0L
 
+    private var depthImageMemory = 0L
     private val pImageIndex = memAllocInt(1)
     private var pool = CommandPool()
 
@@ -85,16 +85,16 @@ internal class Swapchain {
 
         // Determine the number of images
         var desiredNumberOfSwapchainImages = SWAPCHAIN_MODE.mode
-        if (surfCaps.maxImageCount() > 0 && desiredNumberOfSwapchainImages > surfCaps.maxImageCount()) {
+        if (surfCaps.maxImageCount() in 1..(desiredNumberOfSwapchainImages - 1)) {
             desiredNumberOfSwapchainImages = surfCaps.maxImageCount()
         }
 
         val preTransform: Int
-        if (surfCaps.supportedTransforms() and VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR != 0) {
-            preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+        preTransform = if (surfCaps.supportedTransforms() and VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR != 0) {
+            VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
         }
         else {
-            preTransform = surfCaps.currentTransform()
+            surfCaps.currentTransform()
         }
         surfCaps.free()
 
@@ -128,8 +128,6 @@ internal class Swapchain {
             assertion("Failed to create swap chain: " + VulkanResult(err))
         }
 
-        // If we just re-created an existing swapchain, we should destroy the old swapchain at this point.
-        // Note: destroying the swapchain also cleans up all its associated presentable images once the platform is done with them.
         if (newSwapChain > 0) {
             vkDestroySwapchainKHR(logicalDevice.device, swapchain, null)
             swapchain = newSwapChain
