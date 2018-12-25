@@ -68,6 +68,11 @@ internal class Renderpass {
             .pSubpasses(subpass)
             .pDependencies(dependency)
 
+        if (renderpass > 0) {
+            vkDestroyRenderPass(logicalDevice.device, renderpass, null)
+            renderpass = 0
+        }
+
         renderpass = MemoryStack.stackPush().use {
             val pRenderPass = it.mallocLong(1)
             if(vkCreateRenderPass(logicalDevice.device, renderPassInfo, null, pRenderPass) != VK_SUCCESS)
@@ -75,6 +80,7 @@ internal class Renderpass {
             pRenderPass[0]
         }
 
+        isValid = true
         setClearColor(0.0f, 0.0f, 0.0f)
     }
 
@@ -123,6 +129,7 @@ internal class Renderpass {
 
     fun destroy(logicalDevice: LogicalDevice) {
         vkDestroyRenderPass(logicalDevice.device, renderpass, null)
+        renderpass = 0
         isValid = false
     }
 }
