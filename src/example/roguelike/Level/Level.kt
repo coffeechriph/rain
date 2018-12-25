@@ -2,7 +2,11 @@ package example.roguelike.Level
 
 import com.badlogic.gdx.physics.box2d.BodyDef
 import example.roguelike.Entity.*
-import org.joml.*
+import org.joml.Random
+import org.joml.Vector2f
+import org.joml.Vector2i
+import org.joml.Vector4f
+import org.joml.Vector4i
 import rain.api.entity.DirectionType
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -10,7 +14,7 @@ import rain.api.entity.Transform
 import rain.api.gfx.*
 import rain.api.scene.*
 import rain.vulkan.VertexAttribute
-import java.util.Random
+import java.lang.Math
 import kotlin.math.sign
 
 class Level(val player: Player, val resourceFactory: ResourceFactory) {
@@ -102,7 +106,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             val dx = player.transform.x - enemy.transform.x
             val dy = player.transform.y - enemy.transform.y
             if (Math.sqrt((dx * dx + dy * dy).toDouble()) <= 64.0) {
-                enemy.attack(random, player)
+                enemy.attack(player)
                 player.inventory.updateHealthText()
             }
 
@@ -1095,7 +1099,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         for (i in 0 until random.nextInt(50) + 10) {
             val enemy = random.nextInt(2)
 
-            val kracGuy = if (enemy == 0) {Krac()} else {MiniKrac()}
+            val kracGuy = if (enemy == 0) {Krac(random)} else {MiniKrac(random)}
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
@@ -1132,7 +1136,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         containers.clear()
         containerSystem.clear()
 
-        val ns = System.nanoTime()
         for (i in 0 until random.nextInt(50) + 100) {
             val container = Container(random.nextInt(2))
             containerSystem.newEntity(container)
@@ -1156,7 +1159,5 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             container.collider.setFriction(1.0f)
             containers.add(container)
         }
-        val mns = (System.nanoTime() - ns) / 1000_000
-        println("Milli: $mns")
     }
 }

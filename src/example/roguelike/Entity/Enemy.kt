@@ -1,13 +1,13 @@
 package example.roguelike.Entity
 
+import org.joml.Random
 import org.joml.Vector2i
 import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
-import java.util.*
 import kotlin.math.sin
 
-open class Enemy : Entity() {
+open class Enemy(val random: Random) : Entity() {
     var cellX = 0
         private set
     var cellY = 0
@@ -55,7 +55,7 @@ open class Enemy : Entity() {
         transform.y = collider.getPosition().y
     }
 
-    fun damage(random: Random, player: Player) {
+    fun damage(player: Player) {
         if (!wasAttacked) {
             wasAttacked = true
             attackAnimation = 0.0f
@@ -72,7 +72,7 @@ open class Enemy : Entity() {
         }
     }
 
-    fun attack(random: Random, player: Player) {
+    fun attack(player: Player) {
         if (attackTimeout == 0) {
             val baseDamage = strength * 1.5f
             val critChange = Math.min((0.05f * agility) - (0.005f * player.agility), 0.0f)

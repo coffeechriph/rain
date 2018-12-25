@@ -1,13 +1,13 @@
 package example.roguelike.Entity
 
+import org.joml.Random
 import org.joml.Vector2i
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.scene.Scene
-import java.util.*
 
-class MiniKrac: Enemy() {
+class MiniKrac(random: Random): Enemy(random) {
     private var idleDir = 0
 
     init {
@@ -18,10 +18,9 @@ class MiniKrac: Enemy() {
     }
 
     override fun onCollision(entity: Entity) {
-        val random = Random(System.currentTimeMillis())
         if (entity is Attack && entity.attacker is Player) {
             val player = entity.attacker as Player
-            damage(random, player)
+            damage(player)
         }
         else if (entity is Enemy && !entity.pushBackImmune) {
             val dx = (entity.transform.x - transform.x) * 400
@@ -51,7 +50,7 @@ class MiniKrac: Enemy() {
         transform.z = 1.0f + transform.y * 0.001f
 
         if (animator.animationTime >= 1.0f) {
-            idleDir = Random().nextInt(3)
+            idleDir = Random(0).nextInt(3)
 
             when(idleDir) {
                 0 -> animator.setAnimation("idle_up")
