@@ -8,12 +8,11 @@ import rain.api.gfx.IndexBuffer
 import rain.api.gfx.VertexBufferState
 import rain.assertion
 import rain.log
+import java.nio.ByteBuffer
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
     var buffer: Long = 0
-        private set
-    var bufferSize: Long = 0
         private set
     var indexCount: Int = 0
         private set
@@ -21,11 +20,12 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
         private set
 
     private var bufferState = VertexBufferState.STATIC
+    private var bufferSize: Long = 0
+    private var bufferMemory: Long = 0
 
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
 
-    // TODO: Can we optimize this?
     override fun update(indices: IntArray) {
         if (indices.isEmpty()) {
             indexCount = 0
@@ -39,7 +39,15 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
             if (bufferState == VertexBufferState.STATIC) {
                 createIndexBufferWithStaging(vk.logicalDevice, vk.deviceQueue, commandPool, vk.physicalDevice.memoryProperties, indices)
             } else {
-                createIndexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, indices)
+                if (indices.size >= indexCount*4) {
+                    createIndexBuffer(vk.logicalDevice, vk.physicalDevice.memoryProperties, indices)
+                }
+                else {
+                    val bb = memAlloc(indices.size*4)
+                    val ib = bb.asIntBuffer()
+                    ib.put(indices)
+                    mapDataWithoutStaging(vk.logicalDevice, bufferMemory, bufferSize, bb)
+                }
             }
         }
     }
@@ -96,6 +104,7 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
 
         this.buffer = buffer.buffer
         this.bufferSize = buffer.bufferSize
+        this.bufferMemory = buffer.bufferMemory
     }
 
     private fun createIndexBufferWithStaging(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, memoryProperties: VkPhysicalDeviceMemoryProperties, indicies: IntArray) {
@@ -125,6 +134,21 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
 
         this.buffer = actualBuffer.buffer
         this.bufferSize = actualBuffer.bufferSize
+        this.bufferMemory = actualBuffer.bufferMemory
+    }
+
+    private fun mapDataWithoutStaging(logicalDevice: LogicalDevice, bufferMemory: Long, bufferSize: Long, indexBuffer: ByteBuffer) {
+        val pData = memAllocPointer(1)
+        val err = vkMapMemory(logicalDevice.device, bufferMemory, 0, bufferSize, 0, pData)
+
+        val data = pData.get(0)
+        memFree(pData)
+        if (err != VK_SUCCESS) {
+            assertion("Failed to map vertex memory: " + VulkanResult(err))
+        }
+
+        memCopy(memAddress(indexBuffer), data, indexBuffer.remaining().toLong())
+        vkUnmapMemory(logicalDevice.device, bufferMemory)
     }
 
     private fun copyBuffer(logicalDevice: LogicalDevice, queue: Queue, commandPool: CommandPool, srcBuffer: Long, dstBuffer: Long, bufferSize: Long) {
