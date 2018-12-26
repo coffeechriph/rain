@@ -68,7 +68,6 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L)}}
         val material = VulkanMaterial(uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, logicalDevice, physicalDevice.memoryProperties, depthWriteEnabled)
         materials.add(material)
-
         return material
     }
 
