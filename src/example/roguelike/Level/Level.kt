@@ -78,7 +78,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             delayLightUpdate -= 1
         }
 
-        // TODO: Not working...
+        // Add navmesh blockers at the location of enemies
         for (enemy in enemies) {
             if (!enemy.collider.isActive()) {
                 continue
@@ -124,7 +124,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     val px = (player.transform.x / 64).toInt()
                     val py = (player.transform.y / 64).toInt()
 
-                    if (px < width - 1 && py < height - 1) {
+                    if (px < width && py < height && px >= 0 && py >= 0) {
                         val path = navMesh.findPath(Vector2i(worldX.toInt(), worldY.toInt()), Vector2i(px, py))
                         if (path[path.size-1].x == px && path[path.size-1].y == py) {
                             if (path.size > 2) {
@@ -163,20 +163,28 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 if (enemy.pushBack == 0) {
                     enemy.pushBackImmune = false
                     enemy.collider.setVelocity(vx * enemy.walkingSpeedFactor * 100, vy * enemy.walkingSpeedFactor * 100)
+                    if (vy > 0.0f) {
+                        enemy.animator.setAnimation("walk_down")
+                    }
+                    else {
+                        enemy.animator.setAnimation("walk_up")
+                    }
                 }
                 else if (enemy.pushBack > 5) {
                     enemy.collider.setVelocity(enemy.pushDirection.x.toFloat() * 100, enemy.pushDirection.y.toFloat() * 100)
                     enemy.pushBack -= 1
+                    enemy.animator.setAnimation("idle_down")
                 }
                 else {
                     enemy.pushBack -= 1
                     enemy.collider.setVelocity(0.0f, 0.0f)
+                    enemy.animator.setAnimation("idle_down")
                 }
 
                 val pdx = player.transform.x - enemy.transform.x
                 val pdy = player.transform.y - enemy.transform.y
                 val pln = Math.sqrt((pdx*pdx+pdy*pdy).toDouble());
-                if (pln <= 64.0f) {
+                if (pln <= 48.0f) {
                     enemy.traversing = false
                 }
                 else {
@@ -188,6 +196,9 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                         if (enemy.pathIndex >= enemy.path.size - 1) {
                             enemy.traversing = false
                         }
+                    }
+                    else if (enemy.pathIndex >= 3) {
+                        enemy.traversing = false
                     }
                 }
             }

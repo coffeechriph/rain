@@ -37,10 +37,12 @@ class MiniKrac(random: Random): Enemy(random) {
         super.init(scene, system)
 
         // TODO: Should be able to animate on the Y axis as well
-        animator.addAnimation("idle_up", 3, 3, 1, 1.0f)
-        animator.addAnimation("idle_down", 3, 3, 0, 1.0f)
-        animator.addAnimation("idle_left", 3, 3, 1, 1.0f)
-        animator.addAnimation("idle_right", 3, 3, 0, 1.0f)
+        animator.addAnimation("idle_up", 4, 4, 1, 1.0f)
+        animator.addAnimation("idle_down", 4, 4, 0, 1.0f)
+        animator.addAnimation("idle_left", 4, 4, 1, 1.0f)
+        animator.addAnimation("idle_right", 4, 4, 0, 1.0f)
+        animator.addAnimation("walk_down", 4, 8, 0, 3.5f)
+        animator.addAnimation("walk_up", 4, 8, 1, 3.5f)
         animator.setAnimation("idle_up")
 
         attackTimeoutValue = 30
@@ -49,7 +51,7 @@ class MiniKrac(random: Random): Enemy(random) {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         transform.z = 1.0f + transform.y * 0.001f
 
-        if (animator.animationTime >= 1.0f) {
+        /*if (animator.animationTime >= 1.0f) {
             idleDir = Random(0).nextInt(3)
 
             when(idleDir) {
@@ -58,7 +60,7 @@ class MiniKrac(random: Random): Enemy(random) {
                 2 -> animator.setAnimation("idle_right")
                 else -> animator.setAnimation("idle_down")
             }
-        }
+        }*/
 
         handleDamage(transform)
         if (attackTimeout > 0) {

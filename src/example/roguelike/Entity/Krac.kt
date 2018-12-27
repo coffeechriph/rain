@@ -41,6 +41,8 @@ class Krac(random: Random): Enemy(random) {
         animator.addAnimation("idle_down", 0, 0, 0, 1.0f)
         animator.addAnimation("idle_left", 0, 0, 1, 1.0f)
         animator.addAnimation("idle_right", 0, 0, 0, 1.0f)
+        animator.addAnimation("walk_down", 0, 4, 0, 3.0f)
+        animator.addAnimation("walk_up", 0, 4, 1, 3.0f)
         animator.setAnimation("idle_up")
 
         attackTimeoutValue = 100
@@ -49,7 +51,7 @@ class Krac(random: Random): Enemy(random) {
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         transform.z = 1.0f + transform.y * 0.001f
 
-        if (animator.animationTime >= 1.0f) {
+        /*if (animator.animationTime >= 1.0f) {
             idleDir = Random(0).nextInt(3)
 
             when(idleDir) {
@@ -58,7 +60,7 @@ class Krac(random: Random): Enemy(random) {
                 2 -> animator.setAnimation("idle_right")
                 else -> animator.setAnimation("idle_down")
             }
-        }
+        }*/
 
         handleDamage(transform)
         if (attackTimeout > 0) {
