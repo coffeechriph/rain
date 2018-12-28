@@ -153,7 +153,7 @@ internal class Swapchain {
 
         for (i in 0 until imageCount) {
             images[i] = pSwapchainImages.get(i)
-            transitionImageLayout(logicalDevice, pool, deviceQueue.queue, images[i], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_UNDEFINED, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
+            //transitionImageLayout(logicalDevice, pool, deviceQueue.queue, images[i], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_UNDEFINED, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
 
             val imageView = ImageView()
             imageView.create(logicalDevice, images[i], surface.format, VK_IMAGE_VIEW_TYPE_2D, VK10.VK_IMAGE_ASPECT_COLOR_BIT)
@@ -180,7 +180,7 @@ internal class Swapchain {
         imageCreateInfo.extent()
             .width(extent2D.width())
             .height(extent2D.height())
-
+            .depth(1) // Depth must be 1 if type is VK_IMAGE_TYPE_2D
         val pDepthImage = memAllocLong(1)
         vkCreateImage(logicalDevice.device, imageCreateInfo, null, pDepthImage)
         depthImage = pDepthImage.get()

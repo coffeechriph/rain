@@ -80,14 +80,14 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
         sceneData.update(logicalDevice, sceneDataBuffer, 1)
         descriptorPool = DescriptorPool()
         for (i in 0 until texture2d.size) {
-            descriptorPool.withTexture(texture2d[i] as VulkanTexture2d, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+            descriptorPool.withTexture(texture2d[i] as VulkanTexture2d, VK10.VK_SHADER_STAGE_ALL)
         }
 
         descriptorPool
-            .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_VERTEX_BIT)
+            .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_ALL)
 
         if (texture2d.isNotEmpty()) {
-            descriptorPool.withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_VERTEX_BIT or VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+            descriptorPool.withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_ALL)
         }
 
         descriptorPool.build(logicalDevice)

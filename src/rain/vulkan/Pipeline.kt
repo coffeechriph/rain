@@ -67,6 +67,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
                 .depthClampEnable(false)
                 .rasterizerDiscardEnable(false)
                 .depthBiasEnable(false)
+                .lineWidth(1.0f)
 
         // TODO: Alpha blending should not be enabled by default
         val colorWriteMask = VkPipelineColorBlendAttachmentState.calloc(1)

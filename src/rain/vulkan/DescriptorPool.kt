@@ -1,9 +1,11 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.assertion
+import rain.log
 import java.nio.LongBuffer
 
 internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val bufferMode: BufferMode)
@@ -64,28 +66,80 @@ internal class DescriptorPool {
             descriptorCount += u.buffer.size
         }
 
+        log("Descriptor count: $descriptorCount")
         create(logicalDevice, descriptorCount)
 
-        // TODO: Binding index doesn't seem to do anything?
+        val descriptorLayout = VkDescriptorSetLayoutBinding.calloc(descriptorCount)
+        var layoutBufferIndex = 0
         var bindingIndex = 0
-        for (u in uniformBuffers) {
-            val layout = createLayout(logicalDevice, u.buffer.size, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, u.stageFlags, bindingIndex, null)
-            for (k in u.buffer) {
-                val descriptorSet = createUniformBufferSet(logicalDevice, layout[0], bindingIndex, k)
-                descriptorSets.add(descriptorSet)
+        log("CREATING DESCRIPTOR POOL")
+        if (uniformBuffers.size > 0) {
+            for (u in uniformBuffers) {
+                for (k in u.buffer) {
+                    for (l in k.buffer) {
+                        log("Binding index: $bindingIndex")
+                        descriptorLayout[layoutBufferIndex]
+                                .descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+                                .binding(bindingIndex)
+                                .stageFlags(VK_SHADER_STAGE_ALL)
+                                .pImmutableSamplers(null)
+                        bindingIndex++
+                        layoutBufferIndex++
+                    }
+                }
             }
+        }
 
-            //bindingIndex += 1
+        if (textureDescriptors.size > 0) {
+            for (u in textureDescriptors) {
+                for (k in u.buffer) {
+                    log("Binding index: $bindingIndex")
+                    val sampler = memAllocLong(1)
+                    sampler.put(0, k.textureSampler)
+                    descriptorLayout[layoutBufferIndex]
+                            .descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+                            .binding(bindingIndex)
+                            .stageFlags(VK_SHADER_STAGE_ALL)
+                            .pImmutableSamplers(sampler)
+                    bindingIndex++
+                    layoutBufferIndex++
+                }
+            }
+        }
+        log("###### DESCRIPTOR POOL")
+
+        for (b in descriptorLayout){
+            log("BINDING ${b.binding()}")
+        }
+
+        val descriptorSetCreateInfo = VkDescriptorSetLayoutCreateInfo.calloc()
+                .sType(VK10.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO)
+                .pBindings(descriptorLayout)
+
+        val descriptorSetLayout = MemoryUtil.memAllocLong(1)
+        log("PRE!!")
+        val err = VK10.vkCreateDescriptorSetLayout(logicalDevice.device, descriptorSetCreateInfo, null, descriptorSetLayout)
+        if (err != VK10.VK_SUCCESS) {
+            assertion("Failed to create descriptor set layout " + VulkanResult(err))
+        }
+        log("POST!!!")
+        val layout = descriptorSetLayout[0]
+
+        bindingIndex = 0
+        for (u in uniformBuffers) {
+            for (k in u.buffer) {
+                val descriptorSet = createUniformBufferSet(logicalDevice, layout, bindingIndex, k)
+                descriptorSets.add(descriptorSet)
+                bindingIndex += k.buffer.size
+            }
         }
 
         for (u in textureDescriptors) {
-            val layout = createLayout(logicalDevice, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, u.stageFlags, bindingIndex, null)
             for (k in u.buffer) {
-                val descriptorSet = createTextureDescriptorSet(logicalDevice, layout[0], bindingIndex, k)
+                val descriptorSet = createTextureDescriptorSet(logicalDevice, layout, bindingIndex, k)
                 descriptorSets.add(descriptorSet)
+                bindingIndex += 1
             }
-
-            //bindingIndex += 1
         }
 
         isValid = true
@@ -93,6 +147,7 @@ internal class DescriptorPool {
     }
 
     private fun create(logicalDevice: LogicalDevice, descriptorCount: Int) {
+        log("Pool size: ${uniformBuffers.size + textureDescriptors.size}")
         val descriptorPoolSize = VkDescriptorPoolSize.calloc(uniformBuffers.size + textureDescriptors.size)
 
         for (i in 0 until uniformBuffers.size) {
@@ -102,15 +157,17 @@ internal class DescriptorPool {
                 dc += u.buffer.size
             }
 
+            log("UBO Pool index $i - desc: $dc")
             descriptorPoolSize[i]
                 .type(VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
                 .descriptorCount(dc)
         }
 
         for (i in 0 until textureDescriptors.size) {
+            log("TBO Pool index ${i+uniformBuffers.size} - desc: ${textureDescriptors[i].buffer.size}")
             descriptorPoolSize[i + uniformBuffers.size]
                     .type(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
-                    .descriptorCount(textureDescriptors[i].buffer.size)
+                    .descriptorCount(3)
         }
 
         val descriptorPoolCreateInfo = VkDescriptorPoolCreateInfo.calloc()
@@ -118,6 +175,7 @@ internal class DescriptorPool {
                 .pPoolSizes(descriptorPoolSize)
                 .maxSets(descriptorCount)
 
+        log("Creating descriptor pool $descriptorCount")
         val descriptorPool = MemoryUtil.memAllocLong(1)
         val err = VK10.vkCreateDescriptorPool(logicalDevice.device, descriptorPoolCreateInfo, null, descriptorPool)
         if (err != VK10.VK_SUCCESS) {
@@ -125,28 +183,6 @@ internal class DescriptorPool {
         }
 
         pool = descriptorPool.get(0)
-        isValid = true
-    }
-
-    private fun createLayout(logicalDevice: LogicalDevice, descriptorCount: Int, descriptorType: Int, stageFlags: Int, bindingIndex: Int, immutableSampler: LongBuffer?): LongBuffer {
-        val descriptorLayout = VkDescriptorSetLayoutBinding.calloc(1)
-                .descriptorCount(descriptorCount)
-                .descriptorType(descriptorType)
-                .binding(bindingIndex)
-                .stageFlags(stageFlags)
-                .pImmutableSamplers(immutableSampler)
-
-        val descriptorSetCreateInfo = VkDescriptorSetLayoutCreateInfo.calloc()
-                .sType(VK10.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO)
-                .pBindings(descriptorLayout)
-
-        val descriptorSetLayout = MemoryUtil.memAllocLong(1)
-        val err = VK10.vkCreateDescriptorSetLayout(logicalDevice.device, descriptorSetCreateInfo, null, descriptorSetLayout)
-        if (err != VK10.VK_SUCCESS) {
-            assertion("Failed to create descriptor set layout " + VulkanResult(err))
-        }
-
-        return descriptorSetLayout
     }
 
     private fun createTextureDescriptorSet(logicalDevice: LogicalDevice, layout: Long, bindingIndex: Int, texture: VulkanTexture2d): DescriptorSet {
@@ -178,7 +214,6 @@ internal class DescriptorPool {
                 .pImageInfo(samplerInfo)
 
         VK10.vkUpdateDescriptorSets(logicalDevice.device, descriptorWrite, null)
-
         return DescriptorSet(descriptorSets, layout, BufferMode.SINGLE_BUFFER)
     }
 
@@ -209,7 +244,7 @@ internal class DescriptorPool {
             val descriptorWrite = VkWriteDescriptorSet.calloc(1)
                     .sType(VK10.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
                     .dstSet(descriptorSets[i])
-                    .dstBinding(bindingIndex)
+                    .dstBinding(0)
                     .dstArrayElement(0)
                     .descriptorType(VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
                     .pBufferInfo(bufferInfo)

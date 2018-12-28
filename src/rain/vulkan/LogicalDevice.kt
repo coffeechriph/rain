@@ -15,8 +15,10 @@ internal class LogicalDevice {
         private set
 
     fun create(physicalDevice: PhysicalDevice, indices: QueueFamilyIndices) {
-        val queueCreateInfo = VkDeviceQueueCreateInfo.calloc(2)
-        val uniqueQueueFamilies = arrayOf(indices.graphicsFamily, indices.presentFamily)
+        val count = if (indices.graphicsFamily != indices.presentFamily) { 2 } else { 1 }
+        val queueCreateInfo = VkDeviceQueueCreateInfo.calloc(count)
+
+        val uniqueQueueFamilies = if (indices.graphicsFamily != indices.presentFamily) { arrayOf(indices.graphicsFamily, indices.presentFamily) } else {arrayOf(indices.graphicsFamily)}
         for((index, queueFamily) in uniqueQueueFamilies.withIndex()) {
             val info = queueCreateInfo[index]
             info.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)

@@ -13,6 +13,10 @@ import rain.assertion
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
+import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_SAMPLED_BIT
+import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_TRANSFER_DST_BIT
+
+
 
 internal class VulkanTexture2d(val id: Long): Texture2d {
     var texture: Long = 0
@@ -107,6 +111,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
                     .tiling(VK_IMAGE_TILING_OPTIMAL)
                     .initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
                     .samples(VK_SAMPLE_COUNT_1_BIT)
+                    .usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT or VK_IMAGE_USAGE_SAMPLED_BIT)
                     .flags(0)
 
             val extent = imageCreateInfo
@@ -114,6 +119,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
 
             extent.width(width)
                     .height(height)
+                    .depth(1) // Depth must be 1 if type is VK_IMAGE_TYPE_2D
 
             val textureImage = memAllocLong(1)
             vkCreateImage(logicalDevice.device, imageCreateInfo, null, textureImage)

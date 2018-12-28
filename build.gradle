@@ -8,13 +8,13 @@ apply plugin: 'application'
 group '1'
 version '1.0'
 mainClassName = "example.roguelike.MainKt"
-applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+applicationDefaultJvmArgs = []
 
 sourceCompatibility = '11'
 targetCompatibility= '11'
-project.ext.lwjglVersion = "3.2.1-SNAPSHOT"
 project.ext.jomlVersion = "1.9.11"
-project.ext.lwjglNatives = "natives-macos"
+project.ext.lwjglVersion = "3.2.2-SNAPSHOT"
+project.ext.lwjglNatives = "natives-windows"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,6 @@ dependencies {
     compile "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
     compile "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
     compile "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
-    compile "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
     compile "org.joml:joml:${jomlVersion}"
     compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
     compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"

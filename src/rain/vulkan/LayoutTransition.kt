@@ -46,14 +46,13 @@ internal fun transitionImageLayout(logicalDevice: LogicalDevice, commandPool: Co
 
     var aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
     if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-        aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
+        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT
         if (hasStencilComponent(format)) {
             aspectMask = aspectMask or VK_IMAGE_ASPECT_STENCIL_BIT
         }
     }
 
-    val subresourceRange = imageBarrier.subresourceRange()
-    subresourceRange
+    imageBarrier.subresourceRange()
             .aspectMask(aspectMask)
             .baseMipLevel(0)
             .levelCount(1)
