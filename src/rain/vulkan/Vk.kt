@@ -1,5 +1,10 @@
 package rain.vulkan
 
+import org.lwjgl.system.MemoryUtil.memAllocInt
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK11
+import org.lwjgl.vulkan.VkLayerProperties
+
 internal class Vk {
     lateinit var instance: Instance
         private set
@@ -17,8 +22,8 @@ internal class Vk {
         private set
 
     fun create(window: Long) {
-        instance = Instance();
-        instance.create();
+        instance = Instance()
+        instance.create()
 
         surface = Surface()
         surface.create(window, instance)

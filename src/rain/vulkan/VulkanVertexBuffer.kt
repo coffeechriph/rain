@@ -19,20 +19,24 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
         private set
     var isValid = false
         private set
-    private var bufferMemory: Long = 0
     var vertexCount: Int = 0
         private set
-    private var vertexSize = 0
 
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
         private set
 
+    private var bufferMemory: Long = 0
+    private var vertexSize = 0
     private var bufferState = VertexBufferState.STATIC
 
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
 
     private lateinit var dataBuffer: ByteBuffer
+
+    fun invalidate() {
+        isValid = false
+    }
 
     override fun valid(): Boolean {
         return isValid
@@ -62,12 +66,6 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
                 }
             }
         }
-    }
-
-    fun destroy(logicalDevice: LogicalDevice) {
-        vkDestroyBuffer(logicalDevice.device, buffer, null)
-        buffer = 0L
-        isValid = false
     }
 
     fun create(vk: Vk, commandPool: CommandPool, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {

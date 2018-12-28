@@ -5,16 +5,11 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.gfx.Drawable
 import rain.assertion
+import rain.log
 import java.nio.LongBuffer
 import java.util.*
 
 internal class Pipeline(internal val material: VulkanMaterial, internal val vertexBuffer: VulkanVertexBuffer) {
-    var pipeline: Long = 0
-        private set
-
-    var pipelineLayout: Long = 0
-        private set
-
     var isValid = false
         private set
         get() {
@@ -31,23 +26,30 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
             return field
         }
 
-    internal var indexBuffer: VulkanIndexBuffer? = null
-
+    private var pipeline: Long = 0
+    private var pipelineLayout: Long = 0
+    private var indexBuffer: VulkanIndexBuffer? = null
     private lateinit var pOffset: LongBuffer
     private lateinit var pBuffer: LongBuffer
 
-    private var vertesShaderId = 0L
-    private var fragmentShaderId = 0L
     private val nextFrameDrawQueue = ArrayDeque<Drawable>()
 
+    fun hasQueue() : Boolean {
+        return nextFrameDrawQueue.peek() != null
+    }
     fun matches(material: VulkanMaterial, vertexBuffer: VulkanVertexBuffer, indexBuffer: VulkanIndexBuffer?): Boolean {
         return this.material.id == material.id && this.vertexBuffer.id == vertexBuffer.id && (indexBuffer == null || this.indexBuffer!!.id == indexBuffer.id)
     }
 
     fun submitDrawInstance(draw: Drawable) {
-        if (draw.vertexBuffer != vertexBuffer || draw.indexBuffer != indexBuffer) {
+        val vbuf = draw.vertexBuffer as VulkanVertexBuffer
+        val mat = draw.material as VulkanMaterial
+        val ibuf = if (draw.indexBuffer != null) {draw.indexBuffer as VulkanIndexBuffer} else {null}
+
+        if (vbuf.id != vertexBuffer.id || mat.id != material.id || (ibuf != null && indexBuffer != null && ibuf.id != indexBuffer!!.id)) {
             assertion("A drawable that does not match the pipeline should never be submitted to it!")
         }
+
         nextFrameDrawQueue.add(draw)
     }
 
@@ -142,7 +144,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
         val pipelineCreateInfo = VkGraphicsPipelineCreateInfo.calloc(1)
                 .sType(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO)
                 .layout(layout)
-                .renderPass(renderpass.renderpass)
+                .renderPass(renderpass.handler)
                 .pVertexInputState(vertexBuffer.vertexPipelineVertexInputStateCreateInfo)
                 .pInputAssemblyState(inputAssemblyState)
                 .pRasterizationState(rasterizationState)
@@ -155,13 +157,15 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
 
         val pPipelines = memAllocLong(1)
         err = vkCreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, pipelineCreateInfo, null, pPipelines)
+        if (err != VK_SUCCESS) {
+            assertion("Failed to create graphics pipeline ${VulkanResult(err)}")
+        }
+
         pipeline = pPipelines.get(0)
         pipelineLayout = layout
         pBuffer = memAllocLong(1)
         pOffset = memAllocLong(1)
         this.indexBuffer = indexBuffer
-        this.vertesShaderId = material.vertexShader.id
-        this.fragmentShaderId = material.fragmentShader.id
         this.isValid = true
 
         shaderStages.free()

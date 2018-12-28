@@ -1,10 +1,12 @@
 package rain.vulkan
 
 import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK10.vkDeviceWaitIdle
 import rain.api.gfx.*
 import rain.assertion
 import rain.log
 import java.nio.ByteBuffer
+import java.util.*
 
 internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) : ResourceFactory {
     private var resourceId: Long = 0
@@ -17,6 +19,12 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     private val shaders: MutableMap<String, ShaderModule>
     private val buffers: MutableList<VulkanVertexBuffer>
     private val indexBuffers: MutableList<VulkanIndexBuffer>
+
+    private val deleteMaterialQueue = ArrayDeque<VulkanMaterial>()
+    private val deleteTextureQueue = ArrayDeque<VulkanTexture2d>()
+    private val deleteShaderQueue = ArrayDeque<ShaderModule>()
+    private val deleteVertexBufferQueue = ArrayDeque<VulkanVertexBuffer>()
+    private val deleteIndexBufferQueue = ArrayDeque<VulkanIndexBuffer>()
 
     init {
         this.materials = ArrayList()
@@ -125,7 +133,6 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         return textures[name]!!
     }
 
-    // Deleting a material involves removing any pipeline which may reference it.
     override fun deleteMaterial(name: String) {
         var index = 0
         for (material in materials) {
@@ -141,47 +148,28 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         }
 
         val material = materials[index]
-        renderer.removePipelinesWithMaterial(material)
-
-        material.destroy()
-        materials.removeAt(index)
+        material.invalidate()
+        deleteMaterialQueue.add(material)
     }
 
-    // Deleting a texture involves removing any material that references it.
     override fun deleteTexture2d(name: String) {
         val texture = textures[name]
         if (texture != null) {
-            texture.destroy(logicalDevice)
-
-            val materialsToRemove = ArrayList<String>()
-            for (material in materials) {
-                for (mt in material.texture2d) {
-                    val vt = mt as VulkanTexture2d
-                    if (vt.id == texture.id) {
-                        materialsToRemove.add(material.name)
-                        break
-                    }
-                }
-            }
-
-            for (matName in materialsToRemove) {
-                deleteMaterial(matName)
-            }
-
-            textures.remove(name)
+            texture.invalidate()
+            deleteTextureQueue.add(texture)
         }
     }
 
     override fun deleteVertexBuffer(vertexBuffer: VertexBuffer) {
         val vbuf = vertexBuffer as VulkanVertexBuffer
-        vbuf.destroy(logicalDevice)
-        buffers.remove(vbuf)
+        vbuf.invalidate()
+        deleteVertexBufferQueue.add(vbuf)
     }
 
     override fun deleteIndexBuffer(indexBuffer: IndexBuffer) {
         val ibuf = indexBuffer as VulkanIndexBuffer
-        ibuf.destroy(logicalDevice)
-        indexBuffers.remove(ibuf)
+        ibuf.invalidate()
+        deleteIndexBufferQueue.add(ibuf)
     }
 
     override fun getMaterial(name: String): Material {
@@ -200,25 +188,88 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
 
     override fun clear() {
         for (material in materials) {
-            material.destroy()
+            deleteMaterialQueue.add(material)
         }
         materials.clear()
 
         for (texture in textures) {
-            texture.value.destroy(vk.logicalDevice)
+            deleteTextureQueue.add(texture.value)
         }
         textures.clear()
 
         for (shader in shaders) {
-            shader.value.destroy(vk.logicalDevice)
+            deleteShaderQueue.add(shader.value)
         }
         shaders.clear()
 
         for (buffer in buffers) {
-            buffer.destroy(vk.logicalDevice)
+            deleteVertexBufferQueue.add(buffer)
         }
         buffers.clear()
-        resourceId = 0
+
+        for (buffer in indexBuffers) {
+            deleteIndexBufferQueue.add(buffer)
+        }
+        indexBuffers.clear()
+    }
+
+    fun manageResources() {
+        if (deleteTextureQueue.isNotEmpty() || deleteMaterialQueue.isNotEmpty() || deleteShaderQueue.isNotEmpty() || deleteVertexBufferQueue.isNotEmpty()) {
+            vkDeviceWaitIdle(vk.logicalDevice.device)
+
+            while (deleteTextureQueue.isNotEmpty()) {
+                val texture = deleteTextureQueue.pop()
+                VK10.vkDestroyImage(logicalDevice.device, texture.texture, null)
+                VK10.vkDestroySampler(logicalDevice.device, texture.textureSampler, null)
+                texture.invalidate()
+                textures.values.remove(texture)
+            }
+
+            while (deleteShaderQueue.isNotEmpty()) {
+                val shader = deleteShaderQueue.pop()
+                VK10.vkDestroyShaderModule(logicalDevice.device, shader.moduleId, null)
+                shader.invalidate()
+                shaders.values.remove(shader)
+            }
+
+            while (deleteVertexBufferQueue.isNotEmpty()) {
+                val buffer = deleteVertexBufferQueue.pop()
+                VK10.vkDestroyBuffer(logicalDevice.device, buffer.buffer, null)
+                buffer.invalidate()
+                buffers.remove(buffer)
+            }
+
+            while (deleteIndexBufferQueue.isNotEmpty()) {
+                val buffer = deleteIndexBufferQueue.pop()
+                VK10.vkDestroyBuffer(logicalDevice.device, buffer.buffer, null)
+                buffer.invalidate()
+                indexBuffers.remove(buffer)
+            }
+
+            while (deleteMaterialQueue.isNotEmpty()) {
+                val material = deleteMaterialQueue.pop()
+
+                val sceneData = material.sceneData
+                for (b in sceneData.buffer) {
+                    VK10.vkDestroyBuffer(logicalDevice.device, b, null)
+                }
+                material.sceneData.invalidate()
+
+                val textureDataUbo = material.textureDataUBO
+                for (b in textureDataUbo.buffer) {
+                    VK10.vkDestroyBuffer(logicalDevice.device, b, null)
+                }
+                material.textureDataUBO.invalidate()
+
+                VK10.vkDestroyDescriptorPool(logicalDevice.device, material.descriptorPool.pool, null)
+                material.descriptorPool.invalidate()
+
+                material.invalidate()
+                materials.remove(material)
+            }
+
+            vkDeviceWaitIdle(vk.logicalDevice.device)
+        }
     }
 
     private fun uniqueId(): Long {

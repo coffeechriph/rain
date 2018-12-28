@@ -26,6 +26,10 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
     private lateinit var vk: Vk
     private lateinit var commandPool: CommandPool
 
+    fun invalidate() {
+        isValid = false
+    }
+
     override fun valid(): Boolean {
         return isValid
     }
@@ -54,12 +58,6 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
                 }
             }
         }
-    }
-
-    fun destroy(logicalDevice: LogicalDevice) {
-        vkDestroyBuffer(logicalDevice.device, buffer, null)
-        buffer = 0L
-        isValid = false
     }
 
     fun create(vk: Vk, commandPool: CommandPool, indicies: IntArray, state: VertexBufferState) {

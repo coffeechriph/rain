@@ -15,7 +15,7 @@ internal class CommandPool {
         val cmdPoolInfo = VkCommandPoolCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
                 .queueFamilyIndex(queueFamilyIndex)
-                .flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+                .flags(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT)
 
         val pCmdPool = memAllocLong(1)
         val err = vkCreateCommandPool(logicalDevice.device, cmdPoolInfo, null, pCmdPool)

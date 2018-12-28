@@ -15,9 +15,12 @@ import java.io.FileNotFoundException
 import java.nio.ByteBuffer
 
 internal class VulkanTexture2d(val id: Long): Texture2d {
-    private var texture: Long = 0
+    var texture: Long = 0
+        private set
     var textureView: Long = 0
+        private set
     var textureSampler: Long = 0
+        private set
     var isValid = false
         private set
 
@@ -213,9 +216,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
         vkQueueWaitIdle(queue)
     }
 
-    fun destroy(logicalDevice: LogicalDevice) {
-        vkDestroyImage(logicalDevice.device, texture, null)
-        vkDestroySampler(logicalDevice.device, textureSampler, null)
+    fun invalidate() {
         isValid = false
     }
 }

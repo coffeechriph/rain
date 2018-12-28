@@ -226,7 +226,7 @@ internal class Swapchain {
                 .width(extent.width())
                 .layers(1)
                 .pNext(0)
-                .renderPass(renderpass.renderpass)
+                .renderPass(renderpass.handler)
 
         // Create a framebuffer for each swapchain image
         val framebuffers = LongArray(images.size)

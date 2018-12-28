@@ -1,6 +1,7 @@
 package rain
 
 import org.lwjgl.glfw.GLFW
+import org.lwjgl.vulkan.VK10
 import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
@@ -16,6 +17,7 @@ open class Rain {
     private val window = Window()
     private val vk = Vk()
     private val timer = Timer()
+    private lateinit var api: Api
     private lateinit var vulkanRenderer: VulkanRenderer
     internal lateinit var stateManager: StateManager
     internal val input = Input()
@@ -37,6 +39,7 @@ open class Rain {
         }
 
     fun create(width: Int, height: Int, title: String, api: Api) {
+        this.api = api
         window.create(width, height, title, input)
 
         when(api) {
@@ -59,6 +62,7 @@ open class Rain {
 
     fun run() {
         startLog()
+        gui.init()
         scene.init(resourceFactory)
         init()
 
@@ -79,10 +83,10 @@ open class Rain {
                 input.updateKeyState()
             }
             else {
-                vulkanRenderer.recreateResources()
                 stateManager.switchState = false
                 scene.clear()
                 gui.clear()
+                vulkanRenderer.clearPipelines()
                 resourceFactory.clear()
 
                 gui.init()
@@ -93,10 +97,15 @@ open class Rain {
                     break
                 }
             }
+
+            when (api) {
+                Api.VULKAN -> (resourceFactory as VulkanResourceFactory).manageResources()
+                Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
+            }
         }
 
         vulkanRenderer.destroy()
-        window.destroy();
+        window.destroy()
         endLog()
     }
 }

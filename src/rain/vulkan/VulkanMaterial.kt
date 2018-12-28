@@ -2,9 +2,11 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK10.vkDeviceWaitIdle
 import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
 import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
+import rain.log
 
 internal class VulkanMaterial(val id: Long, val name: String, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val
 texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, val depthWriteEnabled: Boolean = true) : Material {
@@ -17,11 +19,28 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
             for (texture in texture2d) {
                 val t = texture as VulkanTexture2d
                 if (!t.isValid) {
+                    log("Material $name has invalid texture!")
                     return false
                 }
             }
 
             if (!vertexShader.isValid || !fragmentShader.isValid) {
+                log("Material $name has invalid shaders!")
+                return false
+            }
+
+            if (!descriptorPool.isValid) {
+                log("Material $name has invalid descriptor pool!")
+                return false
+            }
+
+            if (!textureDataUBO.isValid) {
+                log("Material $name has invalid texture uniform buffer!")
+                return false
+            }
+
+            if (!sceneData.isValid) {
+                log("Material $name has invalid scene data!")
                 return false
             }
 
@@ -75,10 +94,7 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
         isValid = true
     }
 
-    fun destroy() {
+    fun invalidate() {
         isValid = false
-        sceneData.destroy(logicalDevice)
-        textureDataUBO.destroy(logicalDevice)
-        descriptorPool.destroy(logicalDevice)
     }
 }

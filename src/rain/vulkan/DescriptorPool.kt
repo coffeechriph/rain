@@ -9,12 +9,19 @@ import java.nio.LongBuffer
 internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val bufferMode: BufferMode)
 internal class DescriptorPool {
     var descriptorSets = ArrayList<DescriptorSet>()
-    private var pool: Long = 0
+    var isValid = false
+        private set
+    var pool: Long = 0
+        private set
     private var uniformBuffers = ArrayList<UniformBufferDescriptor>()
     private var textureDescriptors = ArrayList<TextureDescriptor>()
 
     internal class TextureDescriptor(val buffer: MutableList<VulkanTexture2d>, val stageFlags: Int)
     internal class UniformBufferDescriptor(val buffer: MutableList<UniformBuffer>, val stageFlags: Int)
+
+    fun invalidate() {
+        isValid = false
+    }
 
     fun withUniformBuffer(uniformBuffer: UniformBuffer, stageFlags: Int): DescriptorPool {
         for (u in uniformBuffers) {
@@ -81,6 +88,7 @@ internal class DescriptorPool {
             //bindingIndex += 1
         }
 
+        isValid = true
         return this
     }
 
@@ -117,6 +125,7 @@ internal class DescriptorPool {
         }
 
         pool = descriptorPool.get(0)
+        isValid = true
     }
 
     private fun createLayout(logicalDevice: LogicalDevice, descriptorCount: Int, descriptorType: Int, stageFlags: Int, bindingIndex: Int, immutableSampler: LongBuffer?): LongBuffer {
@@ -209,9 +218,5 @@ internal class DescriptorPool {
         }
 
         return DescriptorSet(descriptorSets, layout, uniformBuffer.mode)
-    }
-
-    fun destroy(logicalDevice: LogicalDevice) {
-        vkDestroyDescriptorPool(logicalDevice.device, pool, null)
     }
 }

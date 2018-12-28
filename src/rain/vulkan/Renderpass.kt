@@ -5,9 +5,10 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
 import rain.assertion
+import rain.log
 
 internal class Renderpass {
-    var renderpass: Long = 0
+    var handler: Long = 0
         private set
 
     var isValid = false
@@ -68,12 +69,13 @@ internal class Renderpass {
             .pSubpasses(subpass)
             .pDependencies(dependency)
 
-        if (renderpass > 0) {
-            vkDestroyRenderPass(logicalDevice.device, renderpass, null)
-            renderpass = 0
+        if (handler > 0) {
+            vkDestroyRenderPass(logicalDevice.device, handler, null)
+            handler = 0
+            isValid = false
         }
 
-        renderpass = MemoryStack.stackPush().use {
+        handler = MemoryStack.stackPush().use {
             val pRenderPass = it.mallocLong(1)
             if(vkCreateRenderPass(logicalDevice.device, renderPassInfo, null, pRenderPass) != VK_SUCCESS)
                 assertion("Could not create render pass")
@@ -101,7 +103,7 @@ internal class Renderpass {
         renderPassBeginInfo
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .pNext(0)
-                .renderPass(renderpass)
+                .renderPass(handler)
                 .pClearValues(clearValues)
                 .framebuffer(framebuffer)
 
@@ -125,11 +127,5 @@ internal class Renderpass {
 
     fun end(cmdBuffer: CommandPool.CommandBuffer) {
         vkCmdEndRenderPass(cmdBuffer.buffer)
-    }
-
-    fun destroy(logicalDevice: LogicalDevice) {
-        vkDestroyRenderPass(logicalDevice.device, renderpass, null)
-        renderpass = 0
-        isValid = false
     }
 }

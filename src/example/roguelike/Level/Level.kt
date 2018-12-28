@@ -210,6 +210,10 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         for (container in containers) {
             container.sprite.visible = container.cellX == player.cellX && container.cellY == player.cellY
             container.collider.setActive(container.sprite.visible)
+            if (!container.sprite.visible) {
+                continue
+            }
+
             val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
             emitter.enabled = container.sprite.visible
 
@@ -535,7 +539,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
 
-        if (x < width - 1 && y >= 0 && x >= 0) {
+        if (x < width - 1 && y >= 0 && x >= 0 && y < height) {
             if (lightValues[(x+1) + y * width] < value - att) {
                 if (map[(mx+1) + my * mapWidth] == 0) {
                     spreadLight(x + 1, y, value - att)
@@ -1127,6 +1131,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             kracGuy.strength = (random.nextInt(levelFactor) + levelFactor*5 * kracGuy.strengthFactor).toInt()
             kracGuy.agility = (random.nextInt(levelFactor) + levelFactor*2 * kracGuy.agilityFactor).toInt()
             kracGuy.health = (100 + random.nextInt(levelFactor) * kracGuy.healthFactor).toInt()
+            kracGuy.sprite.visible = false
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
             kracGuy.collider.setDamping(0.0f)
@@ -1173,6 +1178,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             container.setPosition(Vector2i(tile.x*64 + 32, tile.y*64 + 32))
             container.collider.setDensity(1000.0f)
             container.collider.setFriction(1.0f)
+            container.sprite.visible = false
             containers.add(container)
         }
     }

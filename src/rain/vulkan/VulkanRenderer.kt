@@ -16,7 +16,7 @@ import rain.log
 import java.util.*
 import kotlin.collections.ArrayList
 
-internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
+internal class VulkanRenderer (private val vk: Vk, val window: Window) : Renderer {
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
     private val logicalDevice: LogicalDevice = vk.logicalDevice
@@ -113,13 +113,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         renderCommandBuffers = renderCommandPool.createCommandBuffer(logicalDevice.device, swapchain.framebuffers.size)
     }
 
-    fun recreateResources() {
-        swapchainIsDirty = true
-        if (recreateSwapchain(vk.surface)) {
-            recreateRenderCommandBuffers()
-        }
-    }
-
     private fun recreateSwapchain(surface: Surface): Boolean {
         if (swapchainIsDirty) {
             log("Swapchain is dirty must recreate!")
@@ -172,6 +165,15 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         return false
     }
 
+    fun clearPipelines() {
+        vkDeviceWaitIdle(logicalDevice.device)
+        for (pipeline in pipelines) {
+            pipeline.destroy(logicalDevice)
+        }
+        pipelines.clear()
+        vkDeviceWaitIdle(logicalDevice.device)
+    }
+
     private fun cleanUpResources() {
         for (i in 0 until swapchain.framebuffers.size) {
             vkDestroyFramebuffer(logicalDevice.device, swapchain.framebuffers[i], null)
@@ -179,16 +181,14 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         vkDestroyImage(logicalDevice.device, swapchain.depthImage, null)
         vkDestroyImageView(logicalDevice.device, swapchain.depthImageView, null)
 
-        for (b in renderCommandBuffers) {
-            vkFreeCommandBuffers(logicalDevice.device, renderCommandPool.pool, b.buffer)
-        }
-
         for (pipeline in pipelines) {
             pipeline.destroy(logicalDevice)
         }
         pipelines.clear()
 
-        renderpass.destroy(logicalDevice)
+        for (b in renderCommandBuffers) {
+            vkFreeCommandBuffers(logicalDevice.device, renderCommandPool.pool, b.buffer)
+        }
 
         for (i in 0 until imageAcquiredSemaphore.size) {
             vkDestroySemaphore(logicalDevice.device, imageAcquiredSemaphore[i].semaphore, null)
@@ -200,6 +200,8 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
     override fun render() {
         if(recreateSwapchain(vk.surface)) {
             recreateRenderCommandBuffers()
+            vkDeviceWaitIdle(vk.logicalDevice.device)
+            return
         }
 
         issueDrawingCommands()
@@ -262,6 +264,9 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
                 obsoletePipelines.add(pipeline)
                 continue
             }
+            else if (!pipeline.hasQueue()) {
+                continue
+            }
 
             pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer, nextImage)
             pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
@@ -269,22 +274,7 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
         }
 
         pipelines.removeAll(obsoletePipelines)
-
         renderpass.end(renderCommandBuffers[frameIndex])
-    }
-
-    fun removePipelinesWithMaterial(material: VulkanMaterial) {
-        val toRemove = ArrayList<Pipeline>()
-        for (pipeline in pipelines) {
-            if (pipeline.material.id == material.id) {
-                pipeline.destroy(logicalDevice)
-                toRemove.add(pipeline)
-            }
-        }
-
-        for (pipeline in toRemove) {
-            pipelines.remove(pipeline)
-        }
     }
 
     private fun issueDrawingCommands() {
@@ -300,7 +290,6 @@ internal class VulkanRenderer (val vk: Vk, val window: Window) : Renderer {
 
             var found = false
             for (pipeline in pipelines) {
-                // TODO: Ensure same index buffer as well!
                 if (pipeline.matches(mat, buffer, indices)) {
                     pipeline.submitDrawInstance(draw)
                     found = true

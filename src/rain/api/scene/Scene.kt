@@ -10,6 +10,7 @@ import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.gfx.*
+import rain.vulkan.VulkanMaterial
 
 class Scene {
     private lateinit var quadVertexBuffer: VertexBuffer
@@ -74,6 +75,7 @@ class Scene {
 
         val submitListSorted = ArrayList<Drawable>()
         val submitListParticles = ArrayList<Drawable>()
+
         for (tilemap in tilemaps) {
             submitListSorted.add(Drawable(tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, tilemap.transform.z))
         }
@@ -122,7 +124,7 @@ class Scene {
                 }
 
                 submitListSorted.add(Drawable(sprite.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
-            }
+             }
 
             for (emitter in system.getParticleEmitterList()) {
                 if (!emitter!!.enabled) {

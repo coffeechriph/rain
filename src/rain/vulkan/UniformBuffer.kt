@@ -7,7 +7,7 @@ import rain.assertion
 import java.nio.ByteBuffer
 
 internal class UniformBuffer {
-    lateinit var buffer: LongArray
+    var buffer = longArrayOf()
         private set
     lateinit var bufferMemory: LongArray
         private set
@@ -15,6 +15,15 @@ internal class UniformBuffer {
         private set
     var mode = BufferMode.SINGLE_BUFFER
         private set
+    var isValid = false
+        private set
+        get() {
+            return buffer.isEmpty() || field
+        }
+
+    fun invalidate() {
+        isValid = false
+    }
 
     internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, mode: BufferMode, bufferSize: Long) {
         val count = if (mode == BufferMode.SINGLE_BUFFER) {1} else {Swapchain.SWAPCHAIN_MODE.mode}
@@ -29,6 +38,8 @@ internal class UniformBuffer {
             this.buffer[i] = buf.buffer
             this.bufferMemory[i] = buf.bufferMemory
         }
+
+        isValid = true
     }
 
     internal fun update(logicalDevice: LogicalDevice, bufferData: ByteBuffer, index: Int) {
@@ -43,13 +54,5 @@ internal class UniformBuffer {
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(bufferData), data, bufferData.remaining().toLong())
         vkUnmapMemory(logicalDevice.device, bufferMemory[index])
-    }
-
-    fun destroy(logicalDevice: LogicalDevice) {
-        if (::buffer.isInitialized) {
-            for (b in buffer) {
-                vkDestroyBuffer(logicalDevice.device, b, null)
-            }
-        }
     }
 }

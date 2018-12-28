@@ -14,7 +14,12 @@ internal class ShaderModule(val id: Long) {
     lateinit var createInfo: VkPipelineShaderStageCreateInfo
         private set
 
-    private var moduleId: Long = 0
+    var moduleId: Long = 0
+        private set
+
+    fun invalidate() {
+        isValid = false
+    }
 
     private fun load(logicalDevice: LogicalDevice, path: String): Long {
         val shaderCode = readFileAsByteBuffer(path)
@@ -43,10 +48,5 @@ internal class ShaderModule(val id: Long) {
                 .stage(stage)
                 .module(load(logicalDevice, path))
                 .pName(memUTF8("main"))
-    }
-
-    fun destroy(logicalDevice: LogicalDevice) {
-        vkDestroyShaderModule(logicalDevice.device, moduleId, null)
-        isValid = false
     }
 }

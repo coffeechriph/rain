@@ -1,16 +1,11 @@
 package rain.vulkan
 
-import org.lwjgl.BufferUtils
 import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkApplicationInfo
-import org.lwjgl.vulkan.VkExtensionProperties
-import org.lwjgl.vulkan.VkInstance
-import org.lwjgl.vulkan.VkInstanceCreateInfo
 import rain.assertion
 import rain.log
 import java.nio.ByteBuffer
@@ -20,8 +15,7 @@ internal class Instance {
     lateinit var instance: VkInstance
         private set
 
-    private val validationLayers = arrayOf("VK_LAYER_LUNARG_core_validation")
-    private var enableValidationLayers = false
+    private var enableValidationLayers = true
 
     fun create() {
         val appInfo = VkApplicationInfo.calloc()
@@ -31,7 +25,7 @@ internal class Instance {
                 .apiVersion(VK_MAKE_VERSION(1, 0, 2))
 
         val requiredExtensions = getRequiredExtensions()
-        val ppEnabledExtensionNames = memAllocPointer(requiredExtensions.remaining())
+        val ppEnabledExtensionNames = memAllocPointer(requiredExtensions.remaining()+1)
         ppEnabledExtensionNames.put(requiredExtensions)
         ppEnabledExtensionNames.flip()
 
@@ -40,6 +34,14 @@ internal class Instance {
                 .pNext(NULL)
                 .pApplicationInfo(appInfo)
                 .ppEnabledExtensionNames(ppEnabledExtensionNames)
+
+        val validationLayers = getValidationLayers()
+        if (validationLayers != null) {
+            pCreateInfo.ppEnabledLayerNames(validationLayers)
+        }
+
+        checkExtensions()
+        checkValidationLayers()
 
         val pInstance = memAllocPointer(1)
         val err = vkCreateInstance(pCreateInfo, null, pInstance)
@@ -70,15 +72,48 @@ internal class Instance {
         }
     }
 
+    private fun checkValidationLayers() {
+        MemoryStack.stackPush().use {
+            val countBuffer = it.mallocInt(1)
+            vkEnumerateInstanceLayerProperties(countBuffer, null)
+            val extensions = VkLayerProperties.calloc(countBuffer[0])
+            vkEnumerateInstanceLayerProperties(countBuffer, extensions)
+
+            extensions.forEach { extension ->
+                log("Found extension ${extension.layerNameString()}")
+            }
+        }
+    }
+
+    private fun getValidationLayers(): PointerBuffer? {
+        if (enableValidationLayers) {
+            val ip = memAllocInt(1)
+            VK10.vkEnumerateInstanceLayerProperties(ip, null)
+            val lp = VkLayerProperties.malloc(ip.get(0))
+            VK10.vkEnumerateInstanceLayerProperties(ip, lp)
+
+            val pb = memAllocPointer(ip[0])
+            for (i in 0 until ip[0]) {
+                log("Validation layer: ${lp[i].layerNameString()} \"${lp[i].descriptionString()}\"")
+                pb.put(memUTF8(lp[i].layerNameString()))
+            }
+            pb.flip()
+            return pb
+        }
+
+        return null
+    }
+
     private fun getRequiredExtensions(): PointerBuffer {
         val glfwExtensions = glfwGetRequiredInstanceExtensions()!!
+        /* NOT SUPPORTED ON MOLTENVK
         if(enableValidationLayers) {
             val extensions = BufferUtils.createPointerBuffer(glfwExtensions.capacity() + 1)
             extensions.put(glfwExtensions)
             extensions.put(memUTF8(VK_EXT_DEBUG_REPORT_EXTENSION_NAME))
             extensions.flip()
             return extensions
-        }
+        }*/
         return glfwExtensions
     }
 }
