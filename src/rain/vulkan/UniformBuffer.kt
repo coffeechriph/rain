@@ -7,44 +7,35 @@ import rain.assertion
 import java.nio.ByteBuffer
 
 internal class UniformBuffer {
-    var buffer = longArrayOf()
+    var buffer: Long = 0
         private set
-    lateinit var bufferMemory: LongArray
+    var bufferMemory: Long = 0
         private set
     var bufferSize: Long = 0
-        private set
-    var mode = BufferMode.SINGLE_BUFFER
         private set
     var isValid = false
         private set
         get() {
-            return buffer.isEmpty() || field
+            return buffer == 0L || field
         }
 
     fun invalidate() {
         isValid = false
     }
 
-    internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, mode: BufferMode, bufferSize: Long) {
-        val count = if (mode == BufferMode.SINGLE_BUFFER) {1} else {Swapchain.SWAPCHAIN_MODE.mode}
-        this.mode = mode
-
-        this.buffer = LongArray(count)
-        this.bufferMemory = LongArray(count)
+    internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, bufferSize: Long) {
         this.bufferSize = bufferSize
 
-        for (i in 0 until count) {
-            val buf = createBuffer(logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
-            this.buffer[i] = buf.buffer
-            this.bufferMemory[i] = buf.bufferMemory
-        }
+        val buf = createBuffer(logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
+        this.buffer = buf.buffer
+        this.bufferMemory = buf.bufferMemory
 
         isValid = true
     }
 
-    internal fun update(logicalDevice: LogicalDevice, bufferData: ByteBuffer, index: Int) {
+    internal fun update(logicalDevice: LogicalDevice, bufferData: ByteBuffer) {
         val pData = MemoryUtil.memAllocPointer(1)
-        val err = vkMapMemory(logicalDevice.device, bufferMemory[index], 0, bufferSize, 0, pData)
+        val err = vkMapMemory(logicalDevice.device, bufferMemory, 0, bufferSize, 0, pData)
 
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
@@ -53,6 +44,6 @@ internal class UniformBuffer {
         }
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(bufferData), data, bufferData.remaining().toLong())
-        vkUnmapMemory(logicalDevice.device, bufferMemory[index])
+        vkUnmapMemory(logicalDevice.device, bufferMemory)
     }
 }

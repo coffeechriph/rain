@@ -268,7 +268,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 continue
             }
 
-            pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer, nextImage)
+            pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
             pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
@@ -298,6 +298,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
             if (!found) {
                 val pipeline = Pipeline(mat, buffer)
+                log("Pipeline with material: ${mat.name}")
                 pipeline.create(logicalDevice, renderpass, indices)
                 pipeline.submitDrawInstance(draw)
                 pipelines.add(pipeline)

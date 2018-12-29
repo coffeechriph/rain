@@ -14,7 +14,7 @@ layout(set = 0, binding = 0) uniform SceneData {
     mat4 projectionMatrix;
 } sceneData;
 
-layout(set = 1, binding = 0) uniform TextureData {
+layout(set = 0, binding = 1) uniform TextureData {
     vec2 uvScale;
 } textureData;
 

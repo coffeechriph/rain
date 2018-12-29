@@ -250,15 +250,11 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
                 val material = deleteMaterialQueue.pop()
 
                 val sceneData = material.sceneData
-                for (b in sceneData.buffer) {
-                    VK10.vkDestroyBuffer(logicalDevice.device, b, null)
-                }
+                VK10.vkDestroyBuffer(logicalDevice.device, sceneData.buffer, null)
                 material.sceneData.invalidate()
 
                 val textureDataUbo = material.textureDataUBO
-                for (b in textureDataUbo.buffer) {
-                    VK10.vkDestroyBuffer(logicalDevice.device, b, null)
-                }
+                VK10.vkDestroyBuffer(logicalDevice.device, textureDataUbo.buffer, null)
                 material.textureDataUBO.invalidate()
 
                 VK10.vkDestroyDescriptorPool(logicalDevice.device, material.descriptorPool.pool, null)

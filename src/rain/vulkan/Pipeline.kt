@@ -112,14 +112,8 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
         shaderStages.get(0).set(material.vertexShader.createInfo)
         shaderStages.get(1).set(material.fragmentShader.createInfo)
 
-        val numDescriptorLayouts = material.descriptorPool.descriptorSets.size
-
-        val descriptorSetLayouts = memAllocLong(numDescriptorLayouts)
-        var i = 0
-        for (set in material.descriptorPool.descriptorSets) {
-            descriptorSetLayouts.put(i, set.layout)
-            i += 1
-        }
+        val pDescriptorSetLayout = memAllocLong(1)
+        pDescriptorSetLayout.put(0, material.descriptorPool.descriptorSetLayout)
 
         // TODO: For now push constants allocate a constant size.
         val pushConstantRange = VkPushConstantRange.calloc(1)
@@ -130,7 +124,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
         val pPipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)
                 .pNext(0)
-                .pSetLayouts(descriptorSetLayouts)
+                .pSetLayouts(pDescriptorSetLayout)
                 .pPushConstantRanges(pushConstantRange)
 
         val pPipelineLayout = memAllocLong(1)
@@ -159,6 +153,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
         val pPipelines = memAllocLong(1)
         err = vkCreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, pipelineCreateInfo, null, pPipelines)
         if (err != VK_SUCCESS) {
+            log("Material: ${material.name}")
             assertion("Failed to create graphics pipeline ${VulkanResult(err)}")
         }
 
@@ -202,15 +197,8 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
             vkCmdBindIndexBuffer(cmdBuffer.buffer, indexBuffer!!.buffer, 0, VK_INDEX_TYPE_UINT32)
         }
 
-        val pDescriptorSet = memAllocLong(material.descriptorPool.descriptorSets.size)
-        for (i in 0 until material.descriptorPool.descriptorSets.size) {
-            if (material.descriptorPool.descriptorSets[i].bufferMode == BufferMode.SINGLE_BUFFER) {
-                pDescriptorSet.put(i, material.descriptorPool.descriptorSets[i].descriptorSet[0])
-            }
-            else {
-                pDescriptorSet.put(i, material.descriptorPool.descriptorSets[i].descriptorSet[nextFrame])
-            }
-        }
+        val pDescriptorSet = memAllocLong(1)
+        pDescriptorSet.put(0, material.descriptorPool.descriptorSet)
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
