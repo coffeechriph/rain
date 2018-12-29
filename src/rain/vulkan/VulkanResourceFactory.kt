@@ -257,7 +257,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
                 VK10.vkDestroyBuffer(logicalDevice.device, textureDataUbo.buffer, null)
                 material.textureDataUBO.invalidate()
 
-                VK10.vkDestroyDescriptorPool(logicalDevice.device, material.descriptorPool.pool, null)
+                //VK10.vkDestroyDescriptorPool(logicalDevice.device, material.descriptorPool.pool, null)
                 material.descriptorPool.invalidate()
 
                 material.invalidate()

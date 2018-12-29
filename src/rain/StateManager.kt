@@ -42,8 +42,6 @@ class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val g
         if (nextStateKey != null) {
             currentState = states[nextStateKey!!]!!
             log("Next state set to $nextStateKey")
-
-            nextStateKey = null
         }
         else {
             assertion("NextStateKey is null!")
@@ -51,6 +49,7 @@ class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val g
 
         currentState.init(resourceFactory, scene, gui, input)
         log("State $nextStateKey initialized!")
+        nextStateKey = null
         return false
     }
 }

@@ -8,13 +8,26 @@ apply plugin: 'application'
 group '1'
 version '1.0'
 mainClassName = "example.roguelike.MainKt"
-applicationDefaultJvmArgs = []
 
 sourceCompatibility = '11'
 targetCompatibility= '11'
 project.ext.jomlVersion = "1.9.11"
-project.ext.lwjglVersion = "3.2.2-SNAPSHOT"
-project.ext.lwjglNatives = "natives-windows"
+project.ext.lwjglVersion = "3.2.1"
+
+def os = System.getProperty("os.name").replace(' ', '').toLowerCase()
+println "Building on $os.."
+
+
+if (os.contains("windows")) {
+    project.ext.lwjglNatives = "natives-windows"
+}
+else if (os.contains("macos")) {
+    applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+    project.ext.lwjglNatives = "natives-macos"
+}
+else {
+    throw new RuntimeException("Operating system not supported!")
+}
 
 repositories {
     mavenCentral()
@@ -39,6 +52,10 @@ dependencies {
     compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
     compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+
+    if (os.contains("macos")) {
+        compile "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
+    }
 }
 
 compileKotlin {

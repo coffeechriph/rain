@@ -10,7 +10,6 @@ import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.gfx.*
-import rain.vulkan.VulkanMaterial
 
 class Scene {
     private lateinit var quadVertexBuffer: VertexBuffer
@@ -154,6 +153,7 @@ class Scene {
             }
         }
 
+        // TODO: Right now we must draw stuff in correct order as we're using alpha blending per default..
         submitListSorted.sortBy { drawable -> drawable.z }
         for (drawable in submitListSorted) {
             renderer.submitDraw(drawable)

@@ -319,10 +319,10 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         lightVertices = FloatArray(width*height*3*6){0.0f}
         lightValues = FloatArray(width*height){0.1f}
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 1)))
-        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", null)
+        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture)
         val lightTransform = Transform()
-        lightTransform.z = 4.0f
-        //scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
+        lightTransform.z = 18.0f
+        scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -368,7 +368,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                             .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f)
                             .build()
                     val etTransform = torchSystem.findTransformComponent(et.getId())
-                    etTransform!!.setPosition(cx + 32, cy + 32, 12.0f)
+                    etTransform!!.setPosition(cx + 32, cy + 32, 19.0f)
                     etTransform.sx = 48.0f
                     etTransform.sy = 48.0f
 

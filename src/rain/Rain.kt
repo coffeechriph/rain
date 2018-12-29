@@ -1,7 +1,6 @@
 package rain
 
 import org.lwjgl.glfw.GLFW
-import org.lwjgl.vulkan.VK10
 import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
@@ -9,7 +8,6 @@ import rain.api.Window
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
 import rain.api.scene.Scene
-import rain.util.ShaderCompiler
 import rain.vulkan.Vk
 import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
@@ -40,7 +38,7 @@ open class Rain {
         }
 
     fun create(width: Int, height: Int, title: String, api: Api) {
-        ShaderCompiler().findAndCompile()
+        //ShaderCompiler().findAndCompile()
         this.api = api
         window.create(width, height, title, input)
 

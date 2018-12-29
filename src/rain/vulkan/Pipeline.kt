@@ -222,4 +222,19 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
             }
         }
     }
+
+    fun drawInstance(cmdBuffer: CommandPool.CommandBuffer, drawable: Drawable) {
+        if (indexBuffer == null) {
+            val pushData = drawable.uniformData
+
+            vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
+            vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0)
+        }
+        else {
+            val pushData = drawable.uniformData
+
+            vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
+            vkCmdDrawIndexed(cmdBuffer.buffer, indexBuffer!!.indexCount, 1, 0, 0, 0)
+        }
+    }
 }

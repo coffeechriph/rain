@@ -204,8 +204,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             return
         }
 
-        issueDrawingCommands()
-
         var result = vkWaitForFences(logicalDevice.device, drawingFinishedFence[frameIndex], false, 1000000000)
         if (result != VK_SUCCESS) {
             log("Failed to wait for fence!")
@@ -258,31 +256,29 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         val projectionMatrixBuffer = memAlloc(16 * 4)
         camera.projection.get(projectionMatrixBuffer)
 
-        val obsoletePipelines = ArrayList<Pipeline>()
-        for (pipeline in pipelines) {
-            if (!pipeline.isValid) {
-                obsoletePipelines.add(pipeline)
-                continue
-            }
-            else if (!pipeline.hasQueue()) {
-                continue
-            }
+        issueDrawingCommands(nextImage)
 
-            pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
-            pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
-            pipeline.drawAll(renderCommandBuffers[frameIndex])
-        }
-
-        pipelines.removeAll(obsoletePipelines)
         renderpass.end(renderCommandBuffers[frameIndex])
     }
 
-    private fun issueDrawingCommands() {
+    private fun issueDrawingCommands(nextImage: Int) {
+        val obsoletePipelines = ArrayList<Pipeline>()
+        val projectionMatrixBuffer = memAlloc(16 * 4)
+        camera.projection.get(projectionMatrixBuffer)
+
         for (draw in drawOpsQueue) {
             val mat = draw.material as VulkanMaterial
             val buffer = draw.vertexBuffer as VulkanVertexBuffer
 
+            if (!mat.isValid || !buffer.isValid) {
+                continue
+            }
+
             val indices = if (draw.indexBuffer != null) {
+                if (!draw.indexBuffer.valid()) {
+                    continue
+                }
+
                 draw.indexBuffer as VulkanIndexBuffer
             } else {
                 null
@@ -290,20 +286,29 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
             var found = false
             for (pipeline in pipelines) {
+                if (!pipeline.isValid) {
+                    obsoletePipelines.add(pipeline)
+                    continue
+                }
+
                 if (pipeline.matches(mat, buffer, indices)) {
-                    pipeline.submitDrawInstance(draw)
+                    pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
+                    pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
+                    pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
                     found = true
                 }
             }
 
             if (!found) {
                 val pipeline = Pipeline(mat, buffer)
-                log("Pipeline with material: ${mat.name}")
                 pipeline.create(logicalDevice, renderpass, indices)
-                pipeline.submitDrawInstance(draw)
+                pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
+                pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
+                pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
                 pipelines.add(pipeline)
             }
         }
+        pipelines.removeAll(obsoletePipelines)
         drawOpsQueue.clear()
     }
 
