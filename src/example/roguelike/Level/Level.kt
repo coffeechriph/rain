@@ -322,7 +322,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", null)
         val lightTransform = Transform()
         lightTransform.z = 4.0f
-        scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
+        //scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {

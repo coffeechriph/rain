@@ -40,6 +40,7 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
         }
         else {
             if (this.buffer > 0L) {
+                vkDeviceWaitIdle(vk.logicalDevice.device)
                 vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
                 this.buffer = 0L
             }
@@ -66,6 +67,7 @@ internal class VulkanIndexBuffer(val id: Long) : IndexBuffer {
         }
 
         if (this.buffer > 0L) {
+            vkDeviceWaitIdle(vk.logicalDevice.device)
             vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
             this.buffer = 0L
         }

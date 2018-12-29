@@ -51,6 +51,7 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
             vertexCount = vertices.size / vertexSize
             if (bufferState == VertexBufferState.STATIC) {
                 if (this.buffer > 0L) {
+                    vkDeviceWaitIdle(vk.logicalDevice.device)
                     vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
                     this.buffer = 0L
                 }
@@ -74,6 +75,7 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
         }
 
         if (this.buffer > 0L) {
+            vkDeviceWaitIdle(vk.logicalDevice.device)
             vkDestroyBuffer(vk.logicalDevice.device, buffer, null)
             this.buffer = 0L
         }

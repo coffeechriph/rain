@@ -42,8 +42,6 @@ internal class Instance {
         private set
 
     private var enableValidationLayers = true
-    private var msg_callback: Long = 0
-
 
     private val dbgFunc = VkDebugReportCallbackEXT.create { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
         val type: String
@@ -168,11 +166,14 @@ internal class Instance {
             val lp = VkLayerProperties.malloc(ip.get(0))
             VK10.vkEnumerateInstanceLayerProperties(ip, lp)
 
-            val pb = memAllocPointer(2)
+            val pb = memAllocPointer(4)
             var index = 0
             for (i in 0 until ip[0]) {
-                if (lp[i].layerNameString() == "VK_LAYER_LUNARG_core_validation" /*|| lp[i].layerNameString() == "VK_LAYER_LUNARG_parameter_validation"*/ || lp[i].layerNameString() == "VK_LAYER_LUNARG_standard_validation") {
-                    log("Validation layer: ${lp[i].layerNameString()} \"${lp[i].descriptionString()}\"")
+                log("Validation layer: ${lp[i].layerNameString()} \"${lp[i].descriptionString()}\"")
+                if (lp[i].layerNameString() == "VK_LAYER_LUNARG_core_validation" ||
+                    lp[i].layerNameString() == "VK_LAYER_LUNARG_parameter_validation" ||
+                    lp[i].layerNameString() == "VK_LAYER_LUNARG_standard_validation" ||
+                    lp[i].layerNameString() == "VK_LAYER_RENDERDOC_Capture") {
                     pb.put(memUTF8(lp[i].layerNameString()))
                     index += 1
                 }

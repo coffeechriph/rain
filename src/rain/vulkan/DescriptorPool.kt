@@ -80,13 +80,25 @@ internal class DescriptorPool {
         descriptorSetLayout = pDescriptorSetLayout[0]
 
         // CREATE POOL - One for UNIFORM_BUFFER and SAMPLER types
-        val descriptorPoolSize = VkDescriptorPoolSize.calloc(2)
+        var poolSizeCount = 0
+        if (uniformBuffers.isNotEmpty()) {
+            poolSizeCount += 1
+        }
+        if (textureDescriptors.isNotEmpty()) {
+            poolSizeCount += 1
+        }
+
+        val descriptorPoolSize = VkDescriptorPoolSize.calloc(poolSizeCount)
         descriptorPoolSize[0]
                 .type(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
                 .descriptorCount(uniformBuffers.size)
-        descriptorPoolSize[1]
-                .type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
-                .descriptorCount(textureDescriptors.size)
+
+        // TODO: This won't work in case we have a texture but no uniform buffers
+        if (textureDescriptors.isNotEmpty()) {
+            descriptorPoolSize[1]
+                    .type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+                    .descriptorCount(textureDescriptors.size)
+        }
 
         val descriptorPoolCreateInfo = VkDescriptorPoolCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO)
