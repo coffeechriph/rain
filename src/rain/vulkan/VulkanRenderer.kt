@@ -274,16 +274,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 continue
             }
 
-            val indices = if (draw.indexBuffer != null) {
-                if (!draw.indexBuffer.valid()) {
-                    continue
-                }
-
-                draw.indexBuffer as VulkanIndexBuffer
-            } else {
-                null
-            }
-
             var found = false
             for (pipeline in pipelines) {
                 if (!pipeline.isValid) {
@@ -291,7 +281,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                     continue
                 }
 
-                if (pipeline.matches(mat, buffer, indices)) {
+                if (pipeline.matches(mat, buffer)) {
                     pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
                     pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
                     pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
@@ -300,8 +290,8 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             }
 
             if (!found) {
-                val pipeline = Pipeline(mat, buffer)
-                pipeline.create(logicalDevice, renderpass, indices)
+                val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
+                pipeline.create(logicalDevice, renderpass)
                 pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
                 pipeline.begin(renderCommandBuffers[frameIndex], nextImage)
                 pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)

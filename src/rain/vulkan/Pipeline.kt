@@ -9,17 +9,11 @@ import rain.log
 import java.nio.LongBuffer
 import java.util.*
 
-internal class Pipeline(internal val material: VulkanMaterial, internal val vertexBuffer: VulkanVertexBuffer) {
+internal class Pipeline(internal val material: VulkanMaterial, private val vertexFormat: Array<VertexAttribute>, private val vertexInputCreateInfo: VkPipelineVertexInputStateCreateInfo) {
     var isValid = false
         private set
         get() {
-            if (!vertexBuffer.isValid) {
-                return false
-            }
-            else if (!material.isValid) {
-                return false
-            }
-            else if (indexBuffer != null && !indexBuffer!!.isValid) {
+            if (!material.isValid) {
                 return false
             }
 
@@ -28,32 +22,16 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
 
     private var pipeline: Long = 0
     private var pipelineLayout: Long = 0
-    private var indexBuffer: VulkanIndexBuffer? = null
     private lateinit var pOffset: LongBuffer
     private lateinit var pBuffer: LongBuffer
 
     private val nextFrameDrawQueue = ArrayDeque<Drawable>()
 
-    fun hasQueue() : Boolean {
-        return nextFrameDrawQueue.peek() != null
-    }
-    fun matches(material: VulkanMaterial, vertexBuffer: VulkanVertexBuffer, indexBuffer: VulkanIndexBuffer?): Boolean {
-        return this.material.id == material.id && this.vertexBuffer.id == vertexBuffer.id && (indexBuffer == null || this.indexBuffer!!.id == indexBuffer.id)
+    fun matches(material: VulkanMaterial, vertexBuffer: VulkanVertexBuffer): Boolean {
+        return this.material.id == material.id && vertexFormat.contentEquals(vertexBuffer.attributes)
     }
 
-    fun submitDrawInstance(draw: Drawable) {
-        val vbuf = draw.vertexBuffer as VulkanVertexBuffer
-        val mat = draw.material as VulkanMaterial
-        val ibuf = if (draw.indexBuffer != null) {draw.indexBuffer as VulkanIndexBuffer} else {null}
-
-        if (vbuf.id != vertexBuffer.id || mat.id != material.id || (ibuf != null && indexBuffer != null && ibuf.id != indexBuffer!!.id)) {
-            assertion("A drawable that does not match the pipeline should never be submitted to it!")
-        }
-
-        nextFrameDrawQueue.add(draw)
-    }
-
-    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass, indexBuffer: VulkanIndexBuffer?) {
+    fun create(logicalDevice: LogicalDevice, renderpass: Renderpass) {
         var err: Int
         val inputAssemblyState = VkPipelineInputAssemblyStateCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO)
@@ -140,7 +118,7 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
                 .sType(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO)
                 .layout(layout)
                 .renderPass(renderpass.handler)
-                .pVertexInputState(vertexBuffer.vertexPipelineVertexInputStateCreateInfo)
+                .pVertexInputState(vertexInputCreateInfo)
                 .pInputAssemblyState(inputAssemblyState)
                 .pRasterizationState(rasterizationState)
                 .pColorBlendState(colorBlendState)
@@ -161,7 +139,6 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
         pipelineLayout = layout
         pBuffer = memAllocLong(1)
         pOffset = memAllocLong(1)
-        this.indexBuffer = indexBuffer
         this.isValid = true
 
         shaderStages.free()
@@ -189,52 +166,38 @@ internal class Pipeline(internal val material: VulkanMaterial, internal val vert
 
     fun begin(cmdBuffer: CommandPool.CommandBuffer, nextFrame: Int) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
-        pOffset.put(0, 0L)
-        pBuffer.put(0, vertexBuffer.buffer)
-        vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
-
-        if (indexBuffer != null) {
-            vkCmdBindIndexBuffer(cmdBuffer.buffer, indexBuffer!!.buffer, 0, VK_INDEX_TYPE_UINT32)
-        }
 
         val pDescriptorSet = memAllocLong(1)
         pDescriptorSet.put(0, material.descriptorPool.descriptorSet)
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
 
-    fun drawAll(cmdBuffer: CommandPool.CommandBuffer) {
-        if (indexBuffer == null) {
-            while (nextFrameDrawQueue.peek() != null) {
-                val drawable = nextFrameDrawQueue.pop()
-                val pushData = drawable.uniformData
-
-                vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-                vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0)
-            }
-        }
-        else {
-            while (nextFrameDrawQueue.peek() != null) {
-                val drawable = nextFrameDrawQueue.pop()
-                val pushData = drawable.uniformData
-
-                vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-                vkCmdDrawIndexed(cmdBuffer.buffer, indexBuffer!!.indexCount, 1, 0, 0, 0)
-            }
-        }
-    }
-
     fun drawInstance(cmdBuffer: CommandPool.CommandBuffer, drawable: Drawable) {
-        if (indexBuffer == null) {
+        if (drawable.indexBuffer == null) {
+            val vbo = drawable.vertexBuffer as VulkanVertexBuffer
             val pushData = drawable.uniformData
 
+            pOffset.put(0, 0L)
+            pBuffer.put(0, vbo.buffer)
+
+            vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
+
             vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-            vkCmdDraw(cmdBuffer.buffer, vertexBuffer.vertexCount, 1, 0, 0)
+            vkCmdDraw(cmdBuffer.buffer, vbo.vertexCount, 1, 0, 0)
         }
         else {
             val pushData = drawable.uniformData
+            val vbo = drawable.vertexBuffer as VulkanVertexBuffer
+            val ibo = drawable.indexBuffer as VulkanIndexBuffer
+
+            pOffset.put(0, 0L)
+            pBuffer.put(0, vbo.buffer)
+
+            vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
+            vkCmdBindIndexBuffer(cmdBuffer.buffer, ibo.buffer, 0, VK_INDEX_TYPE_UINT32)
 
             vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-            vkCmdDrawIndexed(cmdBuffer.buffer, indexBuffer!!.indexCount, 1, 0, 0, 0)
+            vkCmdDrawIndexed(cmdBuffer.buffer, ibo.indexCount, 1, 0, 0, 0)
         }
     }
 }

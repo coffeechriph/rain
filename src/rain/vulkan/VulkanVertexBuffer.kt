@@ -21,6 +21,8 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
         private set
     var vertexCount: Int = 0
         private set
+    lateinit var attributes: Array<VertexAttribute>
+        private set
 
     lateinit var vertexPipelineVertexInputStateCreateInfo: VkPipelineVertexInputStateCreateInfo
         private set
@@ -106,6 +108,7 @@ internal class VulkanVertexBuffer(val id: Long) : VertexBuffer {
         this.vk = vk
         this.commandPool = commandPool
         this.bufferState = state
+        this.attributes = attributes
         this.isValid = true
     }
 
