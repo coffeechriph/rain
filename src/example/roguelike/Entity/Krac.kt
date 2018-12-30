@@ -23,8 +23,8 @@ class Krac(random: Random): Enemy(random) {
             damage(player)
         }
         else if (entity is Enemy && !entity.pushBackImmune) {
-            val dx = (entity.transform.x - transform.x) * 400
-            val dy = (entity.transform.y - transform.y) * 400
+            val dx = (entity.transform.x - transform.x) * 0.1f
+            val dy = (entity.transform.y - transform.y) * 0.1f
             entity.pushBack = 8
             entity.pushDirection = Vector2i(dx.toInt(),dy.toInt())
             entity.traversing = false

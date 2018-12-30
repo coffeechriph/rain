@@ -68,31 +68,9 @@ class Scene {
         physicWorld.setContactListener(physicsContactListener)
     }
 
-    internal fun update(renderer: Renderer, input: Input, deltaTime: Float) {
+    internal fun update(input: Input, deltaTime: Float) {
         physicWorld.step(1.0f / 60.0f, 6, 2)
         physicWorld.clearForces()
-
-        renderer.setActiveCamera(camera)
-
-        val submitListSorted = ArrayList<Drawable>()
-        val submitListParticles = ArrayList<Drawable>()
-
-        for (tilemap in tilemaps) {
-            submitListSorted.add(Drawable(tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, tilemap.transform.z))
-        }
-
-        for (simpleDraw in simpleDraws) {
-            val modelMatrix = Matrix4f()
-            modelMatrix.identity()
-            modelMatrix.rotateZ(simpleDraw.transform.rot)
-            modelMatrix.translate(simpleDraw.transform.x, simpleDraw.transform.y, simpleDraw.transform.z)
-            modelMatrix.scale(simpleDraw.transform.sx, simpleDraw.transform.sy, 0.0f)
-
-            val byteBuffer = MemoryUtil.memAlloc(16 * 4)
-            modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
-
-            submitListSorted.add(Drawable(simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, simpleDraw.transform.z))
-        }
 
         for (system in entitySystems) {
             for (entity in system.getEntityList()) {
@@ -124,15 +102,68 @@ class Scene {
                     continue
                 }
 
-                submitListSorted.add(Drawable(sprite.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
-             }
+            }
 
             for (emitter in system.getParticleEmitterList()) {
                 if (!emitter!!.enabled) {
                     continue
                 }
 
-                emitter.update(system, deltaTime * 0.5f)
+                emitter.update()
+            }
+
+            for (emitter in system.getBurstParticleEmitterList()) {
+                if (!emitter!!.enabled || !emitter.simulating) {
+                    continue
+                }
+
+                emitter.update()
+            }
+
+            for (collider in system.getColliderList()) {
+                val b = collider!!.getBody()
+                collider.transform.x = b.position.x * metersToPixels
+                collider.transform.y = b.position.y * metersToPixels
+            }
+        }
+    }
+
+    internal fun render(renderer: Renderer) {
+        renderer.setActiveCamera(camera)
+        val submitListSorted = ArrayList<Drawable>()
+        val submitListParticles = ArrayList<Drawable>()
+
+        for (tilemap in tilemaps) {
+            submitListSorted.add(Drawable(tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, tilemap.transform.z))
+        }
+
+        for (simpleDraw in simpleDraws) {
+            val modelMatrix = Matrix4f()
+            modelMatrix.identity()
+            modelMatrix.rotateZ(simpleDraw.transform.rot)
+            modelMatrix.translate(simpleDraw.transform.x, simpleDraw.transform.y, simpleDraw.transform.z)
+            modelMatrix.scale(simpleDraw.transform.sx, simpleDraw.transform.sy, 0.0f)
+
+            val byteBuffer = MemoryUtil.memAlloc(16 * 4)
+            modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+
+            submitListSorted.add(Drawable(simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, simpleDraw.transform.z))
+        }
+
+        for (system in entitySystems) {
+            for (sprite in system.getSpriteList()) {
+                if (!sprite!!.visible) {
+                    continue
+                }
+
+                submitListSorted.add(Drawable(sprite.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
+            }
+
+            for (emitter in system.getParticleEmitterList()) {
+                if (!emitter!!.enabled) {
+                    continue
+                }
+
                 submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
             }
 
@@ -141,17 +172,9 @@ class Scene {
                     continue
                 }
 
-                emitter.update(system, deltaTime * 0.5f)
-
                 if (!emitter.burstFinished) {
                     submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
                 }
-            }
-
-            for (collider in system.getColliderList()) {
-                val b = collider!!.getBody()
-                collider.transform.x = b.position.x * metersToPixels
-                collider.transform.y = b.position.y * metersToPixels
             }
         }
 

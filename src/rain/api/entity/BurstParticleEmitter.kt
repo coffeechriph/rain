@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
 import java.util.*
 
 class BurstParticleEmitter constructor(private val resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val
-particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
+particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, particleSpread: Float, private val tickRate: Float = 1.0f) {
     data class Particle (var x: Float, var y: Float, var i: Float)
 
     var vertexBuffer: VertexBuffer
@@ -41,7 +41,6 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
     private var bufferData: FloatArray = FloatArray(numParticles*20)
     private var indices: IntArray = IntArray(numParticles*6)
     private var offsets: FloatArray
-    private var tick = 0.0f
 
     private val modelMatrixBuffer = MemoryUtil.memAlloc(24 * 4)
     private val modelMatrix = Matrix4f()
@@ -110,9 +109,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         return modelMatrixBuffer
     }
 
-    fun update(entitySystem: EntitySystem<Entity>, deltaTime: Float) {
-        tick += deltaTime
-
+    fun update() {
         val psize = particleSize * 0.5f / particleLifetime
         val factor = particleLifetime / numParticles
 
@@ -188,9 +185,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
 
     private fun simulateSingleBurstLinear(vx: Float, vy: Float) {
         for (i in simStartIndex until simIndex) {
-            particles[i].x += vx * (1.0f/60.0f)
-            particles[i].y += vy * (1.0f/60.0f)
-            particles[i].i += (1.0f/60.0f)
+            particles[i].x += vx * (1.0f/60.0f) * tickRate
+            particles[i].y += vy * (1.0f/60.0f) * tickRate
+            particles[i].i += (1.0f/60.0f) * tickRate
 
             if (particles[i].i >= particleLifetime) {
                 particles[i].x = Float.MAX_VALUE
@@ -212,9 +209,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
 
     private fun simulateContinousBurstLinear(vx: Float, vy: Float) {
         for (i in 0 until simIndex) {
-            particles[i].x += vx * (1.0f/60.0f)
-            particles[i].y += vy * (1.0f/60.0f)
-            particles[i].i += (1.0f/60.0f)
+            particles[i].x += vx * (1.0f/60.0f) * tickRate
+            particles[i].y += vy * (1.0f/60.0f) * tickRate
+            particles[i].i += (1.0f/60.0f) * tickRate
 
             if (particles[i].i >= particleLifetime) {
                 particles[i].x = offsets[i*2]
@@ -275,9 +272,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             val vx = (ax * particleVelocity.x)
             val vy = (ay * particleVelocity.y)
 
-            particles[i].x += vx
-            particles[i].y += vy
-            particles[i].i += 0.016f
+            particles[i].x += vx * (1.0f/60.0f) * tickRate
+            particles[i].y += vy * (1.0f/60.0f) * tickRate
+            particles[i].i += (1.0f/60.0f)*tickRate
 
             if (particles[i].i >= particleLifetime) {
                 particles[i].x = offsets[i*2]
@@ -298,9 +295,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             val vx = (ax * particleVelocity.x)
             val vy = (ay * particleVelocity.y)
 
-            particles[i].x += vx
-            particles[i].y += vy
-            particles[i].i += 0.016f
+            particles[i].x += vx * (1.0f/60.0f) * tickRate
+            particles[i].y += vy * (1.0f/60.0f) * tickRate
+            particles[i].i += (1.0f/60.0f)*tickRate
 
             if (particles[i].i >= particleLifetime) {
                 particles[i].x = Float.MAX_VALUE

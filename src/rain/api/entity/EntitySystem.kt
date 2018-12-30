@@ -244,27 +244,27 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float): Builder<T> {
+        fun attachParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
             val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
 
             if (system.particleEmittersMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = ParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread)
+            val emitter = ParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             system.particleEmitters.add(emitter)
             system.particleEmittersMap[entityId] = emitter
             return this
         }
 
-        fun attachBurstParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float): Builder<T> {
+        fun attachBurstParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
             val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
 
             if (system.burstParticleEmitterMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = BurstParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread)
+            val emitter = BurstParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             system.burstParticleEmitters.add(emitter)
             system.burstParticleEmitterMap[entityId] = emitter
             return this

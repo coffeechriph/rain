@@ -13,8 +13,7 @@ import java.nio.ByteBuffer
 import java.util.*
 
 class ParticleEmitter constructor(private val resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val
-particleSize:
-Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float) {
+particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float, private val tickRate: Float = 1.0f) {
     data class Particle (var x: Float, var y: Float, var i: Float)
 
     var vertexBuffer: VertexBuffer
@@ -95,8 +94,8 @@ Float, private val particleLifetime: Float, private val particleVelocity: Vector
         resourceFactory.deleteIndexBuffer(indexBuffer)
     }
 
-    fun update(entitySystem: EntitySystem<Entity>, deltaTime: Float) {
-        tick += 1.0f / 60.0f
+    fun update() {
+        tick += 1.0f / 60.0f * tickRate
 
         val psize = particleSize * 0.5f
         val factor = particleLifetime / numParticles
@@ -110,17 +109,16 @@ Float, private val particleLifetime: Float, private val particleVelocity: Vector
         vertexBuffer.update(bufferData)
     }
 
-    // TODO: Velocity should be actual velocity and not the amount to travel during the lifetime
     private fun updateParticlesLinear(factor: Float, psize: Float) {
         var index1 = 0
-        val vx = particleVelocity.x
-        val vy = particleVelocity.y
+        val vx = particleVelocity.x * particleLifetime
+        val vy = particleVelocity.y * particleLifetime
 
         for (i in 0 until numParticles) {
             val k = (((i.toFloat() * factor) + tick) % particleLifetime)
             particles[i].x = vx * k + offsets[i*2]
             particles[i].y = vy * k + offsets[i*2+1]
-            particles[i].i = k
+            particles[i].i = k / particleLifetime
         }
 
         particles.sortByDescending { p -> p.i }
@@ -158,15 +156,15 @@ Float, private val particleLifetime: Float, private val particleVelocity: Vector
     private fun updateParticlesCircular(factor: Float, psize: Float) {
         var index1 = 0
         for (i in 0 until numParticles) {
-            val k = (((i.toFloat() * factor) + tick) % particleLifetime) / particleLifetime
+            val k = (((i.toFloat() * factor) + tick) % particleLifetime)
             val ax = Math.sin(offsets[i*2].toDouble()).toFloat()
             val ay = Math.cos(offsets[i*2].toDouble()).toFloat()
-            val vx = (ax * particleVelocity.x)
-            val vy = (ay * particleVelocity.y)
+            val vx = (ax * particleVelocity.x) * particleLifetime
+            val vy = (ay * particleVelocity.y) * particleLifetime
 
             particles[i].x = vx * k + offsets[i*2] + ax * particleSpread * offsets[i*2+1]
             particles[i].y = vy * k + offsets[i*2+1] + ay * particleSpread * offsets[i*2+1]
-            particles[i].i = k
+            particles[i].i = k / particleLifetime
         }
 
         particles.sortByDescending { p -> p.i }

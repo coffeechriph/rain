@@ -378,7 +378,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                         torchSystem.newEntity(et)
                                 .attachTransformComponent()
                                 .attachSpriteComponent(torchMaterial)
-                                .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f)
+                                .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f, 0.5f)
                                 .build()
                         val etTransform = torchSystem.findTransformComponent(et.getId())
                         etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
@@ -397,7 +397,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     val et = Entity()
                     torchSystem.newEntity(et)
                             .attachTransformComponent()
-                            .attachParticleEmitter(resourceFactory, 10, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 24.0f)
+                            .attachParticleEmitter(resourceFactory, 20, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 20.0f, 0.5f)
                             .build()
                     val etTransform = torchSystem.findTransformComponent(et.getId())
                     etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
@@ -545,14 +545,14 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         val mx = player.cellX * width + x
         val my = player.cellY * height + y
 
-        if (x > 0 && y >= 0 && x < width && y < height) {
-            if (lightValues[(x-1) + y * width] < value - att) {
+        if (x in 1..width) {
+            if (y in 0..(height - 1) && lightValues[(x-1) + y * width] < value - att) {
                 if (map[(mx-1) + my * mapWidth] == 0) {
                     spreadLight(x - 1, y, value - att)
                 }
             }
 
-            if (y > 0) {
+            if (y in 1..height) {
                 if (lightValues[(x-1) + (y-1) * width] < value - att) {
                     if (map[(mx-1) + (my-1) * mapWidth] == 0) {
                         spreadLight(x - 1, y - 1, value - att)
@@ -560,7 +560,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 }
             }
 
-            if (y < height - 1) {
+            if (y in 0..(height-2)) {
                 if (lightValues[(x-1) + (y+1) * width] < value - att) {
                     if (map[(mx-1) + (my+1) * mapWidth] == 0) {
                         spreadLight(x - 1, y + 1, value - att)
@@ -569,31 +569,27 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
 
-        if (x < width - 1 && y >= 0 && x >= 0 && y < height) {
-            if (lightValues[(x+1) + y * width] < value - att) {
+        if (x in 0..(width-2)) {
+            if (y in 0..(height-1) && lightValues[(x+1) + y * width] < value - att) {
                 if (map[(mx+1) + my * mapWidth] == 0) {
                     spreadLight(x + 1, y, value - att)
                 }
             }
 
-            if (y > 0) {
-                if (lightValues[(x+1) + (y-1) * width] < value - att) {
-                    if (map[(mx+1) + (my-1) * mapWidth] == 0) {
-                        spreadLight(x + 1, y - 1, value - att)
-                    }
+            if (y in 1..height && lightValues[(x+1) + (y-1) * width] < value - att) {
+                if (map[(mx+1) + (my-1) * mapWidth] == 0) {
+                    spreadLight(x + 1, y - 1, value - att)
                 }
             }
 
-            if (y < height - 1) {
-                if (lightValues[(x+1) + (y+1) * width] < value - att) {
-                    if (map[(mx+1) + (my+1) * mapWidth] == 0) {
-                        spreadLight(x + 1, y + 1, value - att)
-                    }
+            if (y in 0..(height-2) && lightValues[(x+1) + (y+1) * width] < value - att) {
+                if (map[(mx+1) + (my+1) * mapWidth] == 0) {
+                    spreadLight(x + 1, y + 1, value - att)
                 }
             }
         }
 
-        if (y > 0 && x >= 0 && x < width) {
+        if (x in 0..(width-1) && y in 1..height) {
             if (lightValues[x + (y-1) * width] < value - att) {
                 if (map[mx + (my-1) * mapWidth] == 0) {
                     spreadLight(x, y - 1, value - att)
@@ -601,7 +597,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
 
-        if (y < height - 1 && x >= 0 && x < width) {
+        if (x in 0..(width-1) && y in 0..(height-2)) {
             if (lightValues[x + (y+1) * width] < value - att) {
                 if (map[mx + (my+1) * mapWidth] == 0) {
                     spreadLight(x, y + 1, value - att)
@@ -718,13 +714,13 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
                 val r = random.nextInt(20)
                 if (r == 1){
-                    mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
+                    mapDetailIndices[tile.x + tile.y * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
                 }
                 else {
                     val c = random.nextInt(100)
 
                     if (c == 5) {
-                        mapDetailIndices[tile.x + (tile.y + 1) * mapWidth] = TileIndex(0, 6)
+                        mapDetailIndices[tile.x + tile.y * mapWidth] = TileIndex(0, 6)
                     }
                 }
             }
@@ -1200,7 +1196,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)
                     .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
-                    .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f)
+                    .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
                     .build()
             val emitter = containerSystem.findBurstEmitterComponent (container.getId())!!
             emitter.burstFinished = true

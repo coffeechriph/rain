@@ -205,7 +205,7 @@ class Player : Entity() {
     private fun <T : Entity> keepPlayerWithinBorder() {
         if (collider.getPosition().x < 0) {
             if (cellX > 0) {
-                collider.setPosition(1270.0f, collider.getPosition().y)
+                collider.setPosition(1216.0f, collider.getPosition().y)
 
                 playerMovedCell = true
                 cellX -= 1
@@ -213,7 +213,7 @@ class Player : Entity() {
         }
         else if (collider.getPosition().x > 1270) {
             if (cellX < level.maxCellX) {
-                collider.setPosition(10.0f, collider.getPosition().y)
+                collider.setPosition(64.0f, collider.getPosition().y)
 
                 playerMovedCell = true
                 cellX += 1
@@ -222,7 +222,7 @@ class Player : Entity() {
 
         if (collider.getPosition().y < 0) {
             if (cellY > 0) {
-                collider.setPosition(collider.getPosition().x, 758.0f)
+                collider.setPosition(collider.getPosition().x, 704.0f)
 
                 playerMovedCell = true
                 cellY -= 1
@@ -230,7 +230,7 @@ class Player : Entity() {
         }
         else if (collider.getPosition().y > 768) {
             if (cellY < level.maxCellY) {
-                collider.setPosition(collider.getPosition().x, 10.0f)
+                collider.setPosition(collider.getPosition().x, 64.0f)
 
                 playerMovedCell = true
                 cellY += 1

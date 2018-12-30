@@ -25,9 +25,6 @@ data class Sprite internal constructor(val entity: Long, val material: Material,
 
         val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
         val ibuf = buffer.asFloatBuffer()
-        if (textureTileOffset.x == 0 && textureTileOffset.y == 4) {
-            println()
-        }
         ibuf.put(16, textureTileOffset.x.toFloat())
         ibuf.put(17, textureTileOffset.y.toFloat())
         return modelMatrixBuffer

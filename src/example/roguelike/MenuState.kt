@@ -150,7 +150,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
             }
         }
 
-        buttonsAnimation += 1.0f / 60.0f
+        buttonsAnimation += 4.0f / 60.0f
         if (buttonsAnimation >= Math.PI*2) {
             buttonsAnimation = 0.0f
         }

@@ -7,8 +7,8 @@ layout (location = 1) in vec2 Uv;
 layout (set = 0, binding = 2) uniform sampler2D texture0;
 
 void main() {
-    color = inColor;
-    color.a = texture(texture0, Uv).a;
+    color = inColor * texture(texture0, Uv);
+
     if (color.w < 0.01f) {
         discard;
     }

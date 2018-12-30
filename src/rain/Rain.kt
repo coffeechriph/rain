@@ -86,6 +86,7 @@ open class Rain {
                     numUpdates++
                 }
 
+                scene.render(vulkanRenderer)
                 gui.render()
                 vulkanRenderer.render()
             }
@@ -129,7 +130,7 @@ open class Rain {
         }
 
         gui.update(input)
-        scene.update(vulkanRenderer, input, deltaTime)
+        scene.update(input, deltaTime)
         stateManager.update(deltaTime)
         input.updateKeyState()
     }
