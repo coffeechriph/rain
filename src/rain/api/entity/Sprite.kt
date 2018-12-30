@@ -3,7 +3,6 @@ package rain.api.entity
 import org.joml.Matrix4f
 import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil.memAlloc
-import rain.api.gfx.Drawable
 import rain.api.gfx.Material
 import java.nio.ByteBuffer
 
@@ -26,6 +25,9 @@ data class Sprite internal constructor(val entity: Long, val material: Material,
 
         val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
         val ibuf = buffer.asFloatBuffer()
+        if (textureTileOffset.x == 0 && textureTileOffset.y == 4) {
+            println()
+        }
         ibuf.put(16, textureTileOffset.x.toFloat())
         ibuf.put(17, textureTileOffset.y.toFloat())
         return modelMatrixBuffer

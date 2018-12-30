@@ -43,7 +43,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private lateinit var lightValues: FloatArray
     private lateinit var lightMapMaterial: Material
 
-    private lateinit var material: Material
+    private lateinit var tilemapMaterial: Material
     private lateinit var itemMaterial: Material
     private lateinit var texture: Texture2d
     private lateinit var torchTexture: Texture2d
@@ -285,7 +285,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         maxCellY = mapHeight / height
         texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
-        material = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture)
+        tilemapMaterial = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture)
         itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture)
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
@@ -360,24 +360,42 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 tr.z = 13.0f
 
                 if (backIndices[i].x == 1) {
-                    val et = Entity()
-                    torchSystem.newEntity(et)
-                            .attachTransformComponent()
-                            .attachSpriteComponent(torchMaterial)
-                            .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f)
-                            .build()
-                    val etTransform = torchSystem.findTransformComponent(et.getId())
-                    etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
-                    etTransform.sx = 48.0f
-                    etTransform.sy = 48.0f
+                    if (random.nextInt(10) < 2) {
+                        val et = Entity()
+                        torchSystem.newEntity(et)
+                                .attachTransformComponent()
+                                .attachSpriteComponent(torchMaterial)
+                                .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f)
+                                .build()
+                        val etTransform = torchSystem.findTransformComponent(et.getId())
+                        etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
+                        etTransform.sx = 48.0f
+                        etTransform.sy = 48.0f
 
-                    val emitter = torchSystem.findEmitterComponent(et.getId())!!
-                    emitter.startSize = 5.0f
-                    emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
-                    emitter.endColor.set(1.0f, 0.3f, 0.0f, 0.5f)
+                        val emitter = torchSystem.findEmitterComponent(et.getId())!!
+                        emitter.startSize = 5.0f
+                        emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
+                        emitter.endColor.set(1.0f, 0.3f, 0.0f, 0.5f)
+                    }
                 }
             }
             else {
+                if (detailIndices[i].x == 0 && detailIndices[i].y == 6) {
+                    val et = Entity()
+                    torchSystem.newEntity(et)
+                            .attachTransformComponent()
+                            .attachParticleEmitter(resourceFactory, 10, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 24.0f)
+                            .build()
+                    val etTransform = torchSystem.findTransformComponent(et.getId())
+                    etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
+                    etTransform.sx = 64.0f
+                    etTransform.sy = 64.0f
+
+                    val emitter = torchSystem.findEmitterComponent(et.getId())!!
+                    emitter.startSize = 20.0f
+                    emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
+                    emitter.endColor.set(0.8f, 0.2f, 0.0f, 0.0f)
+                }
                 navMesh.map[i] = 0
             }
 
@@ -405,9 +423,9 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         generateLightMap()
 
         if (firstBuild) {
-            backTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, backIndices)
-            frontTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, frontIndices)
-            detailTilemap.create(resourceFactory, material, width, height, 64.0f, 64.0f, detailIndices)
+            backTilemap.create(resourceFactory, tilemapMaterial, width, height, 64.0f, 64.0f, backIndices)
+            frontTilemap.create(resourceFactory, tilemapMaterial, width, height, 64.0f, 64.0f, frontIndices)
+            detailTilemap.create(resourceFactory, tilemapMaterial, width, height, 64.0f, 64.0f, detailIndices)
             backTilemap.update(backIndices)
             frontTilemap.update(frontIndices)
             detailTilemap.update(detailIndices)
@@ -579,7 +597,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         }
     }
 
-    fun build(resourceFactory: ResourceFactory, seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
+    fun build(seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
         random = Random(seed)
         generate(7)
         addWallBlockersAtEdges()
@@ -588,7 +606,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapDetailIndices = Array(mapWidth*mapHeight){ TileIndexNone }
-        populateTilemap(resourceFactory)
+        populateTilemap()
 
         // Set position of start and exit
         val startRoom = rooms[0]
@@ -597,7 +615,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         startPosition = startRoom.findNoneEdgeTile(random)
         exitPosition = endRoom.findNoneEdgeTile(random)
 
-        mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, 2)
+        mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, endRoom.type.ordinal)
 
         generateEnemies(healthBarMaterial, healthBarSystem)
         generateContainers()
@@ -650,7 +668,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         }
     }
 
-    private fun populateTilemap(resourceFactory: ResourceFactory) {
+    private fun populateTilemap() {
         for (room in rooms) {
             val tileY = room.type.ordinal
 
@@ -680,7 +698,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     if (map[tile.x + (tile.y+1) * mapWidth] == 1 &&
                         map[tile.x + (tile.y+2) * mapWidth] == 1 &&
                         map[tile.x + (tile.y+3) * mapWidth] == 1) {
-                        mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(2, 1)
+                        mapFrontIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(0, 3)
                         map[tile.x + (tile.y + 1) * mapWidth] = 1
                     }
                 }
@@ -688,6 +706,13 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 val r = random.nextInt(20)
                 if (r == 1){
                     mapDetailIndices[tile.x + (tile.y+1) * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
+                }
+                else {
+                    val c = random.nextInt(100)
+
+                    if (c == 5) {
+                        mapDetailIndices[tile.x + (tile.y + 1) * mapWidth] = TileIndex(0, 6)
+                    }
                 }
             }
         }

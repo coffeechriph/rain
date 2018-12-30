@@ -74,7 +74,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
 
         // TODO: Constant window dimensions
         level.create(resourceFactory, scene, 8960 / 64, 5040 / 64, 1280 / 64, 768 / 64)
-        level.build(resourceFactory, System.currentTimeMillis(), healthBarSystem, healthMaterial)
+        level.build(System.currentTimeMillis(), healthBarSystem, healthMaterial)
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
         scene.addTilemap(level.detailTilemap)
@@ -121,7 +121,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
 
         if (player.transform.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && player.transform.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
                 player.transform.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && player.transform.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
-            level.build(resourceFactory, System.currentTimeMillis(), healthBarSystem, healthMaterial)
+            level.build(System.currentTimeMillis(), healthBarSystem, healthMaterial)
             player.setPosition(level.getFirstTilePos())
             level.switchCell(resourceFactory, player.cellX, player.cellY)
 
