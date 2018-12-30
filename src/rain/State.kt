@@ -7,5 +7,5 @@ import rain.api.scene.Scene
 
 abstract class State(val stateManager: StateManager) {
     abstract fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input)
-    abstract fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input)
+    abstract fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input, deltaTime: Float)
 }

@@ -11,6 +11,7 @@ import rain.api.scene.Scene
 import rain.vulkan.Vk
 import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
+import kotlin.math.min
 
 open class Rain {
     private val window = Window()
@@ -60,27 +61,33 @@ open class Rain {
 
     open fun init() {}
 
+    var toggle = false
     fun run() {
         startLog()
         gui.init()
         scene.init(resourceFactory)
         init()
 
+        var currentTime = System.nanoTime() / 1000_000_000.0f
+        val maxUpdates = 10
+
         while (window.pollEvents()) {
             timer.update()
             if (!stateManager.switchState) {
-                window.title = "FPS: " + timer.framesPerSecond
-                vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
-                window.windowDirty = false
-
-                gui.update(input)
-                scene.update(vulkanRenderer, input, timer.deltaTime)
-                stateManager.update()
+                // Ensure we update the physics enough times even under low fps
+                val newTime = System.nanoTime() / 1000_000_000.0f
+                var frameTime = newTime - currentTime
+                var numUpdates = 0
+                currentTime = newTime
+                while (frameTime > 0.0f && numUpdates < maxUpdates) {
+                    val deltaTime = min(frameTime, 1.0f / 60.0f)
+                    updateLoop(deltaTime)
+                    frameTime -= deltaTime
+                    numUpdates++
+                }
 
                 gui.render()
                 vulkanRenderer.render()
-
-                input.updateKeyState()
             }
             else {
                 stateManager.switchState = false
@@ -102,10 +109,28 @@ open class Rain {
                 Api.VULKAN -> (resourceFactory as VulkanResourceFactory).manageResources()
                 Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
             }
+
+            if (toggle) {
+                Thread.sleep(100)
+            }
         }
 
         vulkanRenderer.destroy()
         window.destroy()
         endLog()
+    }
+
+    private fun updateLoop(deltaTime: Float) {
+        window.title = "FPS: " + timer.framesPerSecond
+        vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
+        window.windowDirty = false
+        if (input.keyState(Input.Key.KEY_0) == Input.InputState.PRESSED) {
+            toggle = !toggle
+        }
+
+        gui.update(input)
+        scene.update(vulkanRenderer, input, deltaTime)
+        stateManager.update(deltaTime)
+        input.updateKeyState()
     }
 }

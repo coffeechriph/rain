@@ -85,7 +85,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         scene.addSystem(bannerEntitySystem)
     }
 
-    override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
+    override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input, deltaTime: Float) {
         val scale = Math.sin(buttonsAnimation.toDouble()).toFloat() * 7.0f
         when (selectedButton) {
             0 -> {
@@ -150,7 +150,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
             }
         }
 
-        buttonsAnimation += 0.05f
+        buttonsAnimation += 1.0f / 60.0f
         if (buttonsAnimation >= Math.PI*2) {
             buttonsAnimation = 0.0f
         }

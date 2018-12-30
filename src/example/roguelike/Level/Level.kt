@@ -69,7 +69,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     var exitPosition = Vector2i()
 
     private var delayLightUpdate = 0
-    fun update() {
+    fun update(deltaTime: Float) {
         if (delayLightUpdate == 0) {
             generateLightMap()
             delayLightUpdate = 2
@@ -88,8 +88,21 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 navMesh.map[enemy.lastX + enemy.lastY * width] = 0
             }
 
-            val x = enemy.transform.x.toInt()/64
-            val y = enemy.transform.y.toInt()/64
+            var x = enemy.transform.x.toInt()/64
+            var y = enemy.transform.y.toInt()/64
+            if (x >= width) {
+                x = width-1
+            }
+            if (y >= height) {
+                y = height - 1
+            }
+            if (x < 0) {
+                x = 0
+            }
+            if (y < 0) {
+                y = 0
+            }
+
             navMesh.map[x + y * width] = 127.toByte()
             enemy.lastX = x
             enemy.lastY = y

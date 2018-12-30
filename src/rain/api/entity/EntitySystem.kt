@@ -11,6 +11,9 @@ import rain.api.gfx.ResourceFactory
 import rain.api.scene.Scene
 import rain.assertion
 
+val pixelsToMeters = 1.0f / 64.0f
+val metersToPixels = 64.0f / 1.0f
+
 class EntitySystem<T: Entity>(val scene: Scene) {
     private var entityId: Long = 0
     private var entities = ArrayList<Long>()
@@ -163,7 +166,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             bodyDef.fixedRotation = true
             val body = system.scene.physicWorld.createBody(bodyDef)
             val shape = PolygonShape()
-            shape.setAsBox(width / 2.0f, height / 2.0f)
+            shape.setAsBox(width / 2.0f * pixelsToMeters, height / 2.0f * pixelsToMeters)
 
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shape
@@ -193,7 +196,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             bodyDef.fixedRotation = true
             val body = system.scene.physicWorld.createBody(bodyDef)
             val shape = CircleShape()
-            shape.radius = radius
+            shape.radius = radius * pixelsToMeters
 
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shape
@@ -223,6 +226,7 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             bodyDef.fixedRotation = true
             val body = system.scene.physicWorld.createBody(bodyDef)
             val shape = PolygonShape()
+            // TODO: Adjust verticies to meters
             shape.set(vertices)
 
             val fixtureDef = FixtureDef()

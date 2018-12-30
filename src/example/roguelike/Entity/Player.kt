@@ -110,19 +110,19 @@ class Player : Entity() {
         var velX = 0.0f
         var velY = 0.0f
         if (leftActive) {
-            velX -= 120.0f
+            velX -= 100.0f
         }
 
         if (rightActive) {
-            velX += 120.0f
+            velX += 100.0f
         }
 
         if (upActive) {
-            velY -= 120.0f
+            velY -= 100.0f
         }
 
         if (downActive) {
-            velY += 120.0f
+            velY += 100.0f
         }
 
         if (velX < 0.0f) {
@@ -143,7 +143,6 @@ class Player : Entity() {
         }
 
         collider.setVelocity(velX, velY)
-
         keepPlayerWithinBorder<Player>()
 
         if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {

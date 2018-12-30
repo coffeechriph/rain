@@ -103,7 +103,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
         currentLevelText.x += currentLevelText.w/2.0f
     }
 
-    override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
+    override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input, deltaTime: Float) {
         if (player.health <= 0) {
             stateManager.startState("menu")
         }
@@ -113,7 +113,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
             player.playerMovedCell = false
         }
 
-        level.update()
+        level.update(deltaTime)
 
         if (inventory.visible) {
             inventory.update(input)

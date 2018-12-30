@@ -188,9 +188,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
 
     private fun simulateSingleBurstLinear(vx: Float, vy: Float) {
         for (i in simStartIndex until simIndex) {
-            particles[i].x += vx * 0.016f
-            particles[i].y += vy * 0.016f
-            particles[i].i += 0.016f
+            particles[i].x += vx * (1.0f/60.0f)
+            particles[i].y += vy * (1.0f/60.0f)
+            particles[i].i += (1.0f/60.0f)
 
             if (particles[i].i >= particleLifetime) {
                 particles[i].x = Float.MAX_VALUE
@@ -212,9 +212,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
 
     private fun simulateContinousBurstLinear(vx: Float, vy: Float) {
         for (i in 0 until simIndex) {
-            particles[i].x += vx * 0.016f
-            particles[i].y += vy * 0.016f
-            particles[i].i += 0.016f
+            particles[i].x += vx * (1.0f/60.0f)
+            particles[i].y += vy * (1.0f/60.0f)
+            particles[i].i += (1.0f/60.0f)
 
             if (particles[i].i >= particleLifetime) {
                 particles[i].x = offsets[i*2]

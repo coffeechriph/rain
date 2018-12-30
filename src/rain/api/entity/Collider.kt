@@ -17,8 +17,8 @@ class Collider internal constructor(private val body: Body, internal val transfo
         body.isActive = c
     }
 
-    fun applyForceToCenter(x: Float, y: Float) {
-        body.applyLinearImpulse(x, y, body.worldCenter.x, body.worldCenter.y, true)
+    fun applyLinearImpulseToCenter(x: Float, y: Float) {
+        body.applyLinearImpulse(x * pixelsToMeters, y * pixelsToMeters, body.worldCenter.x, body.worldCenter.y, true)
     }
 
     fun setFriction(friction: Float) {
@@ -53,18 +53,18 @@ class Collider internal constructor(private val body: Body, internal val transfo
     }
 
     fun setVelocity(x: Float, y: Float) {
-        body.setLinearVelocity(x,y)
+        body.setLinearVelocity(x * pixelsToMeters,y * pixelsToMeters)
     }
 
     fun getVelocity(): Vector2f {
-        return Vector2f(body.linearVelocity.x, body.linearVelocity.y)
+        return Vector2f(body.linearVelocity.x * metersToPixels, body.linearVelocity.y * metersToPixels)
     }
 
     fun setPosition(x: Float, y: Float) {
-        body.setTransform(x, y, body.angle)
+        body.setTransform(x * pixelsToMeters, y * pixelsToMeters, body.angle)
     }
 
     fun getPosition(): Vector2f {
-        return Vector2f(body.position.x, body.position.y)
+        return Vector2f(body.position.x * metersToPixels, body.position.y * metersToPixels)
     }
 }

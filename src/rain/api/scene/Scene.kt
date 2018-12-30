@@ -9,6 +9,7 @@ import org.lwjgl.system.MemoryUtil
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
+import rain.api.entity.metersToPixels
 import rain.api.gfx.*
 
 class Scene {
@@ -69,6 +70,7 @@ class Scene {
 
     internal fun update(renderer: Renderer, input: Input, deltaTime: Float) {
         physicWorld.step(1.0f / 60.0f, 6, 2)
+        physicWorld.clearForces()
 
         renderer.setActiveCamera(camera)
 
@@ -148,8 +150,8 @@ class Scene {
 
             for (collider in system.getColliderList()) {
                 val b = collider!!.getBody()
-                collider.transform.x = b.position.x
-                collider.transform.y = b.position.y
+                collider.transform.x = b.position.x * metersToPixels
+                collider.transform.y = b.position.y * metersToPixels
             }
         }
 

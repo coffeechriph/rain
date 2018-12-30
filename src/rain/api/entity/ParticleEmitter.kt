@@ -96,7 +96,7 @@ Float, private val particleLifetime: Float, private val particleVelocity: Vector
     }
 
     fun update(entitySystem: EntitySystem<Entity>, deltaTime: Float) {
-        tick += deltaTime
+        tick += 1.0f / 60.0f
 
         val psize = particleSize * 0.5f
         val factor = particleLifetime / numParticles

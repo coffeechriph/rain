@@ -4,12 +4,8 @@ class Timer {
     var framesPerSecond = -1
         private set
 
-    var deltaTime = 0.0f
-        private set
-
     private var frameCounter = 0
     private var lastTimeInMilliSeconds = System.currentTimeMillis()
-    private var lastFrameInMilliSeconds = System.currentTimeMillis()
 
     fun update() {
         val milliTime = System.currentTimeMillis()
@@ -20,7 +16,5 @@ class Timer {
         }
 
         frameCounter++
-        deltaTime = (milliTime - lastFrameInMilliSeconds) / 1_000.0f
-        lastFrameInMilliSeconds = System.currentTimeMillis()
     }
 }
