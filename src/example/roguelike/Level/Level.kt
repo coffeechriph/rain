@@ -210,16 +210,15 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         for (container in containers) {
             container.sprite.visible = container.cellX == player.cellX && container.cellY == player.cellY
             container.collider.setActive(container.sprite.visible)
+            val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
+            emitter.enabled = container.sprite.visible
+
             if (!container.sprite.visible) {
                 continue
             }
 
-            val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
-            emitter.enabled = container.sprite.visible
-
             if (container.open && !container.looted) {
                 container.looted = true
-                val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
                 emitter.fireSingleBurst()
 
                 for (i in 0 until random.nextInt(5) + 1) {
@@ -321,7 +320,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 1)))
         lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture)
         val lightTransform = Transform()
-        lightTransform.z = 18.0f
+        lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
     }
 
@@ -368,7 +367,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                             .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f)
                             .build()
                     val etTransform = torchSystem.findTransformComponent(et.getId())
-                    etTransform!!.setPosition(cx + 32, cy + 32, 19.0f)
+                    etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
                     etTransform.sx = 48.0f
                     etTransform.sy = 48.0f
 
@@ -1171,7 +1170,8 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             emitter.particlesPerBurst = 5
             emitter.startColor = Vector4f(0.4f, 0.4f, 0.4f, 1.0f)
             emitter.endColor = Vector4f(0.4f, 0.4f, 0.4f, 0.0f)
-            emitter.transform.z = 12.0f
+            emitter.transform.z = 16.0f
+            emitter.enabled = false
             val room = rooms[random.nextInt(rooms.size)]
             val tile = room.findNoneEdgeTile(random)
 

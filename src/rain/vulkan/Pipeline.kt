@@ -164,7 +164,7 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
         isValid = false
     }
 
-    fun begin(cmdBuffer: CommandPool.CommandBuffer, nextFrame: Int) {
+    fun begin(cmdBuffer: CommandPool.CommandBuffer) {
         vkCmdBindPipeline(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline)
 
         val pDescriptorSet = memAllocLong(1)
