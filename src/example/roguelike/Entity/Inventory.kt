@@ -12,7 +12,7 @@ class Inventory(val gui: Gui, val player: Player) {
             container.visible = value
         }
 
-    private val ItemNone = Item(ItemType.NONE, "Empty", 0, 0, 0, 0)
+    private val ItemNone = Item(player, ItemType.NONE, "Empty", 0, 0, 0, 0)
     var equippedWeapon: Item = ItemNone
     var equippedHead: Item = ItemNone
     var equippedGloves: Item = ItemNone

@@ -18,7 +18,7 @@ layout(set = 0, binding = 1) uniform TextureData {
 } textureData;
 
 layout (location = 0) out vec4 color;
-layout (location = 1) out vec2 Uv;
+layout (location = 1) out vec2 Uv
 
 void main() {
     color = mix(inData.startColor, inData.endColor, pos.z);

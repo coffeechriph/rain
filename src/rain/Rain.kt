@@ -8,6 +8,7 @@ import rain.api.Window
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
 import rain.api.scene.Scene
+import rain.util.ShaderCompiler
 import rain.vulkan.Vk
 import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
@@ -39,7 +40,7 @@ open class Rain {
         }
 
     fun create(width: Int, height: Int, title: String, api: Api) {
-        //ShaderCompiler().findAndCompile()
+        ShaderCompiler().findAndCompile()
         this.api = api
         window.create(width, height, title, input)
 
@@ -61,7 +62,6 @@ open class Rain {
 
     open fun init() {}
 
-    var toggle = false
     fun run() {
         startLog()
         gui.init()
@@ -110,10 +110,6 @@ open class Rain {
                 Api.VULKAN -> (resourceFactory as VulkanResourceFactory).manageResources()
                 Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
             }
-
-            if (toggle) {
-                Thread.sleep(100)
-            }
         }
 
         vulkanRenderer.destroy()
@@ -125,9 +121,6 @@ open class Rain {
         window.title = "FPS: " + timer.framesPerSecond
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
-        if (input.keyState(Input.Key.KEY_0) == Input.InputState.PRESSED) {
-            toggle = !toggle
-        }
 
         gui.update(input)
         scene.update(input, deltaTime)

@@ -184,7 +184,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     }
                 }
                 else if (enemy.pushBack > 5) {
-                    enemy.collider.setVelocity(enemy.pushDirection.x.toFloat() * 100, enemy.pushDirection.y.toFloat() * 100)
+                    enemy.collider.applyLinearImpulseToCenter(enemy.pushDirection.x.toFloat() * 10, enemy.pushDirection.y.toFloat() * 10)
                     enemy.pushBack -= 1
                     enemy.animator.setAnimation("idle_down")
                 }
@@ -254,36 +254,33 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
                     val finalQuality = (qualityIndex*qualityIndex + qualityIndex).toInt()
 
-                    val item = Item(combination.first, "$qualityName $name", random.nextInt(finalQuality)+1, random.nextInt(finalQuality)+1,
+                    val item = Item(player, combination.first, "$qualityName $name", random.nextInt(finalQuality)+1, random.nextInt(finalQuality)+1,
                             random.nextInt(finalQuality)+1,random.nextInt(finalQuality)+1)
                     levelItemSystem.newEntity(item)
                             .attachTransformComponent()
                             .attachSpriteComponent(itemMaterial)
-                            .attachBoxColliderComponent(64.0f, 64.0f)
                             .build()
-                    item.setPosition(levelItemSystem, Vector2i(container.collider.getPosition().x.toInt(), container.collider.getPosition().y.toInt()))
+                    val angle = random.nextFloat()*Math.PI
+                    val direction = Vector2f(Math.sin(angle).toFloat(), Math.cos(angle).toFloat())
+                    direction.x *= 64.0f
+                    direction.y *= 64.0f
+                    item.setPosition(levelItemSystem, Vector2i(container.collider.getPosition().x.toInt()+direction.x.toInt(), container.collider.getPosition().y.toInt()+direction.y.toInt()))
                     item.cellX = player.cellX
                     item.cellY = player.cellY
-                    item.transform.sx = 64.0f
-                    item.transform.sy = 64.0f
+                    item.transform.sx = 40.0f
+                    item.transform.sy = 40.0f
                     item.transform.z = 2.0f
                     item.sprite.textureTileOffset.x = 3
                     item.sprite.textureTileOffset.y = 4 + random.nextInt(3)
-
-                    item.collider.setDamping(300.0f)
-                    item.collider.setFriction(0.0f)
-                    item.collider.setDensity(0.0f)
                 }
             }
         }
 
         for (item in levelItemSystem.getEntityList()) {
             item!!.sprite.visible = item.cellX == player.cellX && item.cellY == player.cellY
-            item.collider.setActive(item.sprite.visible)
 
             if (item.pickedUp) {
                 item.sprite.visible = false
-                item.collider.setActive(false)
             }
         }
     }

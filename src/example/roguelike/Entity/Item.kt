@@ -1,7 +1,11 @@
 package example.roguelike.Entity
 
 import org.joml.Vector2i
-import rain.api.entity.*
+import rain.api.Input
+import rain.api.entity.Entity
+import rain.api.entity.EntitySystem
+import rain.api.entity.Sprite
+import rain.api.entity.Transform
 import rain.api.scene.Scene
 
 enum class ItemType {
@@ -38,21 +42,24 @@ val ITEM_QUALITIES = arrayOf(
     Pair(91..98, "[Rare]"),
     Pair(98..100, "[Epic]")
 )
-class Item (val type: ItemType, val name: String, val stamina: Int, val strength: Int, val agility: Int, val luck: Int): Entity() {
+class Item (val player: Player, val type: ItemType, val name: String, val stamina: Int, val strength: Int, val agility: Int, val luck: Int): Entity() {
     var cellX = 0
     var cellY = 0
     var pickedUp = false
     lateinit var transform: Transform
     lateinit var sprite: Sprite
-    lateinit var collider: Collider
+
+    private var time = 0.0f
+    private var beginPickup = false
+    private var acc = 0.0000000000001
 
     // TODO: Constant window size
     fun setPosition(system: EntitySystem<Item>, pos: Vector2i) {
         val transform = system.findTransformComponent(getId())!!
         transform.z = 1.1f + transform.y * 0.001f
+        transform.x = pos.x.toFloat()
+        transform.y = pos.y.toFloat()
         transform.setScale(96.0f, 96.0f)
-        val body = system.findColliderComponent(getId())!!
-        body.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%768)
         cellX = pos.x / 1280
         cellY = pos.y / 768
     }
@@ -60,14 +67,37 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         transform = system.findTransformComponent(getId())!!
         sprite = system.findSpriteComponent(getId())!!
-        collider = system.findColliderComponent(getId())!!
     }
 
-    // TODO: Problematic that we can't access the system from here....
-    override fun onCollision(entity: Entity) {
-        if (entity is Player) {
-            pickedUp = true
-            entity.inventory.addItem(this)
+    override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
+        if (sprite.visible) {
+            time += 1.0f / 60.0f
+            transform.y += Math.sin(time.toDouble()).toFloat() * 0.1f
+
+            if (!beginPickup && !pickedUp) {
+                if (player.transform.x >= transform.x - 64 && player.transform.x <= transform.x + 64 &&
+                    player.transform.y >= transform.y - 64 && player.transform.y <= transform.y + 64) {
+                    beginPickup = true
+                    acc = 0.0000000000001
+                }
+            }
+            else {
+                val dx = (player.transform.x - transform.x) / 64.0
+                val dy = (player.transform.y - transform.y) / 64.0
+                val ln = Math.sqrt((dx*dx+dy*dy))
+                transform.x += ((dx / ln) * acc).toFloat()
+                transform.y += ((dy / ln) * acc).toFloat()
+                if (acc < 4.0f) {
+                    acc += acc
+                }
+
+                if (player.transform.x >= transform.x - 8 && player.transform.x <= transform.x + 8 &&
+                    player.transform.y >= transform.y - 8 && player.transform.y <= transform.y + 8) {
+                    pickedUp = true
+                    beginPickup = false
+                    player.inventory.addItem(this)
+                }
+            }
         }
     }
 
@@ -88,7 +118,6 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
         if (pickedUp != other.pickedUp) return false
         if (transform != other.transform) return false
         if (sprite != other.sprite) return false
-        if (collider != other.collider) return false
 
         return true
     }
@@ -105,7 +134,6 @@ class Item (val type: ItemType, val name: String, val stamina: Int, val strength
         result = 31 * result + pickedUp.hashCode()
         result = 31 * result + transform.hashCode()
         result = 31 * result + sprite.hashCode()
-        result = 31 * result + collider.hashCode()
         return result
     }
 }
