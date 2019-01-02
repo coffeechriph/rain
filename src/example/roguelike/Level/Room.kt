@@ -1,8 +1,11 @@
 package example.roguelike.Level
 
+import example.roguelike.Entity.Container
+import example.roguelike.Entity.Enemy
 import org.joml.Random
 import org.joml.Vector2i
 import org.joml.Vector4i
+import rain.api.entity.Entity
 
 enum class RoomType {
     DIRT_CAVE,
@@ -15,9 +18,15 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
 
     private val viableTiles = ArrayList<Vector2i>()
     private var allSlotsTaken = false
+    private var firstCheck = true
 
-    fun findNoneEdgeTile(rand: Random): Vector2i {
+    val enemies = ArrayList<Enemy>()
+    val containers = ArrayList<Container>()
+    val torches = ArrayList<Entity>()
+
+    fun findNoneEdgeTile(rand: Random): Vector2i? {
         if (viableTiles.size == 0 && !allSlotsTaken) {
+            firstCheck = false
             for (tile in tiles) {
                 var neighbours = 0
                 for (tile2 in tiles) {
@@ -45,6 +54,10 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
                     }
                 }
             }
+        }
+
+        if (viableTiles.isEmpty()) {
+            return null
         }
 
         return viableTiles.removeAt(rand.nextInt(viableTiles.size))

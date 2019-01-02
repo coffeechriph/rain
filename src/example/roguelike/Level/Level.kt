@@ -7,6 +7,8 @@ import org.joml.Vector2f
 import org.joml.Vector2i
 import org.joml.Vector4f
 import org.joml.Vector4i
+import org.lwjgl.BufferUtils
+import org.lwjgl.stb.STBImageWrite
 import rain.api.entity.DirectionType
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -55,7 +57,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private var mapFrontIndices = Array(0){ TileIndex(0, 0) }
     private var mapDetailIndices = Array(0) { TileIndexNone }
     private var rooms = ArrayList<Room>()
-    private var enemies = ArrayList<Enemy>()
     private lateinit var random: Random
     private lateinit var enemySystem: EntitySystem<Enemy>
     private lateinit var enemyTexture: Texture2d
@@ -63,12 +64,15 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private lateinit var collisionSystem: EntitySystem<Entity>
     private lateinit var containerSystem: EntitySystem<Container>
     private lateinit var levelItemSystem: EntitySystem<Item>
-    private var containers = ArrayList<Container>()
     private lateinit var navMesh: NavMesh
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
 
     private var delayLightUpdate = 0
+
+    private val activeEnemies = ArrayList<Enemy>()
+    private val activeContainers = ArrayList<Container>()
+
     fun update(deltaTime: Float) {
         if (delayLightUpdate == 0) {
             generateLightMap()
@@ -79,8 +83,8 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         }
 
         // Add navmesh blockers at the location of enemies
-        for (enemy in enemies) {
-            if (!enemy.collider.isActive()) {
+        for (enemy in activeEnemies) {
+            if (enemy.health <= 0) {
                 continue
             }
 
@@ -108,12 +112,11 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             enemy.lastY = y
         }
 
-        for (enemy in enemies) {
-            enemy.sprite.visible = enemy.health > 0 && enemy.cellX == player.cellX && enemy.cellY == player.cellY
-            enemy.healthBar.sprite.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
-            enemy.collider.setActive(enemy.sprite.visible)
-
-            if (!enemy.sprite.visible) {
+        for (enemy in activeEnemies) {
+            if (enemy.health <= 0) {
+                enemy.sprite.visible = false
+                enemy.collider.setActive(false)
+                enemy.healthBar.sprite.visible = false
                 continue
             }
 
@@ -220,18 +223,10 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
 
-        for (container in containers) {
-            container.sprite.visible = container.cellX == player.cellX && container.cellY == player.cellY
-            container.collider.setActive(container.sprite.visible)
-            val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
-            emitter.enabled = container.sprite.visible
-
-            if (!container.sprite.visible) {
-                continue
-            }
-
+        for (container in activeContainers) {
             if (container.open && !container.looted) {
                 container.looted = true
+                val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
                 emitter.fireSingleBurst()
 
                 for (i in 0 until random.nextInt(5) + 1) {
@@ -335,6 +330,53 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
+        for (enemy in activeEnemies) {
+            enemy.sprite.visible = false
+            enemy.healthBar.sprite.visible = false
+            enemy.collider.setActive(false)
+        }
+
+        for (container in activeContainers) {
+            container.sprite.visible = false
+            container.collider.setActive(false)
+        }
+
+        activeEnemies.clear()
+        activeContainers.clear()
+
+        for (room in rooms) {
+            val removeMe = ArrayList<Enemy>()
+            for (enemy in room.enemies) {
+                if (enemy.health <= 0) {
+                    removeMe.add(enemy)
+                    continue
+                }
+
+                if (enemy.cellX == cellX && enemy.cellY == cellY) {
+                    enemy.sprite.visible = enemy.health > 0 && enemy.cellX == cellX && enemy.cellY == cellY
+                    enemy.healthBar.sprite.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
+                    enemy.collider.setActive(enemy.sprite.visible)
+                    if (enemy.sprite.visible) {
+                        activeEnemies.add(enemy)
+                    }
+                }
+            }
+
+            for (enemy in removeMe) {
+                room.enemies.remove(enemy)
+            }
+
+            for (container in room.containers) {
+                if (container.cellX == cellX && container.cellY == cellY) {
+                    container.sprite.visible = container.cellX == cellX && container.cellY == cellY
+                    container.collider.setActive(container.sprite.visible)
+                    val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
+                    emitter.enabled = container.sprite.visible
+                    activeContainers.add(container)
+                }
+            }
+        }
+
         val backIndices = Array(width*height){ TileIndexNone }
         val frontIndices = Array(width*height){ TileIndexNone }
         var detailIndices = Array(width*height){ TileIndexNone }
@@ -422,7 +464,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
 
-        for (container in containers) {
+        for (container in activeContainers) {
             if (container.cellX == cellX && container.cellY == cellY) {
                 val ix: Int = (container.transform.x/64).toInt()
                 val iy: Int = (container.transform.y/64).toInt()
@@ -618,13 +660,43 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         val startRoom = rooms[0]
         val endRoom = rooms[0]
 
-        startPosition = startRoom.findNoneEdgeTile(random)
-        exitPosition = endRoom.findNoneEdgeTile(random)
+        startPosition = startRoom.findNoneEdgeTile(random)!!
+        exitPosition = endRoom.findNoneEdgeTile(random)!!
 
         mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, endRoom.type.ordinal)
 
-        generateEnemies(healthBarMaterial, healthBarSystem)
-        generateContainers()
+        generateRooms(healthBarSystem, healthBarMaterial)
+
+        val pixelData = BufferUtils.createByteBuffer(mapWidth*mapHeight*3)
+        for (room in rooms) {
+            val R = random.nextInt(127).toByte()
+            val G = random.nextInt(127).toByte()
+            val B = random.nextInt(127).toByte()
+            for (tile in room.tiles) {
+                pixelData.put((tile.x + tile.y*mapWidth)*3, 127)
+                pixelData.put((tile.x + tile.y*mapWidth)*3+1, 127)
+                pixelData.put((tile.x + tile.y*mapWidth)*3+2, 127)
+            }
+
+            for (enemy in room.enemies) {
+                val x = ((enemy.transform.x/64.0f)+(enemy.cellX*width)).toInt()
+                val y = ((enemy.transform.y/64.0f)+(enemy.cellY*height)).toInt()
+
+                pixelData.put((x + y*mapWidth)*3, 127)
+                pixelData.put((x + y*mapWidth)*3+1, 0)
+                pixelData.put((x + y*mapWidth)*3+2, 0)
+            }
+
+            for (container in room.containers) {
+                val x = ((container.transform.x/64.0f)+(container.cellX*width)).toInt()
+                val y = ((container.transform.y/64.0f)+(container.cellY*height)).toInt()
+                println("$x, $y")
+                pixelData.put((x + y*mapWidth)*3, 127)
+                pixelData.put((x + y*mapWidth)*3+1, 100)
+                pixelData.put((x + y*mapWidth)*3+2, 0)
+            }
+        }
+        STBImageWrite.stbi_write_png("level.png", mapWidth, mapHeight, 3, pixelData, mapWidth*3)
     }
 
     private fun addWallBlockersAtEdges() {
@@ -1090,20 +1162,30 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         tiles.add(Vector2i(x, y))
         mapCopy[x + y*mapWidth] = 1
 
+        val maxTiles = 5
         if (x > 0) {
             if (mapCopy[(x-1) + y*mapWidth] == 0) {
                 tiles.addAll(floodSearchRoom(x-1, y, area, mapCopy, ArrayList()))
+                if (tiles.size >= maxTiles) {
+                    return tiles
+                }
             }
 
             if (y > 0) {
                 if (mapCopy[(x-1) + (y-1)*mapWidth] == 0) {
                     tiles.addAll(floodSearchRoom(x-1, y-1, area, mapCopy, ArrayList()))
+                    if (tiles.size >= maxTiles) {
+                        return tiles
+                    }
                 }
             }
 
             if (y < mapHeight - 1) {
                 if (mapCopy[(x-1) + (y+1)*mapWidth] == 0) {
                     tiles.addAll(floodSearchRoom(x-1, y+1, area, mapCopy, ArrayList()))
+                    if (tiles.size >= maxTiles) {
+                        return tiles
+                    }
                 }
             }
         }
@@ -1111,23 +1193,35 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         if (y > 0) {
             if (mapCopy[x + (y-1)*mapWidth] == 0) {
                 tiles.addAll(floodSearchRoom(x, y-1, area, mapCopy, ArrayList()))
+                if (tiles.size >= maxTiles) {
+                    return tiles
+                }
             }
         }
 
         if (x < mapWidth - 1) {
             if (mapCopy[(x+1) + y*mapWidth] == 0) {
                 tiles.addAll(floodSearchRoom(x+1, y, area, mapCopy, ArrayList()))
+                if (tiles.size >= maxTiles) {
+                    return tiles
+                }
             }
 
             if (y > 0) {
                 if (mapCopy[(x+1) + (y-1)*mapWidth] == 0) {
                     tiles.addAll(floodSearchRoom(x+1, y-1, area, mapCopy, ArrayList()))
+                    if (tiles.size >= maxTiles) {
+                        return tiles
+                    }
                 }
             }
 
             if (y < mapHeight - 1) {
                 if (mapCopy[(x+1) + (y+1)*mapWidth] == 0) {
                     tiles.addAll(floodSearchRoom(x+1, y+1, area, mapCopy, ArrayList()))
+                    if (tiles.size >= maxTiles) {
+                        return tiles
+                    }
                 }
             }
         }
@@ -1135,18 +1229,32 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         if (y < mapHeight - 1) {
             if (mapCopy[x + (y+1)*mapWidth] == 0) {
                 tiles.addAll(floodSearchRoom(x, y+1, area, mapCopy, ArrayList()))
+                if (tiles.size >= maxTiles) {
+                    return tiles
+                }
             }
         }
 
         return tiles
     }
 
-    private fun generateEnemies(healthBarMaterial: Material, healthBarSystem: EntitySystem<HealthBar>) {
-        enemies.clear()
-        enemySystem.clear()
-        healthBarSystem.clear()
+    private fun generateRooms(healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
+        for (room in rooms) {
+            val lightCount = random.nextInt(5) + 3
+            val thisRoomEnemyCount = (room.tiles.size/64)
+            generateEnemiesInRoom(room, thisRoomEnemyCount, healthBarSystem, healthBarMaterial)
+            val thisRoomContainerCount = room.tiles.size/72
+            generateContainersInRoom(room, thisRoomContainerCount, containerSystem, itemMaterial)
+        }
+    }
 
-        for (i in 0 until random.nextInt(50) + 10) {
+    private fun generateEnemiesInRoom(room: Room, count: Int, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
+        for (i in 0 until count) {
+            val p = room.findNoneEdgeTile(random)
+            if (p == null) {
+                return
+            }
+
             val enemy = random.nextInt(2)
 
             val kracGuy = if (enemy == 0) {Krac(random)} else {MiniKrac(random)}
@@ -1173,21 +1281,22 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     .attachSpriteComponent(healthBarMaterial)
                     .build()
 
+            kracGuy.healthBar.sprite.visible = false
             kracGuy.healthBar.transform.sx = 60.0f
             kracGuy.healthBar.transform.sy = 7.0f
 
-            val room = rooms[random.nextInt(rooms.size)]
-            val p = room.findNoneEdgeTile(random)
             kracGuy.setPosition(Vector2i(p.x*64, p.y*64))
-            enemies.add(kracGuy)
+            room.enemies.add(kracGuy)
         }
     }
 
-    private fun generateContainers() {
-        containers.clear()
-        containerSystem.clear()
+    private fun generateContainersInRoom(room: Room, count: Int, containerSystem: EntitySystem<Container>, containerMaterial: Material) {
+        for (i in 0 until count) {
+            val tile = room.findNoneEdgeTile(random)
+            if (tile == null) {
+                return
+            }
 
-        for (i in 0 until random.nextInt(50) + 100) {
             val container = Container(random.nextInt(2))
             containerSystem.newEntity(container)
                     .attachTransformComponent()
@@ -1195,6 +1304,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
                     .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
                     .build()
+
             val emitter = containerSystem.findBurstEmitterComponent (container.getId())!!
             emitter.burstFinished = true
             emitter.singleBurst = true
@@ -1203,14 +1313,13 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             emitter.endColor = Vector4f(0.4f, 0.4f, 0.4f, 0.0f)
             emitter.transform.z = 16.0f
             emitter.enabled = false
-            val room = rooms[random.nextInt(rooms.size)]
-            val tile = room.findNoneEdgeTile(random)
 
             container.setPosition(Vector2i(tile.x*64 + 32, tile.y*64 + 32))
             container.collider.setDensity(1000.0f)
             container.collider.setFriction(1.0f)
             container.sprite.visible = false
-            containers.add(container)
+            container.collider.setActive(false)
+            room.containers.add(container)
         }
     }
 }

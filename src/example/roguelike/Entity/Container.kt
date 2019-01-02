@@ -23,6 +23,8 @@ class Container(val containerType: Int) : Entity() {
         cellX = pos.x / 1280
         cellY = pos.y / 768
         collider.setPosition((pos.x%1280).toFloat(), (pos.y%768).toFloat())
+        transform.x = collider.getPosition().x
+        transform.y = collider.getPosition().y
     }
 
     override fun onCollision(entity: Entity) {

@@ -87,7 +87,7 @@ class Item (val player: Player, val type: ItemType, val name: String, val stamin
                 val ln = Math.sqrt((dx*dx+dy*dy))
                 transform.x += ((dx / ln) * acc).toFloat()
                 transform.y += ((dy / ln) * acc).toFloat()
-                if (acc < 4.0f) {
+                if (acc < 3.4f) {
                     acc += acc
                 }
 

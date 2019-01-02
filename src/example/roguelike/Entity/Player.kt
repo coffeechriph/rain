@@ -203,34 +203,34 @@ class Player : Entity() {
 
     // TODO: This method uses constant window dimensions
     private fun <T : Entity> keepPlayerWithinBorder() {
-        if (collider.getPosition().x < 0) {
+        if (collider.getPosition().x < 0 && leftActive) {
             if (cellX > 0) {
-                collider.setPosition(1216.0f, collider.getPosition().y)
+                collider.setPosition(1280.0f, collider.getPosition().y)
 
                 playerMovedCell = true
                 cellX -= 1
             }
         }
-        else if (collider.getPosition().x > 1270) {
+        else if (collider.getPosition().x > 1280 && rightActive) {
             if (cellX < level.maxCellX) {
-                collider.setPosition(64.0f, collider.getPosition().y)
+                collider.setPosition(0.0f, collider.getPosition().y)
 
                 playerMovedCell = true
                 cellX += 1
             }
         }
 
-        if (collider.getPosition().y < 0) {
+        if (collider.getPosition().y < 0 && upActive) {
             if (cellY > 0) {
-                collider.setPosition(collider.getPosition().x, 704.0f)
+                collider.setPosition(collider.getPosition().x, 768.0f)
 
                 playerMovedCell = true
                 cellY -= 1
             }
         }
-        else if (collider.getPosition().y > 768) {
+        else if (collider.getPosition().y > 768 && downActive) {
             if (cellY < level.maxCellY) {
-                collider.setPosition(collider.getPosition().x, 64.0f)
+                collider.setPosition(collider.getPosition().x, 0.0f)
 
                 playerMovedCell = true
                 cellY += 1
