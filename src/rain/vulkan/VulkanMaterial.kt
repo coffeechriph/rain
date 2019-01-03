@@ -2,17 +2,24 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.vulkan.VK10
-import org.lwjgl.vulkan.VK10.vkDeviceWaitIdle
-import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
 import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
 import rain.log
 
-internal class VulkanMaterial(val id: Long, val name: String, internal val vertexShader: ShaderModule, internal val fragmentShader: ShaderModule, internal val
-texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, val depthWriteEnabled: Boolean = true) : Material {
+internal class VulkanMaterial(vk: Vk,
+                              setupCommandBuffer: CommandPool.CommandBuffer,
+                              setupQueue: Queue,
+                              resourceFactory: VulkanResourceFactory,
+                              logicalDevice: LogicalDevice,
+                              val id: Long,
+                              val name: String,
+                              internal val vertexShader: ShaderModule,
+                              internal val fragmentShader: ShaderModule,
+                              internal val texture2d: Array<Texture2d>,
+                              val depthWriteEnabled: Boolean = true) : Material {
     internal val descriptorPool: DescriptorPool
-    internal val textureDataUBO = UniformBuffer()
-    internal val sceneData = UniformBuffer()
+    internal val textureDataUBO = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
+    internal val sceneData = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
     var isValid = false
         private set
         get() {
@@ -64,8 +71,8 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
                 textureDataBufferF.put(0, texture2d[i].getTexCoordWidth())
                 textureDataBufferF.put(1, texture2d[i].getTexCoordHeight())
             }
-            textureDataUBO.create(logicalDevice, memoryProperties, textureDataBuffer.remaining().toLong())
-            textureDataUBO.update(logicalDevice, textureDataBuffer)
+            textureDataUBO.create(textureDataBuffer.remaining().toLong())
+            textureDataUBO.update(textureDataBuffer)
         }
 
         val sceneDataBuffer = memAlloc(16 * 4)
@@ -75,8 +82,8 @@ texture2d: Array<Texture2d>, val logicalDevice: LogicalDevice, memoryProperties:
                                             0.0f, 0.0f, 1.0f, 0.0f,
                                             0.0f, 0.0f, 0.0f, 1.0f))
         sceneDataBufferF.flip()
-        sceneData.create(logicalDevice, memoryProperties, sceneDataBuffer.remaining().toLong())
-        sceneData.update(logicalDevice, sceneDataBuffer)
+        sceneData.create(sceneDataBuffer.remaining().toLong())
+        sceneData.update(sceneDataBuffer)
         descriptorPool = DescriptorPool()
         for (i in 0 until texture2d.size) {
             descriptorPool.withTexture(texture2d[i] as VulkanTexture2d, VK10.VK_SHADER_STAGE_ALL)

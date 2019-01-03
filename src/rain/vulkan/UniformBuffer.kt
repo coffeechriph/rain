@@ -1,41 +1,39 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
+import org.lwjgl.util.vma.Vma
+import org.lwjgl.util.vma.Vma.vmaMapMemory
+import org.lwjgl.util.vma.Vma.vmaUnmapMemory
+import org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+import org.lwjgl.vulkan.VK10.VK_SUCCESS
 import rain.assertion
 import java.nio.ByteBuffer
 
-internal class UniformBuffer {
-    var buffer: Long = 0
-        private set
-    var bufferMemory: Long = 0
-        private set
-    var bufferSize: Long = 0
-        private set
+internal class UniformBuffer(private val vk: Vk, private val setupCommandBuffer: CommandPool.CommandBuffer, private val setupQueue: Queue, private val resourceFactory: VulkanResourceFactory) {
+    lateinit var rawBuffer: RawBuffer
     var isValid = false
         private set
         get() {
-            return buffer == 0L || field
+            return !::rawBuffer.isInitialized || rawBuffer.buffer == 0L || field
         }
 
     fun invalidate() {
         isValid = false
     }
 
-    internal fun create(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, bufferSize: Long) {
-        this.bufferSize = bufferSize
+    internal fun isInitialized(): Boolean {
+        return ::rawBuffer.isInitialized
+    }
 
-        val buf = createBuffer(logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
-        this.buffer = buf.buffer
-        this.bufferMemory = buf.bufferMemory
-
+    internal fun create(bufferSize: Long) {
+        rawBuffer = RawBuffer(setupCommandBuffer, setupQueue, resourceFactory)
+        rawBuffer.create(vk.vmaAllocator, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
         isValid = true
     }
 
-    internal fun update(logicalDevice: LogicalDevice, bufferData: ByteBuffer) {
-        val pData = MemoryUtil.memAllocPointer(1)
-        val err = vkMapMemory(logicalDevice.device, bufferMemory, 0, bufferSize, 0, pData)
+    internal fun update(bufferData: ByteBuffer) {
+        val pData = MemoryUtil.memAllocPointer(4)
+        val err = vmaMapMemory(vk.vmaAllocator, rawBuffer.allocation, pData)
 
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
@@ -44,6 +42,6 @@ internal class UniformBuffer {
         }
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(bufferData), data, bufferData.remaining().toLong())
-        vkUnmapMemory(logicalDevice.device, bufferMemory)
+        vmaUnmapMemory(vk.vmaAllocator, rawBuffer.allocation)
     }
 }

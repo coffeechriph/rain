@@ -20,13 +20,13 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
     private var memoryUsage: Int = 0
     private var bufferSize: Long = 0
 
-    internal fun create(vmaAllocator: Long, bufferData: ByteBuffer, bufferUsage: Int, bufferMemoryUsage: Int) {
+    internal fun create(vmaAllocator: Long, bufferSize: Long, bufferUsage: Int, bufferMemoryUsage: Int) {
         if (buffer > 0) {
-            resourceFactory.queueRawBufferDeletion(Pair(buffer, allocation))
+            resourceFactory.queueRawBufferDeletion(VulkanResourceFactory.DeleteBuffer(buffer, allocation))
         }
 
         val pBufferCreateInfo = VkBufferCreateInfo.calloc()
-                .size(bufferData.remaining().toLong())
+                .size(bufferSize)
                 .usage(bufferUsage)
 
         val pAllocationCreateInfo = VmaAllocationCreateInfo.calloc()
@@ -42,7 +42,7 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
         buffer = pBuffer[0]
         allocation = pAllocation[0]
         memoryUsage = bufferMemoryUsage
-        bufferSize = pBufferCreateInfo.size()
+        this.bufferSize = pBufferCreateInfo.size()
     }
 
     internal fun buffer(vmaAllocator: Long, bufferData: ByteBuffer) {
@@ -75,7 +75,7 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
 
     private fun mapDataStaging(vmaAllocator: Long, bufferData: ByteBuffer) {
         val stagingBuffer = RawBuffer(setupCommandBuffer, setupQueue, resourceFactory)
-        stagingBuffer.create(vmaAllocator, bufferData, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY)
+        stagingBuffer.create(vmaAllocator, bufferData.remaining().toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY)
         stagingBuffer.buffer(vmaAllocator, bufferData)
 
         setupCommandBuffer.begin()

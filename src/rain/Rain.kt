@@ -57,7 +57,7 @@ open class Rain {
         vk.create(window.windowPointer)
         vulkanRenderer = VulkanRenderer(vk, window)
         vulkanRenderer.create()
-        resourceFactory = VulkanResourceFactory(vk, vulkanRenderer)
+        resourceFactory = VulkanResourceFactory(vk)
     }
 
     open fun init() {}

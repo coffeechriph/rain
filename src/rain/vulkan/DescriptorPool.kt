@@ -1,15 +1,12 @@
 package rain.vulkan
 
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.system.MemoryUtil.memFree
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.assertion
-import rain.log
 import java.nio.LongBuffer
 
-internal class DescriptorSet(val descriptorSet: LongBuffer, val layout: Long, val tag: String)
 internal class DescriptorPool {
     var isValid = false
         private set
@@ -134,7 +131,7 @@ internal class DescriptorPool {
         bindingIndex = 0
         for (i in 0 until uniformBuffers.size) {
             val pBufferInfo = VkDescriptorBufferInfo.calloc(1)
-                    .buffer(uniformBuffers[i].buffer.buffer)
+                    .buffer(uniformBuffers[i].buffer.rawBuffer.buffer)
                     .offset(0)
                     .range(VK10.VK_WHOLE_SIZE)
 

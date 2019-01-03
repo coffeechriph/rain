@@ -1,9 +1,11 @@
 package rain.vulkan
 
-import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.util.vma.Vma
-import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
+import org.lwjgl.vulkan.VkVertexInputAttributeDescription
+import org.lwjgl.vulkan.VkVertexInputBindingDescription
 import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
 import rain.assertion
@@ -51,18 +53,18 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
 
             vertexCount = vertices.size / vertexSize
             if (bufferState == VertexBufferState.STATIC) {
-                rawBuffer.create(vk.vmaAllocator, dataBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
+                rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
                 rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
             } else {
                 if (vertices.size > dataBuffer.capacity()/4) {
-                    rawBuffer.create(vk.vmaAllocator, dataBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
+                    rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
                 }
                 rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
             }
         }
     }
 
-    fun create(vk: Vk, commandBuffer: CommandPool.CommandBuffer, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
+    fun create(vk: Vk, commandBuffer: CommandPool.CommandBuffer, setupQueue: Queue, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
         if (vertices.isEmpty()) {
             assertion("Unable to create vertex buffer with no vertices!")
         }
@@ -70,14 +72,14 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
         dataBuffer = memAlloc(vertices.size*4)
         dataBuffer.asFloatBuffer().put(vertices).flip()
 
-        rawBuffer = RawBuffer(commandBuffer, vk.deviceQueue, resourceFactory)
+        rawBuffer = RawBuffer(commandBuffer, setupQueue, resourceFactory)
 
         if (state == VertexBufferState.STATIC) {
-            rawBuffer.create(vk.vmaAllocator, dataBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
+            rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
             rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
         }
         else {
-            rawBuffer.create(vk.vmaAllocator, dataBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
+            rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
             rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
         }
 

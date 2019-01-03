@@ -276,7 +276,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 }
 
                 if (pipeline.matches(mat, buffer)) {
-                    pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
+                    pipeline.material.sceneData.update(projectionMatrixBuffer)
                     pipeline.begin(renderCommandBuffers[frameIndex])
                     pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
                     found = true
@@ -286,7 +286,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             if (!found) {
                 val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
                 pipeline.create(logicalDevice, renderpass)
-                pipeline.material.sceneData.update(logicalDevice, projectionMatrixBuffer)
+                pipeline.material.sceneData.update(projectionMatrixBuffer)
                 pipeline.begin(renderCommandBuffers[frameIndex])
                 pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
                 pipelines.add(pipeline)

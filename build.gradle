@@ -4,10 +4,6 @@ plugins {
     id 'application'
 }
 
-application {
-    executableDir = "release-build"
-}
-
 apply plugin: 'kotlin'
 apply plugin: 'application'
 group '1'
