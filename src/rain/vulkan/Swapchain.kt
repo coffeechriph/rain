@@ -38,11 +38,8 @@ internal class Swapchain {
 
     private var depthImageMemory = 0L
     private val pImageIndex = memAllocInt(1)
-    private var pool = CommandPool()
 
-    fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, pool: CommandPool, deviceQueue: Queue, extent2D: VkExtent2D) {
-        this.pool = pool
-
+    fun create(logicalDevice: LogicalDevice, physicalDevice: PhysicalDevice, surface: Surface, commandBuffer: CommandPool.CommandBuffer, deviceQueue: Queue, extent2D: VkExtent2D) {
         var err: Int
         extent = VkExtent2D.create()
                 .width(extent2D.width())
@@ -208,7 +205,7 @@ internal class Swapchain {
         val dImageView = ImageView()
         dImageView.create(logicalDevice, depthImage, depthFormat, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT)
         depthImageView = dImageView.imageView
-        transitionImageLayout(logicalDevice, pool, deviceQueue.queue, depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        transitionImageLayout(commandBuffer, deviceQueue.queue, depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 
         memFree(pBufferView)
         memFree(pSwapchainImages)

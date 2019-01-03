@@ -206,7 +206,14 @@ class Container(private val material: Material, private val textMaterial: Materi
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
         val color = skin.foregroundColors["text"]!!
 
-        val list = ArrayList<Float>()
+        var textSize = 0
+        for (text in textfields) {
+            textSize += text.string.length
+        }
+
+        var textVertexDataIndex = 0
+        val textVertexData = FloatArray(textSize*8*6)
+
         for (text in textfields) {
             var boundsW = Float.MAX_VALUE
             if (text.parent != null) {
@@ -221,15 +228,18 @@ class Container(private val material: Material, private val textMaterial: Materi
                 val quad = STBTTAlignedQuad.mallocStack(stack)
 
                 var index = 0
-                var displayString = ""
+                val displayString = CharArray(text.string.length)
+                var displayStringIndex = 0
                 val paddingY = if (text.parent == null){ font.ascent*scale} else {0.0f}
-                val vertList = ArrayList<Float>()
+
+                val vertList = FloatArray(text.string.length*8)
+                var vertListIndex = 0
                 while(index < text.string.length) {
                     if (x.get(0) >= boundsW * 0.9) {
                         break
                     }
 
-                    displayString += text.string[index]
+                    displayString[displayStringIndex++] = text.string[index]
                     index += font.getCodePoint(text.string, text.string.length, index, codePoint)
                     val cp = codePoint.get(0)
 
@@ -244,18 +254,18 @@ class Container(private val material: Material, private val textMaterial: Materi
                             x.put(0, x.get(0) + stbtt_GetCodepointKernAdvance(font.fontInfo, cp, codePoint.get(0)) * scale)
                         }
 
-                        vertList.add(quad.x0())
-                        vertList.add(quad.x1())
-                        vertList.add(quad.y0() + paddingY)
-                        vertList.add(quad.y1() + paddingY)
-                        vertList.add(quad.s0())
-                        vertList.add(quad.s1())
-                        vertList.add(quad.t0())
-                        vertList.add(quad.t1())
+                        vertList[vertListIndex++] = quad.x0()
+                        vertList[vertListIndex++] = quad.x1()
+                        vertList[vertListIndex++] = quad.y0() + paddingY
+                        vertList[vertListIndex++] = quad.y1() + paddingY
+                        vertList[vertListIndex++] = quad.s0()
+                        vertList[vertListIndex++] = quad.s1()
+                        vertList[vertListIndex++] = quad.t0()
+                        vertList[vertListIndex++] = quad.t1()
                     }
                 }
 
-                text.w = font.getStringWidth(displayString, 0, displayString.length)
+                text.w = font.getStringWidth(String(displayString, 0, displayStringIndex), 0, displayStringIndex)
                 text.h = font.fontHeight
 
                 if (text.parent != null) {
@@ -263,7 +273,7 @@ class Container(private val material: Material, private val textMaterial: Materi
                     text.y = text.parent.y + text.parent.h / 2 + text.h / 4
                 }
 
-                for (i in 0 until vertList.size/8) {
+                for (i in 0 until vertListIndex/8) {
                     val cx1 = text.x + vertList[i*8]
                     val cx2 = text.x + vertList[i*8+1]
                     val cy1 = text.y + vertList[i*8+2]
@@ -273,24 +283,70 @@ class Container(private val material: Material, private val textMaterial: Materi
                     val uy1 = vertList[i*8+6]
                     val uy2 = vertList[i*8+7]
 
-                    list.addAll(listOf(
-                            cx1, cy1, depth, color.x, color.y, color.z, ux1, uy1,
-                            cx1, cy2, depth, color.x, color.y, color.z, ux1, uy2,
-                            cx2, cy2, depth, color.x, color.y, color.z, ux2, uy2,
-                            cx2, cy2, depth, color.x, color.y, color.z, ux2, uy2,
-                            cx2, cy1, depth, color.x, color.y, color.z, ux2, uy1,
-                            cx1, cy1, depth, color.x, color.y, color.z, ux1, uy1
-                    ))
+                    textVertexData[textVertexDataIndex++] = cx1
+                    textVertexData[textVertexDataIndex++] = cy1
+                    textVertexData[textVertexDataIndex++] = depth
+                    textVertexData[textVertexDataIndex++] = color.x
+                    textVertexData[textVertexDataIndex++] = color.y
+                    textVertexData[textVertexDataIndex++] = color.z
+                    textVertexData[textVertexDataIndex++] = ux1
+                    textVertexData[textVertexDataIndex++] = uy1
+
+                    textVertexData[textVertexDataIndex++] = cx1
+                    textVertexData[textVertexDataIndex++] = cy2
+                    textVertexData[textVertexDataIndex++] = depth
+                    textVertexData[textVertexDataIndex++] = color.x
+                    textVertexData[textVertexDataIndex++] = color.y
+                    textVertexData[textVertexDataIndex++] = color.z
+                    textVertexData[textVertexDataIndex++] = ux1
+                    textVertexData[textVertexDataIndex++] = uy2
+
+                    textVertexData[textVertexDataIndex++] = cx2
+                    textVertexData[textVertexDataIndex++] = cy2
+                    textVertexData[textVertexDataIndex++] = depth
+                    textVertexData[textVertexDataIndex++] = color.x
+                    textVertexData[textVertexDataIndex++] = color.y
+                    textVertexData[textVertexDataIndex++] = color.z
+                    textVertexData[textVertexDataIndex++] = ux2
+                    textVertexData[textVertexDataIndex++] = uy2
+
+                    textVertexData[textVertexDataIndex++] = cx2
+                    textVertexData[textVertexDataIndex++] = cy2
+                    textVertexData[textVertexDataIndex++] = depth
+                    textVertexData[textVertexDataIndex++] = color.x
+                    textVertexData[textVertexDataIndex++] = color.y
+                    textVertexData[textVertexDataIndex++] = color.z
+                    textVertexData[textVertexDataIndex++] = ux2
+                    textVertexData[textVertexDataIndex++] = uy2
+
+                    textVertexData[textVertexDataIndex++] = cx2
+                    textVertexData[textVertexDataIndex++] = cy1
+                    textVertexData[textVertexDataIndex++] = depth
+                    textVertexData[textVertexDataIndex++] = color.x
+                    textVertexData[textVertexDataIndex++] = color.y
+                    textVertexData[textVertexDataIndex++] = color.z
+                    textVertexData[textVertexDataIndex++] = ux2
+                    textVertexData[textVertexDataIndex++] = uy1
+
+                    textVertexData[textVertexDataIndex++] = cx1
+                    textVertexData[textVertexDataIndex++] = cy1
+                    textVertexData[textVertexDataIndex++] = depth
+                    textVertexData[textVertexDataIndex++] = color.x
+                    textVertexData[textVertexDataIndex++] = color.y
+                    textVertexData[textVertexDataIndex++] = color.z
+                    textVertexData[textVertexDataIndex++] = ux1
+                    textVertexData[textVertexDataIndex++] = uy1
                 }
             }
         }
 
-        if (list.size > 0) {
+        if (textVertexDataIndex > 0) {
             if (!::textBuffer.isInitialized) {
-                textBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 3), VertexAttribute(2, 2)))
+                textBuffer = resourceFactory.createVertexBuffer(textVertexData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 3), VertexAttribute(2, 2)))
             }
-
-            textBuffer.update(list.toFloatArray())
+            else {
+                textBuffer.update(textVertexData)
+            }
         }
     }
 

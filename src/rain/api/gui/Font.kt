@@ -7,6 +7,7 @@ import org.lwjgl.stb.STBTTPackedchar
 import org.lwjgl.stb.STBTruetype.*
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memAlloc
+import org.lwjgl.system.MemoryUtil.memAllocInt
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
@@ -31,6 +32,10 @@ class Font(ttfFile: String) {
     private var bitmapWidth = 0
     private var bitmapHeight = 0
     private lateinit var cdata: STBTTPackedchar.Buffer
+
+    private val pCodePoint = memAllocInt(1)
+    private val pAdvancedWidth = memAllocInt(1)
+    private val pLeftSideBearing = memAllocInt(1)
 
     init {
         ttf = readFileAsByteBuffer(ttfFile)
@@ -95,23 +100,18 @@ class Font(ttfFile: String) {
 
     fun getStringWidth(text: String, from: Int, to: Int): Float {
         var width = 0
-        stackPush().use { stack ->
-            val pCodePoint = stack.mallocInt(1)
-            val pAdvancedWidth = stack.mallocInt(1)
-            val pLeftSideBearing = stack.mallocInt(1)
 
-            var i = from
-            while (i < to) {
-                i += getCodePoint(text, to, i, pCodePoint)
-                val cp = pCodePoint.get(0)
+        var i = from
+        while (i < to) {
+            i += getCodePoint(text, to, i, pCodePoint)
+            val cp = pCodePoint.get(0)
 
-                stbtt_GetCodepointHMetrics(fontInfo, cp, pAdvancedWidth, pLeftSideBearing)
-                width += pAdvancedWidth.get(0)
+            stbtt_GetCodepointHMetrics(fontInfo, cp, pAdvancedWidth, pLeftSideBearing)
+            width += pAdvancedWidth.get(0)
 
-                if (useKerning && i < to) {
-                    getCodePoint(text, to, i, pCodePoint)
-                    width += stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0))
-                }
+            if (useKerning && i < to) {
+                getCodePoint(text, to, i, pCodePoint)
+                width += stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0))
             }
         }
 

@@ -135,7 +135,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                         .height(height[0])
             }
 
-            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandPool, setupQueue, extent2D)
+            swapchain.create(logicalDevice, physicalDevice, surface, setupCommandBuffer, setupQueue, extent2D)
             renderpass.create(logicalDevice, surface.format, findDepthFormat(physicalDevice))
             swapchain.createFramebuffers(logicalDevice, renderpass, extent2D)
             swapchainIsDirty = false
@@ -200,7 +200,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     override fun render() {
         if(recreateSwapchain(vk.surface)) {
             recreateRenderCommandBuffers()
-            vkDeviceWaitIdle(vk.logicalDevice.device)
             return
         }
 
@@ -209,11 +208,14 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             log("Failed to wait for fence!")
         }
 
+        result = vkResetFences(logicalDevice.device, drawingFinishedFence[frameIndex])
+        if (result != VK_SUCCESS) {
+            log("Failed to reset fence!")
+        }
+
         val nextImage = swapchain.aquireNextImage(logicalDevice, imageAcquiredSemaphore[frameIndex])
         if (nextImage == -1) { // Need to recreate swapchain
             swapchainIsDirty = true
-            recreateSwapchain(vk.surface)
-            recreateRenderCommandBuffers()
             return
         }
 
@@ -234,19 +236,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         }
 
         renderCommandBuffers[frameIndex].end()
-
-        result = vkResetFences(logicalDevice.device, drawingFinishedFence[frameIndex])
-        if (result != VK_SUCCESS) {
-            log("Failed to reset fence!")
-        }
         renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence[frameIndex])
 
         presentImage(nextImage)
 
-        frameIndex++
-        if(frameIndex >= imageAcquiredSemaphore.size) {
-            frameIndex = 0
-        }
+        frameIndex = (frameIndex+1)%swapchain.framebuffers.size
     }
 
     private fun drawRenderPass(nextImage: Int) {

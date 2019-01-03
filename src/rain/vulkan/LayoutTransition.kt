@@ -5,8 +5,7 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkImageMemoryBarrier
 import org.lwjgl.vulkan.VkQueue
 
-internal fun transitionImageLayout(logicalDevice: LogicalDevice, commandPool: CommandPool, queue: VkQueue, image: Long, format: Int, oldLayout: Int, newLayout: Int) {
-    val commandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
+internal fun transitionImageLayout(commandBuffer: CommandPool.CommandBuffer, queue: VkQueue, image: Long, format: Int, oldLayout: Int, newLayout: Int) {
     commandBuffer.begin()
 
     val imageBarrier = VkImageMemoryBarrier.calloc(1)

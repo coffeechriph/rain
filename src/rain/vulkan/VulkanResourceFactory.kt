@@ -14,6 +14,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     private val physicalDevice: PhysicalDevice
     private val queue: Queue
     private val commandPool: CommandPool
+    private val setupCommandBuffer: CommandPool.CommandBuffer
     private val materials: MutableList<VulkanMaterial>
     private val textures: MutableMap<String, VulkanTexture2d>
     private val shaders: MutableMap<String, ShaderModule>
@@ -25,6 +26,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     private val deleteShaderQueue = ArrayDeque<ShaderModule>()
     private val deleteVertexBufferQueue = ArrayDeque<VulkanVertexBuffer>()
     private val deleteIndexBufferQueue = ArrayDeque<VulkanIndexBuffer>()
+    private val deleteRawBufferQueue = ArrayDeque<Long>()
 
     init {
         this.materials = ArrayList()
@@ -37,12 +39,17 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         this.queue = vk.deviceQueue
         this.commandPool = CommandPool()
         this.commandPool.create(logicalDevice, vk.queueFamilyIndices.graphicsFamily)
+        this.setupCommandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
+    }
+
+    fun queueRawBufferDeletion(buffer: Long) {
+        deleteRawBufferQueue.add(buffer)
     }
 
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
         log("Creating vertex buffer of size ${vertices.size * 4} bytes.")
-        val buffer = VulkanVertexBuffer(uniqueId())
-        buffer.create(vk, commandPool, vertices, attributes, state)
+        val buffer = VulkanVertexBuffer(uniqueId(), this)
+        buffer.create(vk, setupCommandBuffer, vertices, attributes, state)
         buffers.add(buffer)
         return buffer
     }
@@ -109,7 +116,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         if (!textures.containsKey(name)) {
             log("Loading texture $name from $textureFile with filter $filter.")
             val texture2d = VulkanTexture2d(uniqueId())
-            texture2d.load(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, textureFile, filter)
+            texture2d.load(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, queue.queue, textureFile, filter)
             textures[name] = texture2d
         }
         else {
@@ -123,7 +130,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         if (!textures.containsKey(name)) {
             log("Creating texture $name from source with filter $filter.")
             val texture2d = VulkanTexture2d(uniqueId())
-            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, commandPool, queue.queue, imageData, width, height, channels, filter)
+            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, queue.queue, imageData, width, height, channels, filter)
             textures[name] = texture2d
         }
         else {
@@ -262,6 +269,11 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
 
                 material.invalidate()
                 materials.remove(material)
+            }
+
+            while (deleteRawBufferQueue.isNotEmpty()) {
+                val buffer = deleteRawBufferQueue.pop()
+                VK10.vkDestroyBuffer(logicalDevice.device, buffer, null)
             }
 
             vkDeviceWaitIdle(vk.logicalDevice.device)

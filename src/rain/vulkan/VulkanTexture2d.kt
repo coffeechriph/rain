@@ -16,8 +16,6 @@ import java.nio.ByteBuffer
 import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_SAMPLED_BIT
 import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_TRANSFER_DST_BIT
 
-
-
 internal class VulkanTexture2d(val id: Long): Texture2d {
     var texture: Long = 0
         private set
@@ -58,7 +56,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
         return isValid
     }
 
-    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, filePath: String, filter: TextureFilter) {
+    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: VkQueue, filePath: String, filter: TextureFilter) {
         if (!File(filePath).exists()) {
             throw FileNotFoundException("File $filePath was not found!")
         }
@@ -72,10 +70,10 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
             throw RuntimeException("Failed to load image $filePath")
         }
 
-        createImage(logicalDevice, memoryProperties, commandPool, queue, imageData, width.get(0), height.get(0), channels.get(0), filter)
+        createImage(logicalDevice, memoryProperties, commandBuffer, queue, imageData, width.get(0), height.get(0), channels.get(0), filter)
     }
 
-    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandPool: CommandPool, queue: VkQueue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
+    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: VkQueue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
         val format = findTextureFormat(channels)
         val textureFilter = when(filter) {
             TextureFilter.NEAREST -> VK_FILTER_NEAREST
@@ -143,9 +141,9 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
 
             vkBindImageMemory(logicalDevice.device, textureImage.get(0), textureImageMemory.get(0), 0)
 
-            transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-            copyBufferToImage(logicalDevice, commandPool, queue, buffer.buffer, textureImage.get(0), width, height)
-            transitionImageLayout(logicalDevice, commandPool, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+            transitionImageLayout(commandBuffer, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+            copyBufferToImage(commandBuffer, queue, buffer.buffer, textureImage.get(0), width, height)
+            transitionImageLayout(commandBuffer, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 
             texture = textureImage.get(0)
 
@@ -195,8 +193,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
         }
     }
 
-    private fun copyBufferToImage(logicalDevice: LogicalDevice, commandPool: CommandPool, queue: VkQueue, buffer: Long, image: Long, width: Int, height: Int) {
-        val commandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
+    private fun copyBufferToImage(commandBuffer: CommandPool.CommandBuffer, queue: VkQueue, buffer: Long, image: Long, width: Int, height: Int) {
         commandBuffer.begin()
 
         val region = VkBufferImageCopy.calloc(1)
