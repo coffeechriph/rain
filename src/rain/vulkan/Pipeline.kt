@@ -178,7 +178,7 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
             val pushData = drawable.uniformData
 
             pOffset.put(0, 0L)
-            pBuffer.put(0, vbo.buffer)
+            pBuffer.put(0, vbo.rawBuffer.buffer)
 
             vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
 
@@ -191,7 +191,7 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
             val ibo = drawable.indexBuffer as VulkanIndexBuffer
 
             pOffset.put(0, 0L)
-            pBuffer.put(0, vbo.buffer)
+            pBuffer.put(0, vbo.rawBuffer.buffer)
 
             vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
             vkCmdBindIndexBuffer(cmdBuffer.buffer, ibo.buffer, 0, VK_INDEX_TYPE_UINT32)

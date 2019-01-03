@@ -1,6 +1,10 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.util.vma.Vma.*
+import org.lwjgl.util.vma.VmaAllocationCreateInfo
+import org.lwjgl.util.vma.VmaAllocationInfo
 import org.lwjgl.vulkan.*
 import rain.assertion
 

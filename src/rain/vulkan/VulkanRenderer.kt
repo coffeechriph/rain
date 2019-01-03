@@ -238,7 +238,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         renderCommandBuffers[frameIndex].end()
         renderCommandBuffers[frameIndex].submit(graphicsQueue[frameIndex], imageAcquiredSemaphore[frameIndex], completeRenderSemaphore[frameIndex], VK10.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, drawingFinishedFence[frameIndex])
 
-        presentImage(nextImage)
+        presentImage()
 
         frameIndex = (frameIndex+1)%swapchain.framebuffers.size
     }
@@ -250,12 +250,12 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         val projectionMatrixBuffer = memAlloc(16 * 4)
         camera.projection.get(projectionMatrixBuffer)
 
-        issueDrawingCommands(nextImage)
+        issueDrawingCommands()
 
         renderpass.end(renderCommandBuffers[frameIndex])
     }
 
-    private fun issueDrawingCommands(nextImage: Int) {
+    private fun issueDrawingCommands() {
         val obsoletePipelines = ArrayList<Pipeline>()
         val projectionMatrixBuffer = memAlloc(16 * 4)
         camera.projection.get(projectionMatrixBuffer)
@@ -296,8 +296,8 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         drawOpsQueue.clear()
     }
 
-    private fun presentImage(nextImage: Int) {
-        pImageIndex.put(0, nextImage)
+    private fun presentImage() {
+        pImageIndex.put(0, frameIndex)
         pSwapchains.put(0, swapchain.swapchain)
         pRenderCompleteSemaphore.put(0, completeRenderSemaphore[frameIndex].semaphore)
 

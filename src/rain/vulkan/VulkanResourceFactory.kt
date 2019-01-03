@@ -1,5 +1,6 @@
 package rain.vulkan
 
+import org.lwjgl.util.vma.Vma
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VK10.vkDeviceWaitIdle
 import rain.api.gfx.*
@@ -21,12 +22,16 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
     private val buffers: MutableList<VulkanVertexBuffer>
     private val indexBuffers: MutableList<VulkanIndexBuffer>
 
+    // TODO: Bug!
+    // TODO: We delete whatever the references of these resources are using
+    // This will cause issues when we queue them for deletion and realloc them as the newly allocated
+    // stuff will be deleted...
     private val deleteMaterialQueue = ArrayDeque<VulkanMaterial>()
     private val deleteTextureQueue = ArrayDeque<VulkanTexture2d>()
     private val deleteShaderQueue = ArrayDeque<ShaderModule>()
     private val deleteVertexBufferQueue = ArrayDeque<VulkanVertexBuffer>()
     private val deleteIndexBufferQueue = ArrayDeque<VulkanIndexBuffer>()
-    private val deleteRawBufferQueue = ArrayDeque<Long>()
+    private val deleteRawBufferQueue = ArrayDeque<Pair<Long, Long>>()
 
     init {
         this.materials = ArrayList()
@@ -42,7 +47,7 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
         this.setupCommandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
     }
 
-    fun queueRawBufferDeletion(buffer: Long) {
+    fun queueRawBufferDeletion(buffer: Pair<Long, Long>) {
         deleteRawBufferQueue.add(buffer)
     }
 
@@ -241,7 +246,8 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
 
             while (deleteVertexBufferQueue.isNotEmpty()) {
                 val buffer = deleteVertexBufferQueue.pop()
-                VK10.vkDestroyBuffer(logicalDevice.device, buffer.buffer, null)
+                VK10.vkDestroyBuffer(logicalDevice.device, buffer.rawBuffer.buffer, null)
+                Vma.vmaFreeMemory(vk.vmaAllocator, buffer.rawBuffer.allocation)
                 buffer.invalidate()
                 buffers.remove(buffer)
             }
@@ -273,7 +279,8 @@ internal class VulkanResourceFactory(val vk: Vk, val renderer: VulkanRenderer) :
 
             while (deleteRawBufferQueue.isNotEmpty()) {
                 val buffer = deleteRawBufferQueue.pop()
-                VK10.vkDestroyBuffer(logicalDevice.device, buffer, null)
+                VK10.vkDestroyBuffer(logicalDevice.device, buffer.first, null)
+                Vma.vmaFreeMemory(vk.vmaAllocator, buffer.second)
             }
 
             vkDeviceWaitIdle(vk.logicalDevice.device)
