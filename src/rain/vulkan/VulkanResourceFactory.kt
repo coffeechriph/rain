@@ -11,6 +11,8 @@ import java.util.*
 
 internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     data class DeleteBuffer(val buffer: Long, val allocation: Long)
+    data class DeleteTexture(val image: Long, val allocation: Long, val imageView: Long, val sampler: Long)
+    data class DeleteMaterial(val pool: Long)
 
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
@@ -28,9 +30,9 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     // TODO: We delete whatever the references of these resources are using
     // This will cause issues when we queue them for deletion and realloc them as the newly allocated
     // stuff will be deleted...
-    private val deleteMaterialQueue = ArrayDeque<VulkanMaterial>()
-    private val deleteTextureQueue = ArrayDeque<VulkanTexture2d>()
-    private val deleteShaderQueue = ArrayDeque<ShaderModule>()
+    private val deleteMaterialQueue = ArrayDeque<DeleteMaterial>()
+    private val deleteTextureQueue = ArrayDeque<DeleteTexture>()
+    private val deleteShaderQueue = ArrayDeque<Long>()
     private val deleteRawBufferQueue = ArrayDeque<DeleteBuffer>()
 
     init {
@@ -47,7 +49,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         this.setupCommandBuffer = commandPool.createCommandBuffer(logicalDevice.device, 1)[0]
     }
 
-    fun queueRawBufferDeletion(buffer: DeleteBuffer) {
+    internal fun queueRawBufferDeletion(buffer: DeleteBuffer) {
         deleteRawBufferQueue.add(buffer)
     }
 
@@ -85,7 +87,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
             shaders[fragmentShaderFile] = fragment
         }
 
-        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L)}}
+        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
         val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, logicalDevice, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled)
         materials.add(material)
         return material
@@ -108,7 +110,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
             shaders[fragmentShaderFile] = fragment
         }
 
-        val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L)} }
+        val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)} }
         val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, logicalDevice, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled)
         materials.add(material)
 
@@ -120,8 +122,8 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     override fun loadTexture2d(name: String, textureFile: String, filter: TextureFilter): Texture2d {
         if (!textures.containsKey(name)) {
             log("Loading texture $name from $textureFile with filter $filter.")
-            val texture2d = VulkanTexture2d(uniqueId())
-            texture2d.load(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue.queue, textureFile, filter)
+            val texture2d = VulkanTexture2d(uniqueId(), vk, this)
+            texture2d.load(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue, textureFile, filter)
             textures[name] = texture2d
         }
         else {
@@ -134,8 +136,8 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     override fun createTexture2d(name: String, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
         if (!textures.containsKey(name)) {
             log("Creating texture $name from source with filter $filter.")
-            val texture2d = VulkanTexture2d(uniqueId())
-            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue.queue, imageData, width, height, channels, filter)
+            val texture2d = VulkanTexture2d(uniqueId(), vk, this)
+            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue, imageData, width, height, channels, filter)
             textures[name] = texture2d
         }
         else {
@@ -163,26 +165,31 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         material.invalidate()
         deleteRawBufferQueue.add(DeleteBuffer(material.sceneData.rawBuffer.buffer, material.sceneData.rawBuffer.allocation))
         deleteRawBufferQueue.add(DeleteBuffer(material.textureDataUBO.rawBuffer.buffer, material.textureDataUBO.rawBuffer.allocation))
-        deleteMaterialQueue.add(material)
+        deleteMaterialQueue.add(DeleteMaterial(material.descriptorPool.pool))
+        materials.remove(material)
     }
 
     override fun deleteTexture2d(name: String) {
         val texture = textures[name]
         if (texture != null) {
             texture.invalidate()
-            deleteTextureQueue.add(texture)
+            deleteTextureQueue.add(DeleteTexture(texture.texture, texture.allocation, texture.textureView, texture.textureSampler))
+            textures.remove(name)
         }
     }
 
     override fun deleteVertexBuffer(vertexBuffer: VertexBuffer) {
         val vbuf = vertexBuffer as VulkanVertexBuffer
+        vbuf.invalidate()
         deleteRawBufferQueue.add(DeleteBuffer(vbuf.rawBuffer.buffer, vbuf.rawBuffer.allocation))
+        buffers.remove(vbuf)
     }
 
     override fun deleteIndexBuffer(indexBuffer: IndexBuffer) {
         val ibuf = indexBuffer as VulkanIndexBuffer
         ibuf.invalidate()
         deleteRawBufferQueue.add(DeleteBuffer(ibuf.rawBuffer.buffer, ibuf.rawBuffer.allocation))
+        indexBuffers.remove(ibuf)
     }
 
     override fun getMaterial(name: String): Material {
@@ -208,17 +215,19 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
                 deleteRawBufferQueue.add(DeleteBuffer(material.textureDataUBO.rawBuffer.buffer, material.textureDataUBO.rawBuffer.allocation))
             }
 
-            deleteMaterialQueue.add(material)
+            deleteMaterialQueue.add(DeleteMaterial(material.descriptorPool.pool))
         }
         materials.clear()
 
         for (texture in textures) {
-            deleteTextureQueue.add(texture.value)
+            val tex = texture.value
+            deleteTextureQueue.add(DeleteTexture(tex.texture, tex.allocation, tex.textureView, tex.textureSampler))
+            tex.invalidate()
         }
         textures.clear()
 
         for (shader in shaders) {
-            deleteShaderQueue.add(shader.value)
+            deleteShaderQueue.add(shader.value.moduleId)
         }
         shaders.clear()
 
@@ -241,27 +250,20 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
 
             while (deleteTextureQueue.isNotEmpty()) {
                 val texture = deleteTextureQueue.pop()
-                VK10.vkDestroyImage(logicalDevice.device, texture.texture, null)
-                VK10.vkDestroySampler(logicalDevice.device, texture.textureSampler, null)
-                texture.invalidate()
-                textures.values.remove(texture)
+                Vma.vmaDestroyImage(vk.vmaAllocator, texture.image, texture.allocation)
+                VK10.vkDestroySampler(logicalDevice.device, texture.sampler, null)
+                VK10.vkDestroyImageView(logicalDevice.device, texture.imageView, null)
             }
 
             while (deleteShaderQueue.isNotEmpty()) {
                 val shader = deleteShaderQueue.pop()
-                VK10.vkDestroyShaderModule(logicalDevice.device, shader.moduleId, null)
-                shader.invalidate()
-                shaders.values.remove(shader)
+                VK10.vkDestroyShaderModule(logicalDevice.device, shader, null)
             }
 
+            // TODO: Why can't we destroy the descriptor pool??
             while (deleteMaterialQueue.isNotEmpty()) {
                 val material = deleteMaterialQueue.pop()
-
-                //VK10.vkDestroyDescriptorPool(logicalDevice.device, material.descriptorPool.pool, null)
-                material.descriptorPool.invalidate()
-
-                material.invalidate()
-                materials.remove(material)
+                //VK10.vkDestroyDescriptorPool(logicalDevice.device, material.pool, null)
             }
 
             while (deleteRawBufferQueue.isNotEmpty()) {

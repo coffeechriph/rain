@@ -20,9 +20,10 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
     private var memoryUsage: Int = 0
     private var bufferSize: Long = 0
 
-    internal fun create(vmaAllocator: Long, bufferSize: Long, bufferUsage: Int, bufferMemoryUsage: Int) {
+    internal fun create(vmaAllocator: Long, bufferSize: Long, bufferUsage: Int, bufferMemoryUsage: Int, requiredFlags: Int = 0) {
         if (buffer > 0) {
             resourceFactory.queueRawBufferDeletion(VulkanResourceFactory.DeleteBuffer(buffer, allocation))
+            buffer = 0
         }
 
         val pBufferCreateInfo = VkBufferCreateInfo.calloc()
@@ -31,9 +32,10 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
 
         val pAllocationCreateInfo = VmaAllocationCreateInfo.calloc()
                 .usage(bufferMemoryUsage)
+                .requiredFlags(requiredFlags)
 
         val pBuffer = memAllocLong(1)
-        val pAllocation = memAllocPointer(4)
+        val pAllocation = memAllocPointer(1)
         val err = vmaCreateBuffer(vmaAllocator, pBufferCreateInfo, pAllocationCreateInfo, pBuffer, pAllocation, null)
         if (err != VK_SUCCESS) {
             assertion("VMA Error: ${VulkanResult(err)}")

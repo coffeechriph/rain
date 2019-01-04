@@ -3,21 +3,24 @@ package rain.vulkan
 import org.lwjgl.stb.STBImage.stbi_load
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.memAllocInt
-import org.lwjgl.system.MemoryUtil.memAllocLong
+import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.util.vma.Vma
+import org.lwjgl.util.vma.Vma.*
+import org.lwjgl.util.vma.VmaAllocationCreateInfo
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
 import rain.assertion
+import rain.log
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
-import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_SAMPLED_BIT
-import org.lwjgl.vulkan.VK10.VK_IMAGE_USAGE_TRANSFER_DST_BIT
 
-internal class VulkanTexture2d(val id: Long): Texture2d {
+internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: VulkanResourceFactory): Texture2d {
     var texture: Long = 0
+        private set
+    var allocation: Long = 0
         private set
     var textureView: Long = 0
         private set
@@ -56,7 +59,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
         return isValid
     }
 
-    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: VkQueue, filePath: String, filter: TextureFilter) {
+    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: Queue, filePath: String, filter: TextureFilter) {
         if (!File(filePath).exists()) {
             throw FileNotFoundException("File $filePath was not found!")
         }
@@ -73,21 +76,23 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
         createImage(logicalDevice, memoryProperties, commandBuffer, queue, imageData, width.get(0), height.get(0), channels.get(0), filter)
     }
 
-    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: VkQueue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
+    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: Queue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
         val format = findTextureFormat(channels)
         val textureFilter = when(filter) {
             TextureFilter.NEAREST -> VK_FILTER_NEAREST
             TextureFilter.LINEAR -> VK_FILTER_LINEAR
         }
 
-        val buffer = createBuffer(logicalDevice, (width*height*channels).toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, memoryProperties)
+        log("Texture format: $format")
 
+        val buffer = RawBuffer(commandBuffer, queue, resourceFactory)
+        buffer.create(vk.vmaAllocator, imageData.remaining().toLong(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, Vma.VMA_MEMORY_USAGE_CPU_ONLY, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT or VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
         val imageDataBuffer = MemoryUtil.memAlloc(imageData.remaining())
         imageDataBuffer.put(imageData)
         imageDataBuffer.flip()
 
         val pData = MemoryUtil.memAllocPointer(1)
-        var err = VK10.vkMapMemory(logicalDevice.device, buffer.bufferMemory, 0, buffer.bufferSize, 0, pData)
+        var err = vmaMapMemory(vk.vmaAllocator, buffer.allocation, pData)
 
         val data = pData.get(0)
         MemoryUtil.memFree(pData)
@@ -97,7 +102,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
 
         MemoryUtil.memCopy(MemoryUtil.memAddress(imageDataBuffer), data, imageDataBuffer.remaining().toLong())
         MemoryUtil.memFree(imageDataBuffer)
-        VK10.vkUnmapMemory(logicalDevice.device, buffer.bufferMemory)
+        vmaUnmapMemory(vk.vmaAllocator, buffer.allocation)
 
         MemoryStack.stackPush().use {
             val imageCreateInfo: VkImageCreateInfo = VkImageCreateInfo.calloc()
@@ -110,6 +115,7 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
                     .initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
                     .samples(VK_SAMPLE_COUNT_1_BIT)
                     .usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT or VK_IMAGE_USAGE_SAMPLED_BIT)
+                    .sharingMode(VK_SHARING_MODE_EXCLUSIVE)
                     .flags(0)
 
             val extent = imageCreateInfo
@@ -119,33 +125,25 @@ internal class VulkanTexture2d(val id: Long): Texture2d {
                     .height(height)
                     .depth(1) // Depth must be 1 if type is VK_IMAGE_TYPE_2D
 
+            val pAllocationCreateInfo = VmaAllocationCreateInfo.calloc()
+                    .flags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+
             val textureImage = memAllocLong(1)
-            vkCreateImage(logicalDevice.device, imageCreateInfo, null, textureImage)
+            val pAllocation = memAllocPointer(1)
+            err = vmaCreateImage(vk.vmaAllocator, imageCreateInfo, pAllocationCreateInfo, textureImage, pAllocation, null)
+            if (err != VK_SUCCESS) {
+                assertion("Error creating image: ${VulkanResult(err)}")
+            }
 
             val memoryRequirements = VkMemoryRequirements.callocStack()
             vkGetImageMemoryRequirements(logicalDevice.device, textureImage.get(0), memoryRequirements)
 
-            val typeIndex = memAllocInt(1)
-            getMemoryType(memoryProperties, memoryRequirements.memoryTypeBits(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, typeIndex)
-
-            val memoryAllocateInfo = VkMemoryAllocateInfo.callocStack()
-                    .sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
-                    .allocationSize(memoryRequirements.size())
-                    .memoryTypeIndex(typeIndex.get(0))
-
-            val textureImageMemory = memAllocLong(1)
-            err = vkAllocateMemory(logicalDevice.device, memoryAllocateInfo, null, textureImageMemory)
-            if (err != VK_SUCCESS) {
-                assertion("Error allocating texture memory " + VulkanResult(err))
-            }
-
-            vkBindImageMemory(logicalDevice.device, textureImage.get(0), textureImageMemory.get(0), 0)
-
-            transitionImageLayout(commandBuffer, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-            copyBufferToImage(commandBuffer, queue, buffer.buffer, textureImage.get(0), width, height)
-            transitionImageLayout(commandBuffer, queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+            transitionImageLayout(commandBuffer, queue.queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+            copyBufferToImage(commandBuffer, queue.queue, buffer.buffer, textureImage.get(0), width, height)
+            transitionImageLayout(commandBuffer, queue.queue, textureImage.get(0), format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 
             texture = textureImage.get(0)
+            allocation = pAllocation[0]
 
             val textureImageView = ImageView()
             textureImageView.create(logicalDevice, texture, format, VK_IMAGE_VIEW_TYPE_2D, VK10.VK_IMAGE_ASPECT_COLOR_BIT)
