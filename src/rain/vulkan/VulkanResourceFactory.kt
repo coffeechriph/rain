@@ -85,7 +85,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
             shaders[fragmentShaderFile] = fragment
         }
 
-        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L)}}
+        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
         val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, logicalDevice, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled)
         materials.add(material)
         return material
@@ -108,7 +108,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
             shaders[fragmentShaderFile] = fragment
         }
 
-        val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L)} }
+        val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)} }
         val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, logicalDevice, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled)
         materials.add(material)
 
@@ -120,8 +120,8 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     override fun loadTexture2d(name: String, textureFile: String, filter: TextureFilter): Texture2d {
         if (!textures.containsKey(name)) {
             log("Loading texture $name from $textureFile with filter $filter.")
-            val texture2d = VulkanTexture2d(uniqueId())
-            texture2d.load(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue.queue, textureFile, filter)
+            val texture2d = VulkanTexture2d(uniqueId(), vk, this)
+            texture2d.load(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue, textureFile, filter)
             textures[name] = texture2d
         }
         else {
@@ -134,8 +134,8 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     override fun createTexture2d(name: String, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
         if (!textures.containsKey(name)) {
             log("Creating texture $name from source with filter $filter.")
-            val texture2d = VulkanTexture2d(uniqueId())
-            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue.queue, imageData, width, height, channels, filter)
+            val texture2d = VulkanTexture2d(uniqueId(), vk, this)
+            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue, imageData, width, height, channels, filter)
             textures[name] = texture2d
         }
         else {
