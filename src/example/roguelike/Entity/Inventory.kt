@@ -44,11 +44,15 @@ class Inventory(val gui: Gui, val player: Player) {
     private var selectedItem: Item = ItemNone
     private var selectedItemIndex = 0
 
+    // TODO: These shouldn't be part of the inventory but
+    // exist as part of PlayerHud or something
     private var healthText: Text
     private var staminaText: Text
     private var strengthText: Text
     private var agilityText: Text
     private var luckText: Text
+    private var levelText: Text
+    private var xpText: Text
 
     init {
         container = gui.newContainer(startX, startY, 500.0f, 500.0f)
@@ -68,7 +72,7 @@ class Inventory(val gui: Gui, val player: Player) {
         dropButton.text = "Drop"
         container.addComponent(dropButton)
 
-        statContainer = gui.newContainer(0.0f, 768.0f - 120.0f, 100.0f, 120.0f)
+        statContainer = gui.newContainer(0.0f, 768.0f - 140.0f, 100.0f, 140.0f)
         statContainer.visible = true
         statContainer.skin.foregroundColors["text"] = Vector3f(240.0f / 255.0f, 207.0f / 255.0f, 117.0f / 255.0f)
 
@@ -78,6 +82,8 @@ class Inventory(val gui: Gui, val player: Player) {
         strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
         agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
         luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
+        levelText = statContainer.addText("Level: ${player.playerXpLevel}", 0.0f, 100.0f)
+        xpText = statContainer.addText("Xp: ${player.xp}/${player.xpUntilNextLevel}", 0.0f, 120.0f)
 
         equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f)
         equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f)
@@ -238,6 +244,8 @@ class Inventory(val gui: Gui, val player: Player) {
         statContainer.removeText(strengthText)
         statContainer.removeText(agilityText)
         statContainer.removeText(luckText)
+        statContainer.removeText(levelText)
+        statContainer.removeText(xpText)
 
         equippedWeaponText = container.addText("Weapon: ${equippedWeapon.name}", 230.0f, 175.0f)
         equippedHeadText = container.addText("Head: ${equippedHead.name}", 230.0f, 195.0f)
@@ -262,6 +270,8 @@ class Inventory(val gui: Gui, val player: Player) {
         strengthText = statContainer.addText("Strength: ${player.strength}", 0.0f, 40.0f)
         agilityText = statContainer.addText("Agility: ${player.agility}", 0.0f, 60.0f)
         luckText = statContainer.addText("Luck: ${player.luck}", 0.0f, 80.0f)
+        levelText = statContainer.addText("Level: ${player.playerXpLevel}", 0.0f, 100.0f)
+        xpText = statContainer.addText("Xp: ${player.xp}/${player.xpUntilNextLevel}", 0.0f, 120.0f)
         updateHealthText()
     }
 

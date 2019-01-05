@@ -56,9 +56,9 @@ class Item (val player: Player, val type: ItemType, val name: String, val stamin
     // TODO: Constant window size
     fun setPosition(system: EntitySystem<Item>, pos: Vector2i) {
         val transform = system.findTransformComponent(getId())!!
-        transform.z = 1.1f + transform.y * 0.001f
         transform.x = pos.x.toFloat()
         transform.y = pos.y.toFloat()
+        transform.z = 1.1f + transform.y * 0.001f
         transform.setScale(96.0f, 96.0f)
         cellX = pos.x / 1280
         cellY = pos.y / 768
@@ -95,6 +95,7 @@ class Item (val player: Player, val type: ItemType, val name: String, val stamin
                     player.transform.y >= transform.y - 8 && player.transform.y <= transform.y + 8) {
                     pickedUp = true
                     beginPickup = false
+                    sprite.visible = false
                     player.inventory.addItem(this)
                 }
             }

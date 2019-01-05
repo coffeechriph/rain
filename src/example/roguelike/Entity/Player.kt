@@ -57,6 +57,23 @@ class Player : Entity() {
     private var inCombatCooldown = 0
     private var inCombat = false
 
+    var playerXpLevel = 1
+        private set
+    var xp = 0
+        private set
+    var xpUntilNextLevel = 100
+        private set
+
+    fun addXp(increase: Int) {
+        this.xp += increase
+        if (this.xp >= xpUntilNextLevel) {
+            this.xp = 0
+            playerXpLevel += 1
+            xpUntilNextLevel += xpUntilNextLevel
+        }
+        inventory.updateEquippedItems()
+    }
+
     fun setPosition(pos: Vector2i) {
         cellX = pos.x / 1280
         cellY = pos.y / 768

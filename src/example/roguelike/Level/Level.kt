@@ -64,6 +64,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private lateinit var collisionSystem: EntitySystem<Entity>
     private lateinit var containerSystem: EntitySystem<Container>
     private lateinit var levelItemSystem: EntitySystem<Item>
+    private lateinit var xpBallSystem: EntitySystem<XpBall>
     private lateinit var navMesh: NavMesh
     var startPosition = Vector2i()
     var exitPosition = Vector2i()
@@ -115,6 +116,25 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
         for (enemy in activeEnemies) {
             if (enemy.health <= 0) {
+                if (enemy.sprite.visible) {
+                    for (i in 0 until random.nextInt(5)+1) {
+                        // Add xp balls to the world
+                        val xpBall = XpBall(player)
+                        xpBallSystem.newEntity(xpBall)
+                                .attachTransformComponent()
+                                .attachSpriteComponent(itemMaterial)
+                                .build()
+
+                        val px = (Math.sin(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
+                        val py = (Math.cos(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
+                        xpBall.setPosition(xpBallSystem, Vector2i(enemy.transform.x.toInt() + px, enemy.transform.y.toInt() + py))
+                        xpBall.transform.sx = random.nextFloat() * 16.0f + 40.0f
+                        xpBall.transform.sy = random.nextFloat() * 16.0f + 40.0f
+                        xpBall.sprite.textureTileOffset.x = 5
+                        xpBall.sprite.textureTileOffset.y = 6
+                    }
+                }
+
                 enemy.sprite.visible = false
                 enemy.collider.setActive(false)
                 enemy.healthBar.sprite.visible = false
@@ -271,14 +291,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 }
             }
         }
-
-        for (item in levelItemSystem.getEntityList()) {
-            item!!.sprite.visible = item.cellX == player.cellX && item.cellY == player.cellY
-
-            if (item.pickedUp) {
-                item.sprite.visible = false
-            }
-        }
     }
 
     fun getFirstTilePos(): Vector2i {
@@ -315,6 +327,9 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
         levelItemSystem = EntitySystem(scene)
         scene.addSystem(levelItemSystem)
+
+        xpBallSystem = EntitySystem(scene)
+        scene.addSystem(xpBallSystem)
 
         torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
         torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture)
