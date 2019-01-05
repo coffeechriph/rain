@@ -75,8 +75,8 @@ class Item (val player: Player, val type: ItemType, val name: String, val stamin
             transform.y += Math.sin(time.toDouble()).toFloat() * 0.1f
 
             if (!beginPickup && !pickedUp) {
-                if (player.transform.x >= transform.x - 80 && player.transform.x <= transform.x + 80 &&
-                    player.transform.y >= transform.y - 80 && player.transform.y <= transform.y + 80) {
+                if (player.transform.x >= transform.x - 128 && player.transform.x <= transform.x + 128 &&
+                    player.transform.y >= transform.y - 128 && player.transform.y <= transform.y + 128) {
                     beginPickup = true
                     acc = 0.0000000000001
                 }
@@ -87,7 +87,7 @@ class Item (val player: Player, val type: ItemType, val name: String, val stamin
                 val ln = Math.sqrt((dx*dx+dy*dy))
                 transform.x += ((dx / ln) * acc).toFloat()
                 transform.y += ((dy / ln) * acc).toFloat()
-                if (acc < 3.4f) {
+                if (acc < 3.7f) {
                     acc += acc
                 }
 

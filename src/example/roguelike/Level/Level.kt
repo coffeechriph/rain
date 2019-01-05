@@ -230,7 +230,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
                 emitter.fireSingleBurst()
 
-                for (i in 0 until random.nextInt(5) + 1) {
+                for (i in 0 until container.numItems) {
                     val combination = ITEM_COMBINATIONS[random.nextInt(ITEM_COMBINATIONS.size)]
                     val name = combination.second[random.nextInt(combination.second.size)]
 
@@ -639,6 +639,93 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         }
     }
 
+    fun buildFirstRoom() {
+        random = Random(System.currentTimeMillis())
+        var x = 0
+        var y = 0
+        val firstRoomTiles = ArrayList<Vector2i>()
+        for (i in 0 until width*height) {
+            if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
+                map[x + (y*mapWidth)] = 1
+            }
+            else if (y == 1 && (x == 1 || x == width-2)) {
+                map[x + (y*mapWidth)] = 1
+            }
+            else {
+                firstRoomTiles.add(Vector2i(x, y))
+            }
+
+            x += 1
+            if (x >= width) {
+                x = 0
+                y += 1
+            }
+        }
+
+        val room = Room(firstRoomTiles, Vector4i(0,0,width,height),RoomType.DIRT_CAVE)
+        rooms.add(room)
+
+        mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
+        mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
+        mapDetailIndices = Array(mapWidth*mapHeight){ TileIndexNone }
+        populateTilemap()
+
+        // Set position of start and exit
+        val startRoom = rooms[0]
+        val endRoom = rooms[0]
+
+        startPosition = Vector2i(width/2, 1)
+        exitPosition = Vector2i(width/2, height/2)
+
+        mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, endRoom.type.ordinal)
+        generateLightsInRoom(room, width*2+height*2, false, torchSystem, torchMaterial)
+
+        // Put campfire next to exit on first level
+        val tx = exitPosition.x % width
+        val ty = exitPosition.y % height
+        val et = LightSource(exitPosition.x / width, exitPosition.y / height)
+        torchSystem.newEntity(et)
+                .attachTransformComponent()
+                .attachParticleEmitter(resourceFactory, 20, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 20.0f, 0.5f)
+                .build()
+        val etTransform = torchSystem.findTransformComponent(et.getId())
+        etTransform!!.setPosition(((tx*64) + 32).toFloat(), ((ty*64) - 32).toFloat(), 18.0f)
+        etTransform.sx = 64.0f
+        etTransform.sy = 64.0f
+
+        val emitter = torchSystem.findEmitterComponent(et.getId())!!
+        emitter.startSize = 20.0f
+        emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
+        emitter.endColor.set(0.8f, 0.2f, 0.0f, 0.0f)
+        emitter.enabled = false
+        room.campfire.add(et)
+
+        // Give the player a nice chest to start off with
+        val container = Container(0, 5)
+        containerSystem.newEntity(container)
+                .attachTransformComponent()
+                .attachSpriteComponent(itemMaterial)
+                .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
+                .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
+                .build()
+
+        val emitter2 = containerSystem.findBurstEmitterComponent (container.getId())!!
+        emitter2.burstFinished = true
+        emitter2.singleBurst = true
+        emitter2.particlesPerBurst = 5
+        emitter2.startColor = Vector4f(0.4f, 0.4f, 0.4f, 1.0f)
+        emitter2.endColor = Vector4f(0.4f, 0.4f, 0.4f, 0.0f)
+        emitter2.transform.z = 16.0f
+        emitter2.enabled = true
+
+        container.setPosition(Vector2i((tx+1)*64 + 32, ty*64 + 32))
+        container.collider.setDensity(1000.0f)
+        container.collider.setFriction(1.0f)
+        container.sprite.visible = true
+        container.collider.setActive(false)
+        room.containers.add(container)
+    }
+
     fun build(seed: Long, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
         random = Random(seed)
         generate(7)
@@ -684,7 +771,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             for (container in room.containers) {
                 val x = ((container.transform.x/64.0f)+(container.cellX*width)).toInt()
                 val y = ((container.transform.y/64.0f)+(container.cellY*height)).toInt()
-                println("$x, $y")
                 pixelData.put((x + y*mapWidth)*3, 127)
                 pixelData.put((x + y*mapWidth)*3+1, 100)
                 pixelData.put((x + y*mapWidth)*3+2, 0)
@@ -1292,7 +1378,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 return
             }
 
-            val container = Container(random.nextInt(2))
+            val container = Container(random.nextInt(2), random.nextInt(7) + 1)
             containerSystem.newEntity(container)
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)

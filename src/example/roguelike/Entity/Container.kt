@@ -5,7 +5,7 @@ import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
 
-class Container(val containerType: Int) : Entity() {
+class Container(val containerType: Int, val numItems: Int) : Entity() {
     var health = 0
     var open = false
     var looted = false
