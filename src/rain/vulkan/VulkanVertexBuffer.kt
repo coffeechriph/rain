@@ -53,12 +53,8 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
 
             vertexCount = vertices.size / vertexSize
             if (bufferState == VertexBufferState.STATIC) {
-                rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
                 rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
             } else {
-                if (vertices.size > dataBuffer.capacity()/4) {
-                    rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
-                }
                 rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
             }
         }

@@ -9,6 +9,7 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkBufferCopy
 import org.lwjgl.vulkan.VkBufferCreateInfo
 import rain.assertion
+import rain.log
 import java.nio.ByteBuffer
 
 internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuffer, private val setupQueue: Queue, private val resourceFactory: VulkanResourceFactory) {
@@ -19,6 +20,7 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
 
     private var memoryUsage: Int = 0
     private var bufferSize: Long = 0
+    private var bufferUsage = 0
 
     internal fun create(vmaAllocator: Long, bufferSize: Long, bufferUsage: Int, bufferMemoryUsage: Int, requiredFlags: Int = 0) {
         if (buffer > 0) {
@@ -44,10 +46,15 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
         buffer = pBuffer[0]
         allocation = pAllocation[0]
         memoryUsage = bufferMemoryUsage
+        this.bufferUsage = bufferUsage
         this.bufferSize = pBufferCreateInfo.size()
     }
 
     internal fun buffer(vmaAllocator: Long, bufferData: ByteBuffer) {
+        if (this.bufferSize < bufferData.remaining()) {
+            create(vmaAllocator, bufferData.remaining().toLong(), bufferUsage, memoryUsage)
+        }
+
         val pAllocInfo = VmaAllocationInfo.calloc()
         val pFlags = memAllocInt(1)
         vmaGetAllocationInfo(vmaAllocator, allocation, pAllocInfo)
