@@ -50,7 +50,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private lateinit var texture: Texture2d
     private lateinit var torchTexture: Texture2d
     private lateinit var torchMaterial: Material
-    private lateinit var torchSystem: EntitySystem<Entity>
+    private lateinit var torchSystem: EntitySystem<LightSource>
     private var firstBuild = true
 
     private var mapBackIndices = Array(0){ TileIndex(0, 0) }
@@ -72,6 +72,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
     private val activeEnemies = ArrayList<Enemy>()
     private val activeContainers = ArrayList<Container>()
+    private val activeLightSources = ArrayList<LightSource>()
 
     fun update(deltaTime: Float) {
         if (delayLightUpdate == 0) {
@@ -341,8 +342,19 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             container.collider.setActive(false)
         }
 
+        for (lights in activeLightSources) {
+            val sprite = torchSystem.findSpriteComponent(lights.getId())
+            if (sprite != null) {
+                sprite.visible = false
+            }
+
+            val emitter = torchSystem.findEmitterComponent(lights.getId())!!
+            emitter.enabled = false
+        }
+
         activeEnemies.clear()
         activeContainers.clear()
+        activeLightSources.clear()
 
         for (room in rooms) {
             val removeMe = ArrayList<Enemy>()
@@ -375,6 +387,25 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     activeContainers.add(container)
                 }
             }
+
+            for (light in room.torches) {
+                if (light.cellX == cellX && light.cellY == cellY) {
+                    val sprite = torchSystem.findSpriteComponent(light.getId())!!
+                    sprite.visible = true
+
+                    val emitter = torchSystem.findEmitterComponent(light.getId())!!
+                    emitter.enabled = true
+                    activeLightSources.add(light)
+                }
+            }
+
+            for (light in room.campfire) {
+                if (light.cellX == cellX && light.cellY == cellY) {
+                    val emitter = torchSystem.findEmitterComponent(light.getId())!!
+                    emitter.enabled = true
+                    activeLightSources.add(light)
+                }
+            }
         }
 
         val backIndices = Array(width*height){ TileIndexNone }
@@ -386,7 +417,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         var cx = 0.0f
         var cy = 0.0f
         collisionSystem.clear()
-        torchSystem.clear()
         for (i in 0 until width*height) {
             if (sx + sy*mapWidth >= map.size) {
                 break
@@ -410,44 +440,8 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 tr!!.sx = 64.0f
                 tr.sy = 64.0f
                 tr.z = 13.0f
-
-                if (backIndices[i].x == 1) {
-                    if (random.nextInt(10) < 2) {
-                        val et = Entity()
-                        torchSystem.newEntity(et)
-                                .attachTransformComponent()
-                                .attachSpriteComponent(torchMaterial)
-                                .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f, 0.5f)
-                                .build()
-                        val etTransform = torchSystem.findTransformComponent(et.getId())
-                        etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
-                        etTransform.sx = 48.0f
-                        etTransform.sy = 48.0f
-
-                        val emitter = torchSystem.findEmitterComponent(et.getId())!!
-                        emitter.startSize = 5.0f
-                        emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
-                        emitter.endColor.set(1.0f, 0.3f, 0.0f, 0.5f)
-                    }
-                }
             }
             else {
-                if (detailIndices[i].x == 0 && detailIndices[i].y == 6) {
-                    val et = Entity()
-                    torchSystem.newEntity(et)
-                            .attachTransformComponent()
-                            .attachParticleEmitter(resourceFactory, 20, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 20.0f, 0.5f)
-                            .build()
-                    val etTransform = torchSystem.findTransformComponent(et.getId())
-                    etTransform!!.setPosition(cx + 32, cy + 32, 18.0f)
-                    etTransform.sx = 64.0f
-                    etTransform.sy = 64.0f
-
-                    val emitter = torchSystem.findEmitterComponent(et.getId())!!
-                    emitter.startSize = 20.0f
-                    emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
-                    emitter.endColor.set(0.8f, 0.2f, 0.0f, 0.0f)
-                }
                 navMesh.map[i] = 0
             }
 
@@ -501,8 +495,8 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         }
 
         // Put out light values
-        for (torch in torchSystem.getEntityList()) {
-            val t = torchSystem.findTransformComponent(torch!!.getId())!!
+        for (light in activeLightSources) {
+            val t = torchSystem.findTransformComponent(light.getId())!!
             val x = (t.x / 64.0f).toInt()
             val y = (t.y / 64.0f).toInt()
             lightValues[x + y * width] = 1.0f
@@ -785,13 +779,13 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 if (r == 1){
                     mapDetailIndices[tile.x + tile.y * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
                 }
-                else {
-                    val c = random.nextInt(100)
+            }
 
-                    if (c == 5) {
-                        mapDetailIndices[tile.x + tile.y * mapWidth] = TileIndex(0, 6)
-                    }
-                }
+            for (campfire in room.campfire) {
+                val transform = torchSystem.findTransformComponent(campfire.getId())!!
+                val x = (transform.x / 64).toInt()
+                val y = (transform.y / 64).toInt()
+                mapDetailIndices[x + y * mapWidth] = TileIndex(0, 6)
             }
         }
 
@@ -1245,6 +1239,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             generateEnemiesInRoom(room, thisRoomEnemyCount, healthBarSystem, healthBarMaterial)
             val thisRoomContainerCount = room.tiles.size/72
             generateContainersInRoom(room, thisRoomContainerCount, containerSystem, itemMaterial)
+            generateLightsInRoom(room, lightCount, random.nextInt(10) == 1, torchSystem, torchMaterial)
         }
     }
 
@@ -1320,6 +1315,67 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             container.sprite.visible = false
             container.collider.setActive(false)
             room.containers.add(container)
+        }
+    }
+
+    private fun generateLightsInRoom(room: Room, torches: Int, campfire: Boolean, torchSystem: EntitySystem<LightSource>, torchMaterial: Material) {
+        var numTorches = 0
+        for (tile in room.tiles) {
+            val x = tile.x
+            val y = tile.y
+            if (y > 0 && map[x + (y-1)*mapWidth] == 1) {
+                val tx = x % width
+                val ty = y % height
+                val et = LightSource(x / width, y / height)
+                torchSystem.newEntity(et)
+                        .attachTransformComponent()
+                        .attachSpriteComponent(torchMaterial)
+                        .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f, 0.5f)
+                        .build()
+                val etTransform = torchSystem.findTransformComponent(et.getId())
+                etTransform!!.setPosition((tx*64 + 32).toFloat(), (ty*64 - 32).toFloat(), 18.0f)
+                etTransform.sx = 48.0f
+                etTransform.sy = 48.0f
+
+                val sprite = torchSystem.findSpriteComponent(et.getId())!!
+                sprite.visible = false
+
+                val emitter = torchSystem.findEmitterComponent(et.getId())!!
+                emitter.startSize = 5.0f
+                emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
+                emitter.endColor.set(1.0f, 0.3f, 0.0f, 0.5f)
+                emitter.enabled = false
+                room.torches.add(et)
+                numTorches++
+            }
+
+            if (numTorches >= torches) {
+                break
+            }
+        }
+
+        if (campfire) {
+            val tile = room.findNoneEdgeTile(random)
+            if (tile != null) {
+                val tx = tile.x % width
+                val ty = tile.y % height
+                val et = LightSource(tile.x / width, tile.y / height)
+                torchSystem.newEntity(et)
+                        .attachTransformComponent()
+                        .attachParticleEmitter(resourceFactory, 20, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 20.0f, 0.5f)
+                        .build()
+                val etTransform = torchSystem.findTransformComponent(et.getId())
+                etTransform!!.setPosition(((tx*64) + 32).toFloat(), ((ty*64) - 32).toFloat(), 18.0f)
+                etTransform.sx = 64.0f
+                etTransform.sy = 64.0f
+
+                val emitter = torchSystem.findEmitterComponent(et.getId())!!
+                emitter.startSize = 20.0f
+                emitter.startColor.set(1.0f, 0.9f, 0.2f, 1.0f)
+                emitter.endColor.set(0.8f, 0.2f, 0.0f, 0.0f)
+                emitter.enabled = false
+                room.campfire.add(et)
+            }
         }
     }
 }

@@ -2,10 +2,10 @@ package example.roguelike.Level
 
 import example.roguelike.Entity.Container
 import example.roguelike.Entity.Enemy
+import example.roguelike.Entity.LightSource
 import org.joml.Random
 import org.joml.Vector2i
 import org.joml.Vector4i
-import rain.api.entity.Entity
 
 enum class RoomType {
     DIRT_CAVE,
@@ -22,7 +22,8 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
 
     val enemies = ArrayList<Enemy>()
     val containers = ArrayList<Container>()
-    val torches = ArrayList<Entity>()
+    val torches = ArrayList<LightSource>()
+    val campfire = ArrayList<LightSource>()
 
     fun findNoneEdgeTile(rand: Random): Vector2i? {
         if (viableTiles.size == 0 && !allSlotsTaken) {

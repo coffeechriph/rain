@@ -12,8 +12,12 @@ mainClassName = "example.roguelike.MainKt"
 
 sourceCompatibility = '11'
 targetCompatibility= '11'
-project.ext.jomlVersion = "1.9.12"
-project.ext.lwjglVersion = "3.2.2-SNAPSHOT"
+
+ext {
+    gdxVersion = '1.9.9'
+    jomlVersion = "1.9.12"
+    lwjglVersion = "3.2.2-SNAPSHOT"
+}
 
 def os = System.getProperty("os.name").replace(' ', '').toLowerCase()
 println "Building on $os.."
@@ -32,10 +36,6 @@ else {
 repositories {
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-}
-
-ext {
-    gdxVersion = '1.9.9'
 }
 
 dependencies {
