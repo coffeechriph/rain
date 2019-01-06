@@ -101,8 +101,10 @@ class Inventory(val gui: Gui, val player: Player) {
     }
 
     fun addItem(item: Item) {
+        val hasItemHigherScoreThanEquipped = hasItemHigherScoreThanEquipped(item)
+        val usefulScore = if (hasItemHigherScoreThanEquipped > 0.0f) {" +"} else if (hasItemHigherScoreThanEquipped < 0.0f){" -"} else {""}
         val button = ToggleButton()
-        button.text = item.name
+        button.text = item.name + usefulScore
         button.x = 0.0f
         button.y = 20.0f + (itemButtons.size*25).toFloat()
         button.w = 230.0f
@@ -121,6 +123,45 @@ class Inventory(val gui: Gui, val player: Player) {
 
         headerText = container.addText("<Inventory: ${items.size}>", 0.0f, 0.0f)
         headerText.x = 250.0f - headerText.w/2.0f
+    }
+
+    private fun hasItemHigherScoreThanEquipped(item: Item): Int {
+        val itemScore = (item.agility + item.luck + item.strength + item.stamina).toFloat() / 4.0f
+        val compItem = when (item.type) {
+            ItemType.BOOTS -> if (equippedBoots != ItemNone) {
+                equippedBoots
+            }
+            else { ItemNone }
+            ItemType.CHEST -> if (equippedChest != ItemNone) {
+                equippedChest
+            }
+            else { ItemNone }
+            ItemType.GLOVES-> if (equippedGloves!= ItemNone) {
+                equippedGloves
+            }
+            else { ItemNone }
+            ItemType.HEAD -> if (equippedHead!= ItemNone) {
+                equippedHead
+            }
+            else { ItemNone }
+            ItemType.LEGS -> if (equippedLegs!= ItemNone) {
+                equippedLegs
+            }
+            else { ItemNone }
+            ItemType.MELEE -> if (equippedWeapon!= ItemNone) {
+                equippedWeapon
+            }
+            else { ItemNone }
+            ItemType.RANGED -> if (equippedWeapon!= ItemNone) {
+                equippedWeapon
+            }
+            else { ItemNone }
+            else -> { ItemNone }
+        }
+
+        val compItemScore = (compItem.agility + compItem.luck + compItem.strength + compItem.stamina).toFloat() / 4.0f
+        val r = itemScore - compItemScore
+        return if(r > 0.0f) { 1 } else if (r < 0.0f) { -1 } else { 0 }
     }
 
     fun update(input: Input) {
@@ -233,6 +274,12 @@ class Inventory(val gui: Gui, val player: Player) {
     }
 
     fun updateEquippedItems() {
+        for (i in 0 until items.size) {
+            val hasItemHigherScoreThanEquipped = hasItemHigherScoreThanEquipped(items[i])
+            val usefulScore = if (hasItemHigherScoreThanEquipped > 0.0f) {" +"} else if (hasItemHigherScoreThanEquipped < 0.0f){" -"} else {""}
+            itemButtons[i].text = items[i].name + usefulScore
+        }
+
         container.removeText(equippedWeaponText)
         container.removeText(equippedHeadText)
         container.removeText(equippedChestText)
