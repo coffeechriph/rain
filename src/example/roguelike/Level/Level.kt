@@ -2,11 +2,7 @@ package example.roguelike.Level
 
 import com.badlogic.gdx.physics.box2d.BodyDef
 import example.roguelike.Entity.*
-import org.joml.Random
-import org.joml.Vector2f
-import org.joml.Vector2i
-import org.joml.Vector4f
-import org.joml.Vector4i
+import org.joml.*
 import org.lwjgl.BufferUtils
 import org.lwjgl.stb.STBImageWrite
 import rain.api.entity.DirectionType
@@ -42,7 +38,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         private set
     private lateinit var lightMap: VertexBuffer
     private lateinit var lightVertices: FloatArray
-    private lateinit var lightValues: FloatArray
+    private lateinit var lightValues: Array<Vector4f>
     private lateinit var lightMapMaterial: Material
 
     private lateinit var tilemapMaterial: Material
@@ -336,9 +332,9 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         torchSystem = EntitySystem(scene)
         scene.addSystem(torchSystem)
 
-        lightVertices = FloatArray(width*height*3*6){0.0f}
-        lightValues = FloatArray(width*height){0.1f}
-        lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 1)))
+        lightVertices = FloatArray(width*height*6*6){0.0f}
+        lightValues = Array(width*height){Vector4f()}
+        lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 4)))
         lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture)
         val lightTransform = Transform()
         lightTransform.z = 17.0f
@@ -506,7 +502,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private fun generateLightMap() {
         // Clear old light values
         for (i in 0 until lightValues.size) {
-            lightValues[i] = 0.1f
+            lightValues[i] = Vector4f(0.0f, 0.0f, 0.0f, 0.1f)
         }
 
         // Put out light values
@@ -514,13 +510,24 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             val t = torchSystem.findTransformComponent(light.getId())!!
             val x = (t.x / 64.0f).toInt()
             val y = (t.y / 64.0f).toInt()
-            lightValues[x + y * width] = 1.0f
-            spreadLight(x, y, 1.0f)
+            lightValues[x + y * width] = Vector4f(light.color.x, light.color.y, light.color.z, 1.0f)
+            spreadLight(x, y, lightValues[x + y * width])
+        }
+
+        // Put out light values at XpBalls
+        for (xp in xpBallSystem.getEntityList()) {
+            if (xp!!.sprite.visible) {
+                val t = xpBallSystem.findTransformComponent(xp.getId())!!
+                val x = (t.x / 64.0f).toInt()
+                val y = (t.y / 64.0f).toInt()
+                lightValues[x + y * width] = Vector4f(0.0f, 0.4f, 0.0f, 0.5f)
+                spreadLight(x, y, lightValues[x + y * width])
+            }
         }
 
         val px = ((player.transform.x) / 64.0f).toInt()
         val py = ((player.transform.y) / 64.0f).toInt()
-        spreadLight(px, py, 0.5f)
+        spreadLight(px, py, Vector4f(0.0f, 0.0f, 0.0f, 0.75f))
 
         var x = 0.0f
         var y = 0.0f
@@ -533,37 +540,55 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
             val topleft = if (ix > 0 && iy > 0) { lightValues[(ix-1) + (iy-1)*width] } else { lightValues[i] }
             val left = if (ix > 0) { lightValues[(ix-1) + iy*width] } else { lightValues[i] }
-            val botleft = if (ix > 0 && iy < height-1) { lightValues[(ix-1) + (iy+1)*width] } else { lightValues[i] }
+            val botleft = if (ix > 0 && iy < height-1) { lightValues[(ix-1) + (iy+1)*width]} else { lightValues[i] }
 
-            val topRight = if (ix < width-1 && iy > 0) { lightValues[(ix+1) + (iy-1)*width] } else { lightValues[i] }
+            val topRight = if (ix < width-1 && iy > 0) { lightValues[(ix+1) + (iy-1)*width]} else { lightValues[i] }
             val right = if (ix < width-1) { lightValues[(ix+1) + iy*width] } else { lightValues[i] }
             val botRight = if (ix < width-1 && iy < height-1) { lightValues[(ix+1) + (iy+1)*width] } else { lightValues[i] }
 
             lightVertices[index] = x
             lightVertices[index+1] = y
-            lightVertices[index+2] = (lightValues[i]+topleft+left+top)*0.25f
+            lightVertices[index+2] = (lightValues[i].x+topleft.x+left.x+top.x)*0.25f
+            lightVertices[index+3] = (lightValues[i].y+topleft.y+left.y+top.y)*0.25f
+            lightVertices[index+4] = (lightValues[i].z+topleft.z+left.z+top.z)*0.25f
+            lightVertices[index+5] = (lightValues[i].w+topleft.w+left.w+top.w)*0.25f
 
-            lightVertices[index+3] = x
-            lightVertices[index+4] = y+64.0f
-            lightVertices[index+5] = (lightValues[i]+botleft+left+bot)*0.25f
-
-            lightVertices[index+6] = x+64.0f
+            lightVertices[index+6] = x
             lightVertices[index+7] = y+64.0f
-            lightVertices[index+8] = (lightValues[i]+botRight+right+bot)*0.25f
-
-            lightVertices[index+9] = x+64.0f
-            lightVertices[index+10] = y+64.0f
-            lightVertices[index+11] = (lightValues[i]+botRight+right+bot)*0.25f
+            lightVertices[index+8] = (lightValues[i].x+botleft.x+left.x+bot.x)*0.25f
+            lightVertices[index+9] = (lightValues[i].y+botleft.y+left.y+bot.y)*0.25f
+            lightVertices[index+10] = (lightValues[i].z+botleft.z+left.z+bot.z)*0.25f
+            lightVertices[index+11] = (lightValues[i].w+botleft.w+left.w+bot.w)*0.25f
 
             lightVertices[index+12] = x+64.0f
-            lightVertices[index+13] = y
-            lightVertices[index+14] = (lightValues[i]+topRight+right+top)*0.25f
+            lightVertices[index+13] = y+64.0f
+            lightVertices[index+14] = (lightValues[i].x+botRight.x+right.x+bot.x)*0.25f
+            lightVertices[index+15] = (lightValues[i].y+botRight.y+right.y+bot.y)*0.25f
+            lightVertices[index+16] = (lightValues[i].z+botRight.z+right.z+bot.z)*0.25f
+            lightVertices[index+17] = (lightValues[i].w+botRight.w+right.w+bot.w)*0.25f
 
-            lightVertices[index+15] = x
-            lightVertices[index+16] = y
-            lightVertices[index+17] = (lightValues[i]+topleft+left+top)*0.25f
+            lightVertices[index+18] = x+64.0f
+            lightVertices[index+19] = y+64.0f
+            lightVertices[index+20] = (lightValues[i].x+botRight.x+right.x+bot.x)*0.25f
+            lightVertices[index+21] = (lightValues[i].y+botRight.y+right.y+bot.y)*0.25f
+            lightVertices[index+22] = (lightValues[i].z+botRight.z+right.z+bot.z)*0.25f
+            lightVertices[index+23] = (lightValues[i].w+botRight.w+right.w+bot.w)*0.25f
 
-            index += 18
+            lightVertices[index+24] = x+64.0f
+            lightVertices[index+25] = y
+            lightVertices[index+26] = (lightValues[i].x+topRight.x+right.x+top.x)*0.25f
+            lightVertices[index+27] = (lightValues[i].y+topRight.y+right.y+top.y)*0.25f
+            lightVertices[index+28] = (lightValues[i].z+topRight.z+right.z+top.z)*0.25f
+            lightVertices[index+29] = (lightValues[i].w+topRight.w+right.w+top.w)*0.25f
+
+            lightVertices[index+30] = x
+            lightVertices[index+31] = y
+            lightVertices[index+32] = (lightValues[i].x+topleft.x+left.x+top.x)*0.25f
+            lightVertices[index+33] = (lightValues[i].y+topleft.y+left.y+top.y)*0.25f
+            lightVertices[index+34] = (lightValues[i].z+topleft.z+left.z+top.z)*0.25f
+            lightVertices[index+35] = (lightValues[i].w+topleft.w+left.w+top.w)*0.25f
+
+            index += 36
             x += 64.0f
             if (x >= width*64.0f) {
                 x = 0.0f
@@ -580,75 +605,80 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         lightMap.update(lightVertices)
     }
 
-    private fun spreadLight(x: Int, y: Int, value: Float) {
-        if (value <= 0.0f) {
+    private fun spreadLight(x: Int, y: Int, value: Vector4f) {
+        if (value.w <= 0.0f) {
             return
         }
 
         val att = 0.2f
-        if (x >= 0 && x < width && y >= 0 && y < height && lightValues[x + y * width] < value) {
-            lightValues[x + y * width] = value
+        if (x in 0..(width - 1) && y >= 0 && y < height && lightValues[x + y * width].w < value.w) {
+            val r = (lightValues[x + y * width].x + value.x) * 0.5f
+            val g = (lightValues[x + y * width].y + value.y) * 0.5f
+            val b = (lightValues[x + y * width].z + value.z) * 0.5f
+            val a = (lightValues[x + y * width].w + value.w) * 0.5f
+            lightValues[x + y * width] = Vector4f(r,g,b,a)
         }
 
         val mx = player.cellX * width + x
         val my = player.cellY * height + y
+        val color = Vector4f(value.x, value.y, value.z, value.w - att)
 
         if (x in 1..width) {
-            if (y in 0..(height - 1) && lightValues[(x-1) + y * width] < value - att) {
+            if (y in 0..(height - 1) && lightValues[(x-1) + y * width].w < color.w - att) {
                 if (map[(mx-1) + my * mapWidth] == 0) {
-                    spreadLight(x - 1, y, value - att)
+                    spreadLight(x - 1, y, color)
                 }
             }
 
             if (y in 1..height) {
-                if (lightValues[(x-1) + (y-1) * width] < value - att) {
+                if (lightValues[(x-1) + (y-1) * width].w < color.w - att) {
                     if (map[(mx-1) + (my-1) * mapWidth] == 0) {
-                        spreadLight(x - 1, y - 1, value - att)
+                        spreadLight(x - 1, y - 1, color)
                     }
                 }
             }
 
             if (y in 0..(height-2)) {
-                if (lightValues[(x-1) + (y+1) * width] < value - att) {
+                if (lightValues[(x-1) + (y+1) * width].w < color.w - att) {
                     if (map[(mx-1) + (my+1) * mapWidth] == 0) {
-                        spreadLight(x - 1, y + 1, value - att)
+                        spreadLight(x - 1, y + 1, color)
                     }
                 }
             }
         }
 
         if (x in 0..(width-2)) {
-            if (y in 0..(height-1) && lightValues[(x+1) + y * width] < value - att) {
+            if (y in 0..(height-1) && lightValues[(x+1) + y * width].w < color.w - att) {
                 if (map[(mx+1) + my * mapWidth] == 0) {
-                    spreadLight(x + 1, y, value - att)
+                    spreadLight(x + 1, y, color)
                 }
             }
 
-            if (y in 1..height && lightValues[(x+1) + (y-1) * width] < value - att) {
+            if (y in 1..height && lightValues[(x+1) + (y-1) * width].w < color.w - att) {
                 if (map[(mx+1) + (my-1) * mapWidth] == 0) {
-                    spreadLight(x + 1, y - 1, value - att)
+                    spreadLight(x + 1, y - 1, color)
                 }
             }
 
-            if (y in 0..(height-2) && lightValues[(x+1) + (y+1) * width] < value - att) {
+            if (y in 0..(height-2) && lightValues[(x+1) + (y+1) * width].w < color.w - att) {
                 if (map[(mx+1) + (my+1) * mapWidth] == 0) {
-                    spreadLight(x + 1, y + 1, value - att)
+                    spreadLight(x + 1, y + 1, color)
                 }
             }
         }
 
         if (x in 0..(width-1) && y in 1..height) {
-            if (lightValues[x + (y-1) * width] < value - att) {
+            if (lightValues[x + (y-1) * width].w < color.w - att) {
                 if (map[mx + (my-1) * mapWidth] == 0) {
-                    spreadLight(x, y - 1, value - att)
+                    spreadLight(x, y - 1, color)
                 }
             }
         }
 
         if (x in 0..(width-1) && y in 0..(height-2)) {
-            if (lightValues[x + (y+1) * width] < value - att) {
+            if (lightValues[x + (y+1) * width].w < color.w - att) {
                 if (map[mx + (my+1) * mapWidth] == 0) {
-                    spreadLight(x, y + 1, value - att)
+                    spreadLight(x, y + 1, color)
                 }
             }
         }
@@ -698,7 +728,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         // Put campfire next to exit on first level
         val tx = exitPosition.x % width
         val ty = exitPosition.y % height
-        val et = LightSource(exitPosition.x / width, exitPosition.y / height)
+        val et = LightSource(exitPosition.x / width, exitPosition.y / height, Vector3f(0.9f, 0.55f, 0.1f))
         torchSystem.newEntity(et)
                 .attachTransformComponent()
                 .attachParticleEmitter(resourceFactory, 20, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 20.0f, 0.5f)
@@ -1361,7 +1391,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                     .attachBoxColliderComponent(width = 60.0f, height = 40.0f, aliveOnStart = false)
                     .build()
 
-            val levelFactor = player.currentLevel*player.currentLevel
+            val levelFactor = (player.currentLevel*1.5f).toInt()
             kracGuy.strength = (random.nextInt(levelFactor) + levelFactor*5 * kracGuy.strengthFactor).toInt()
             kracGuy.agility = (random.nextInt(levelFactor) + levelFactor*2 * kracGuy.agilityFactor).toInt()
             kracGuy.health = (100 + random.nextInt(levelFactor) * kracGuy.healthFactor).toInt()
@@ -1427,7 +1457,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             if (y > 0 && map[x + (y-1)*mapWidth] == 1) {
                 val tx = x % width
                 val ty = y % height
-                val et = LightSource(x / width, y / height)
+                val et = LightSource(x / width, y / height, Vector3f(0.9f, 0.55f, 0.1f))
                 torchSystem.newEntity(et)
                         .attachTransformComponent()
                         .attachSpriteComponent(torchMaterial)
@@ -1460,7 +1490,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             if (tile != null) {
                 val tx = tile.x % width
                 val ty = tile.y % height
-                val et = LightSource(tile.x / width, tile.y / height)
+                val et = LightSource(tile.x / width, tile.y / height, Vector3f(0.9f, 0.55f, 0.1f))
                 torchSystem.newEntity(et)
                         .attachTransformComponent()
                         .attachParticleEmitter(resourceFactory, 20, 40.0f, 0.7f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 20.0f, 0.5f)

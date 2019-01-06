@@ -32,14 +32,15 @@ class Player : Entity() {
     lateinit var animator: Animator
     lateinit var collider: Collider
 
-    var health = 100
-    var stamina = 1
-    var strength = 1
-    var agility = 1
-    var luck = 1
+    var health = 107
+    var stamina = 5
+    var strength = 5
+    var agility = 5
+    var luck = 5
     lateinit var level: Level
 
     var baseHealth = 100
+        private set
     var healthDamaged = 0
         set (value) {
             field = value
@@ -47,17 +48,21 @@ class Player : Entity() {
             inCombat = true
             regenHealthTimeout = 0
         }
-    val baseStamina = 5
-    val baseStrength = 5
-    val baseAgility = 5
-    val baseLuck = 5
+    var baseStamina = 5
+        private set
+    var baseStrength = 5
+        private set
+    var baseAgility = 5
+        private set
+    var baseLuck = 5
+        private set
 
-    var currentLevel = 1
+    var currentLevel = 0
     private var regenHealthTimeout = 0
     private var inCombatCooldown = 0
     private var inCombat = false
 
-    var playerXpLevel = 1
+    var playerXpLevel = 0
         private set
     var xp = 0
         private set
@@ -70,6 +75,11 @@ class Player : Entity() {
             this.xp = 0
             playerXpLevel += 1
             xpUntilNextLevel += xpUntilNextLevel
+
+            baseStamina = (baseStamina.toFloat() * 1.3f).toInt()
+            baseStrength = (baseStrength.toFloat() * 1.2f).toInt()
+            baseAgility = (baseAgility.toFloat() * 1.2f).toInt()
+            baseLuck = (baseLuck.toFloat() * 1.1f).toInt()
         }
         inventory.updateEquippedItems()
     }

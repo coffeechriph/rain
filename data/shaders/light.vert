@@ -1,9 +1,9 @@
 #version 420 core
 
 layout(location = 0) in vec2 pos;
-layout(location = 1) in float light;
+layout(location = 1) in vec4 light;
 
-layout(location = 0) out float Light;
+layout(location = 0) out vec4 Light;
 
 layout(push_constant) uniform ModelMatrix {
     mat4 matrix;

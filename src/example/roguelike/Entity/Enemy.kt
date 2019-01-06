@@ -82,7 +82,7 @@ open class Enemy(val random: Random) : Entity() {
                 damage *= random.nextInt(4) + 1.5f
             }
 
-            player.healthDamaged += damage.toInt()
+            player.healthDamaged += Math.max(1, damage.toInt())
 
             // TODO: Make this time based
             attackTimeout = attackTimeoutValue

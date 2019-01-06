@@ -158,7 +158,7 @@ class Inventory(val gui: Gui, val player: Player) {
                 updateEquippedItems()
             }
         }
-        else if(input.keyState(Input.Key.KEY_X) == Input.InputState.PRESSED && selectedItemIndex < items.size) {
+        else if(input.keyState(Input.Key.KEY_X) == Input.InputState.PRESSED && selectedItemIndex >= 0 && selectedItemIndex < items.size) {
             selectedItem = items[selectedItemIndex]
             if (selectedItem != ItemNone) {
                 if (selectedItem == equippedWeapon) {
