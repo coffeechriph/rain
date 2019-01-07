@@ -34,8 +34,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         private set
     var frontTilemap = Tilemap()
         private set
-    var detailTilemap = Tilemap()
-        private set
     private lateinit var lightMap: VertexBuffer
     private lateinit var lightVertices: FloatArray
     private lateinit var lightValues: Array<Vector4f>
@@ -51,7 +49,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
     private var mapBackIndices = Array(0){ TileIndex(0, 0) }
     private var mapFrontIndices = Array(0){ TileIndex(0, 0) }
-    private var mapDetailIndices = Array(0) { TileIndexNone }
     private var rooms = ArrayList<Room>()
     private lateinit var random: Random
     private lateinit var enemySystem: EntitySystem<Enemy>
@@ -312,16 +309,16 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
         enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
-        enemySystem = scene.newSystem<Enemy>()
+        enemySystem = scene.newSystem()
 
-        collisionSystem = scene.newSystem<Entity>()
-        containerSystem = scene.newSystem<Container>()
-        levelItemSystem = scene.newSystem<Item>()
-        xpBallSystem = scene.newSystem<XpBall>()
+        collisionSystem = scene.newSystem()
+        containerSystem = scene.newSystem()
+        levelItemSystem = scene.newSystem()
+        xpBallSystem = scene.newSystem()
 
         torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
         torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture)
-        torchSystem = scene.newSystem<LightSource>()
+        torchSystem = scene.newSystem()
 
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
@@ -412,7 +409,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
         val backIndices = Array(width*height){ TileIndexNone }
         val frontIndices = Array(width*height){ TileIndexNone }
-        var detailIndices = Array(width*height){ TileIndexNone }
         var sx = cellX * width
         var sy = cellY * height
 
@@ -426,7 +422,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
             backIndices[i] = mapBackIndices[sx + sy*mapWidth]
             frontIndices[i] = mapFrontIndices[sx + sy*mapWidth]
-            detailIndices[i] = mapDetailIndices[sx + sy*mapWidth]
 
             if (map[sx + sy*mapWidth] == 1) {
                 navMesh.map[i] = 127
@@ -473,12 +468,9 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         if (firstBuild) {
             backTilemap.create(resourceFactory, tilemapMaterial, width, height, 64.0f, 64.0f, backIndices)
             frontTilemap.create(resourceFactory, tilemapMaterial, width, height, 64.0f, 64.0f, frontIndices)
-            detailTilemap.create(resourceFactory, tilemapMaterial, width, height, 64.0f, 64.0f, detailIndices)
             backTilemap.update(backIndices)
             frontTilemap.update(frontIndices)
-            detailTilemap.update(detailIndices)
             backTilemap.transform.setPosition(0.0f, 0.0f, 1.0f)
-            detailTilemap.transform.setPosition(0.0f, 0.0f, 1.01f)
             frontTilemap.transform.setPosition(0.0f, 0.0f, 10.0f)
 
             firstBuild = false
@@ -486,7 +478,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         else {
             backTilemap.update(backIndices)
             frontTilemap.update(frontIndices)
-            detailTilemap.update(detailIndices)
         }
     }
 
@@ -708,7 +699,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
-        mapDetailIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         populateTilemap()
 
         // Set position of start and exit
@@ -775,7 +765,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
         mapBackIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         mapFrontIndices = Array(mapWidth*mapHeight){ TileIndexNone }
-        mapDetailIndices = Array(mapWidth*mapHeight){ TileIndexNone }
         populateTilemap()
 
         // Set position of start and exit
@@ -904,15 +893,8 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
                 val r = random.nextInt(20)
                 if (r == 1){
-                    mapDetailIndices[tile.x + tile.y * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
+                    mapBackIndices[tile.x + tile.y * mapWidth] = TileIndex(random.nextInt(3) + 4, tileY)
                 }
-            }
-
-            for (campfire in room.campfire) {
-                val transform = torchSystem.findTransformComponent(campfire.getId())!!
-                val x = (transform.x / 64).toInt()
-                val y = (transform.y / 64).toInt()
-                mapDetailIndices[x + y * mapWidth] = TileIndex(0, 6)
             }
         }
 
@@ -1063,7 +1045,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
 
     private fun findNearestNeighbourOfRooms() {
         for (room in rooms) {
-            while (room.neighbourRooms.size < 3) {
+            while (room.neighbourRooms.size < 4) {
                 var nearestRoom: Room? = null
                 var shortestDist = Double.MAX_VALUE
                 for (otherRoom in rooms) {
@@ -1110,7 +1092,6 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     }
 
     private fun connectRooms() {
-
         for (room in rooms) {
             for (neighbour in room.neighbourRooms) {
                 var shortestLength = Int.MAX_VALUE

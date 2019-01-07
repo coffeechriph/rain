@@ -74,7 +74,6 @@ class GameState(stateManager: StateManager): State(stateManager) {
         level.buildFirstRoom()
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)
-        scene.addTilemap(level.detailTilemap)
 
         camera = Camera(Vector2f(0.0f, 20.0f))
         scene.setActiveCamera(camera)
