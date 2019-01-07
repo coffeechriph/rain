@@ -326,7 +326,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 4)))
-        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture, true, true, BlendMode.BLEND_FACTOR_SRC_COLOR, BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
+        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture, true, true, BlendMode.BLEND_FACTOR_DST_COLOR, BlendMode.BLEND_FACTOR_ZERO)
         val lightTransform = Transform()
         lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
@@ -493,14 +493,19 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
     private fun generateLightMap() {
         // Clear old light values
         for (i in 0 until lightValues.size) {
-            lightValues[i] = Vector4f(0.0f, 0.0f, 0.0f, 0.1f)
+            lightValues[i] = Vector4f(0.48f, 0.62f, 0.69f, 0.2f)
         }
 
         // Put out light values
         for (light in activeLightSources) {
             val t = torchSystem.findTransformComponent(light.getId())!!
-            val x = (t.x / 64.0f).toInt()
-            val y = (t.y / 64.0f).toInt()
+            var x = ((t.x-32.0f) / 64.0f).toInt()
+            var y = ((t.y-32.0f) / 64.0f).toInt()
+
+            if (x < 0) { x = 0 }
+            else if (x > width) { x = width - 1 }
+            if (y < 0) { y = 0 }
+            else if (y > height) { y = height - 1 }
             lightValues[x + y * width] = Vector4f(light.color.x, light.color.y, light.color.z, 0.9f)
             spreadLight(x, y, lightValues[x + y * width])
         }
@@ -511,14 +516,14 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
                 val t = xpBallSystem.findTransformComponent(xp.getId())!!
                 val x = (t.x / 64.0f).toInt()
                 val y = (t.y / 64.0f).toInt()
-                lightValues[x + y * width] = Vector4f(0.0f, 0.4f, 0.0f, 0.5f)
+                lightValues[x + y * width] = Vector4f(0.0f, 1.0f, 0.0f, 1.0f)
                 spreadLight(x, y, lightValues[x + y * width])
             }
         }
 
         val px = ((player.transform.x) / 64.0f).toInt()
         val py = ((player.transform.y) / 64.0f).toInt()
-        spreadLight(px, py, Vector4f(0.0f, 0.0f, 0.0f, 0.75f))
+        spreadLight(px, py, Vector4f(0.48f, 0.62f, 0.69f, 1.0f))
 
         var x = 0.0f
         var y = 0.0f
