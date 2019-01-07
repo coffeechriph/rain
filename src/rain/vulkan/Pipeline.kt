@@ -49,12 +49,12 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
 
         // TODO: Alpha blending should not be enabled by default
         val colorWriteMask = VkPipelineColorBlendAttachmentState.calloc(1)
-                .blendEnable(true)
-                .srcColorBlendFactor(VK_BLEND_FACTOR_SRC_ALPHA)
-                .dstColorBlendFactor(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
+                .blendEnable(material.blendEnabled)
+                .srcColorBlendFactor(material.srcColor.value)
+                .dstColorBlendFactor(material.dstColor.value)
                 .colorBlendOp(VK_BLEND_OP_ADD)
-                .srcAlphaBlendFactor(VK_BLEND_FACTOR_ONE)
-                .dstAlphaBlendFactor(VK_BLEND_FACTOR_ZERO)
+                .srcAlphaBlendFactor(material.srcAlpha.value)
+                .dstAlphaBlendFactor(material.dstAlpha.value)
                 .alphaBlendOp(VK_BLEND_OP_ADD)
                 .colorWriteMask(VK_COLOR_COMPONENT_R_BIT or VK_COLOR_COMPONENT_G_BIT or VK_COLOR_COMPONENT_B_BIT or VK_COLOR_COMPONENT_A_BIT) // <- RGBA
 

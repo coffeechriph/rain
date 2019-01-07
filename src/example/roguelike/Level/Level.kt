@@ -299,7 +299,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         maxCellY = mapHeight / height
         texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
-        tilemapMaterial = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture)
+        tilemapMaterial = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, enableBlend = false)
         itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture)
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
@@ -326,7 +326,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 4)))
-        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture)
+        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture, true, true, BlendMode.BLEND_FACTOR_SRC_COLOR, BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
         val lightTransform = Transform()
         lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
@@ -501,7 +501,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             val t = torchSystem.findTransformComponent(light.getId())!!
             val x = (t.x / 64.0f).toInt()
             val y = (t.y / 64.0f).toInt()
-            lightValues[x + y * width] = Vector4f(light.color.x, light.color.y, light.color.z, 1.0f)
+            lightValues[x + y * width] = Vector4f(light.color.x, light.color.y, light.color.z, 0.9f)
             spreadLight(x, y, lightValues[x + y * width])
         }
 
@@ -601,7 +601,7 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
             return
         }
 
-        val att = 0.2f
+        val att = 0.22f
         if (x in 0..(width - 1) && y >= 0 && y < height && lightValues[x + y * width].w < value.w) {
             val r = (lightValues[x + y * width].x + value.x) * 0.5f
             val g = (lightValues[x + y * width].y + value.y) * 0.5f

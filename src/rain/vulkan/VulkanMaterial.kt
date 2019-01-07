@@ -2,6 +2,7 @@ package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.vulkan.VK10
+import rain.api.gfx.BlendMode
 import rain.api.gfx.Material
 import rain.api.gfx.Texture2d
 import rain.log
@@ -16,7 +17,12 @@ internal class VulkanMaterial(vk: Vk,
                               internal val vertexShader: ShaderModule,
                               internal val fragmentShader: ShaderModule,
                               internal val texture2d: Array<Texture2d>,
-                              val depthWriteEnabled: Boolean = true) : Material {
+                              val depthWriteEnabled: Boolean = true,
+                              val blendEnabled: Boolean = true,
+                              val srcColor: BlendMode,
+                              val dstColor: BlendMode,
+                              val srcAlpha: BlendMode,
+                              val dstAlpha: BlendMode) : Material {
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
     internal val sceneData = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
