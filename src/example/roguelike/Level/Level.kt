@@ -312,25 +312,16 @@ class Level(val player: Player, val resourceFactory: ResourceFactory) {
         enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
         enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
-        enemySystem = EntitySystem(scene)
-        scene.addSystem(enemySystem)
+        enemySystem = scene.newSystem<Enemy>()
 
-        collisionSystem = EntitySystem(scene)
-        scene.addSystem(collisionSystem)
-
-        containerSystem = EntitySystem(scene)
-        scene.addSystem(containerSystem)
-
-        levelItemSystem = EntitySystem(scene)
-        scene.addSystem(levelItemSystem)
-
-        xpBallSystem = EntitySystem(scene)
-        scene.addSystem(xpBallSystem)
+        collisionSystem = scene.newSystem<Entity>()
+        containerSystem = scene.newSystem<Container>()
+        levelItemSystem = scene.newSystem<Item>()
+        xpBallSystem = scene.newSystem<XpBall>()
 
         torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
         torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture)
-        torchSystem = EntitySystem(scene)
-        scene.addSystem(torchSystem)
+        torchSystem = scene.newSystem<LightSource>()
 
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}

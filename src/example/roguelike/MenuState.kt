@@ -69,7 +69,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         bannerMaterial = resourceFactory.createMaterial("bannerMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", bannerTexture)
         bannerEntity = Entity()
 
-        bannerEntitySystem = EntitySystem(scene)
+        bannerEntitySystem = scene.newSystem()
         bannerEntitySystem.newEntity(bannerEntity)
                 .attachTransformComponent()
                 .attachSpriteComponent(bannerMaterial)
@@ -81,8 +81,6 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         bannerTransform.x = 1280.0f / 2.0f
         bannerTransform.y = 128.0f
         bannerTransform.z = 1.0f
-
-        scene.addSystem(bannerEntitySystem)
     }
 
     override fun update(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input, deltaTime: Float) {

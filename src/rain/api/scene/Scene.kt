@@ -25,11 +25,10 @@ class Scene {
     private var camera = Camera(Vector2f(0.0f, 20.0f))
     private lateinit var emitterMaterial: Material
 
-    // TODO: Instead of having this method - we could streamline usage
-    // by having a 'newSystem' method which creates a entitySystem
-    // populated with the reference to the scene...
-    fun<T: Entity> addSystem(system: EntitySystem<T>) {
+    fun<T: Entity> newSystem(): EntitySystem<T> {
+        val system = EntitySystem<T>(this)
         entitySystems.add(system as EntitySystem<Entity>)
+        return system
     }
 
     fun addTilemap(tilemap: Tilemap) {
