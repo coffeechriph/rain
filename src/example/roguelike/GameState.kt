@@ -48,7 +48,6 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .attachTransformComponent()
                 .attachSpriteComponent(mobMaterial)
                 .attachAnimatorComponent()
-                .attachBoxColliderComponent(width = 24.0f, height = 32.0f)
                 .build()
 
         level = Level(player, resourceFactory)
@@ -78,14 +77,6 @@ class GameState(stateManager: StateManager): State(stateManager) {
         camera = Camera(Vector2f(0.0f, 20.0f))
         scene.setActiveCamera(camera)
 
-        player.map = level.map
-        player.width = level.width
-        player.height = level.height
-        player.mapWidth = level.mapWidth
-        player.mapHeight = level.mapHeight
-        player.maxCellX = level.maxCellX
-        player.maxCellY = level.maxCellY
-        player.tileWidth = 64
         player.setPosition(level.getFirstTilePos())
         level.switchCell(resourceFactory, player.cellX, player.cellY)
 

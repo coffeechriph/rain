@@ -67,6 +67,20 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
     private val activeEnemies = ArrayList<Enemy>()
     private val activeContainers = ArrayList<Container>()
     private val activeLightSources = ArrayList<LightSource>()
+    private val collisionBoxes = ArrayList<Vector4i>()
+
+    fun collides(x: Float, y: Float, w: Float, h: Float): Boolean {
+        val w2 = w * 0.5f
+        val h2 = h * 0.5f
+        for (box in collisionBoxes) {
+            if (x + w2 >= box.x && x - w2 <= box.x + box.z &&
+                y + h2 >= box.y && y - h2 <= box.y + box.w) {
+                return true
+            }
+        }
+
+        return false
+    }
 
     fun update(deltaTime: Float) {
         if (delayLightUpdate == 0) {
@@ -415,6 +429,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         var cx = 0.0f
         var cy = 0.0f
         collisionSystem.clear()
+        collisionBoxes.clear()
         for (i in 0 until width*height) {
             if (sx + sy*mapWidth >= map.size) {
                 break
@@ -425,6 +440,8 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
             if (map[sx + sy*mapWidth] == 1) {
                 navMesh.map[i] = 127
+                collisionBoxes.add(Vector4i(cx.toInt(), cy.toInt(), 64, 64))
+
                 val e = Entity()
                 collisionSystem.newEntity(e)
                         .attachTransformComponent()
@@ -514,7 +531,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
         val px = ((player.transform.x) / 64.0f).toInt()
         val py = ((player.transform.y) / 64.0f).toInt()
-        spreadLight(px, py, Vector4f(0.48f, 0.62f, 0.69f, 1.0f))
+        spreadLight(px, py, Vector4f(0.48f, 0.62f, 0.69f, 0.75f))
 
         var x = 0.0f
         var y = 0.0f
@@ -705,7 +722,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         val startRoom = rooms[0]
         val endRoom = rooms[0]
 
-        startPosition = Vector2i(width/2, 1)
+        startPosition = Vector2i(width/2, 3)
         exitPosition = Vector2i(width/2, height/2)
 
         mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, endRoom.type.ordinal)

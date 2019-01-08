@@ -17,20 +17,11 @@ class Player : Entity() {
         private set
     var cellY = 0
         private set
-    var map = IntArray(0)
-    var mapWidth: Int = 0
-    var mapHeight: Int = 0
-    var width: Int = 0
-    var height: Int = 0
-    var tileWidth: Int = 0
-    var maxCellX = 0
-    var maxCellY = 0
     lateinit var inventory: Inventory
     lateinit var attack: Attack
     lateinit var transform: Transform
     lateinit var sprite: Sprite
     lateinit var animator: Animator
-    lateinit var collider: Collider
 
     var health = 107
     var stamina = 5
@@ -87,7 +78,8 @@ class Player : Entity() {
     fun setPosition(pos: Vector2i) {
         cellX = pos.x / 1280
         cellY = pos.y / 768
-        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%768)
+        transform.x = pos.x.toFloat()%1280
+        transform.y = pos.y.toFloat()%768
         playerMovedCell = true
     }
 
@@ -95,7 +87,6 @@ class Player : Entity() {
         sprite = system.findSpriteComponent(getId())!!
         transform = system.findTransformComponent(getId())!!
         animator = system.findAnimatorComponent(getId())!!
-        collider = system.findColliderComponent(getId())!!
         transform.setScale(64.0f,64.0f)
 
         animator.addAnimation("idle", 0, 0, 0, 0.0f)
@@ -134,43 +125,8 @@ class Player : Entity() {
             downActive = false
         }
 
-        var velX = 0.0f
-        var velY = 0.0f
-        if (leftActive) {
-            velX -= 100.0f
-        }
-
-        if (rightActive) {
-            velX += 100.0f
-        }
-
-        if (upActive) {
-            velY -= 100.0f
-        }
-
-        if (downActive) {
-            velY += 100.0f
-        }
-
-        if (velX < 0.0f) {
-            animator.setAnimation("walk_left")
-        }
-        else if (velX > 0.0f) {
-            animator.setAnimation("walk_right")
-        }
-        else if (velY < 0.0f) {
-            animator.setAnimation("walk_up")
-        }
-        else if (velY > 0.0f) {
-            animator.setAnimation("walk_down")
-        }
-
-        if (velX == 0.0f && velY == 0.0f) {
-            animator.setAnimation("idle")
-        }
-
-        collider.setVelocity(velX, velY)
-        keepPlayerWithinBorder<Player>()
+        movement()
+        keepPlayerWithinBorder()
 
         if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {
             inventory.visible = !inventory.visible
@@ -202,6 +158,52 @@ class Player : Entity() {
         }
     }
 
+    private fun movement() {
+        var velX = 0.0f
+        var velY = 0.0f
+        val c = (1.0f / 60.0f)
+        if (leftActive) {
+            velX -= 100.0f * c
+        }
+
+        if (rightActive) {
+            velX += 100.0f * c
+        }
+
+        if (upActive) {
+            velY -= 100.0f * c
+        }
+
+        if (downActive) {
+            velY += 100.0f * c
+        }
+
+        if (level.collides(transform.x + velX, transform.y, 32.0f, 32.0f)) {
+            velX = 0.0f
+        }
+
+        if (level.collides(transform.x, transform.y + velY, 32.0f, 32.0f)) {
+            velY = 0.0f
+        }
+
+        if (velX < 0.0f) {
+            animator.setAnimation("walk_left")
+        } else if (velX > 0.0f) {
+            animator.setAnimation("walk_right")
+        } else if (velY < 0.0f) {
+            animator.setAnimation("walk_up")
+        } else if (velY > 0.0f) {
+            animator.setAnimation("walk_down")
+        }
+
+        if (velX == 0.0f && velY == 0.0f) {
+            animator.setAnimation("idle")
+        }
+
+        transform.x += velX
+        transform.y += velY
+    }
+
     private fun setDirectionBasedOnInput(input: Input) {
         if (input.keyState(Input.Key.KEY_A) == Input.InputState.PRESSED) {
             leftActive = true
@@ -229,35 +231,35 @@ class Player : Entity() {
     }
 
     // TODO: This method uses constant window dimensions
-    private fun <T : Entity> keepPlayerWithinBorder() {
-        if (collider.getPosition().x < 0 && leftActive) {
+    private fun keepPlayerWithinBorder() {
+        if (transform.x < 0 && leftActive) {
             if (cellX > 0) {
-                collider.setPosition(1280.0f, collider.getPosition().y)
+                transform.x = 1280.0f
 
                 playerMovedCell = true
                 cellX -= 1
             }
         }
-        else if (collider.getPosition().x > 1280 && rightActive) {
+        else if (transform.x > 1280 && rightActive) {
             if (cellX < level.maxCellX) {
-                collider.setPosition(0.0f, collider.getPosition().y)
+                transform.x = 0.0f
 
                 playerMovedCell = true
                 cellX += 1
             }
         }
 
-        if (collider.getPosition().y < 0 && upActive) {
+        if (transform.y < 0 && upActive) {
             if (cellY > 0) {
-                collider.setPosition(collider.getPosition().x, 768.0f)
+                transform.y = 768.0f
 
                 playerMovedCell = true
                 cellY -= 1
             }
         }
-        else if (collider.getPosition().y > 768 && downActive) {
+        else if (transform.y > 768 && downActive) {
             if (cellY < level.maxCellY) {
-                collider.setPosition(collider.getPosition().x, 0.0f)
+                transform.y = 0.0f
 
                 playerMovedCell = true
                 cellY += 1
