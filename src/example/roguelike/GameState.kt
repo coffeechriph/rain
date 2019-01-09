@@ -108,11 +108,11 @@ class GameState(stateManager: StateManager): State(stateManager) {
 
         if (player.transform.x + player.cellX*level.width*64 >= level.exitPosition.x*64 - 32 && player.transform.x + player.cellX*level.width*64 <= level.exitPosition.x*64 + 32 &&
                 player.transform.y + player.cellY*level.height*64 >= level.exitPosition.y*64 - 32 && player.transform.y + player.cellY*level.height*64 <= level.exitPosition.y*64 + 32) {
+            player.currentLevel += 1
             level.build(System.currentTimeMillis(), healthBarSystem, healthMaterial)
             player.setPosition(level.getFirstTilePos())
             level.switchCell(resourceFactory, player.cellX, player.cellY)
 
-            player.currentLevel += 1
             container.removeText(currentLevelText)
             currentLevelText = container.addText("Current Level: ${player.currentLevel}", 0.0f, 0.0f, background = true)
             currentLevelText.x += currentLevelText.w/2.0f

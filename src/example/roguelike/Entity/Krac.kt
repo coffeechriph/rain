@@ -13,6 +13,7 @@ class Krac(random: Random, player: Player): Enemy(random, player) {
         healthFactor = 1.5f
         agilityFactor = 0.1f
         walkingSpeedFactor = 0.55f
+        attackSpeed = 0.007f
     }
 
     override fun onCollision(entity: Entity) {

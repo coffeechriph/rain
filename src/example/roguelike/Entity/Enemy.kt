@@ -8,7 +8,7 @@ import rain.api.entity.*
 import rain.api.scene.Scene
 import kotlin.math.sin
 
-open class Enemy(val random: Random, val player: Player) : Entity() {
+open class Enemy(private val random: Random, val player: Player) : Entity() {
     var cellX = 0
         private set
     var cellY = 0
@@ -38,6 +38,7 @@ open class Enemy(val random: Random, val player: Player) : Entity() {
 
     protected var attackTimeoutValue = 30
     protected var attackTimeout = 0
+    protected var attackSpeed = 0.01f
     var walkingSpeedFactor = 1.0f
         protected set
     var pushBack = 0
@@ -51,6 +52,9 @@ open class Enemy(val random: Random, val player: Player) : Entity() {
         private set
     private var prepareAttack = 0.0f
     private var attackArea = Vector4f()
+    var attackAreaVisual = Entity()
+    lateinit var attackAreaVisualSprite: Sprite
+    lateinit var attackAreaVisualTransform: Transform
 
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {
@@ -85,13 +89,46 @@ open class Enemy(val random: Random, val player: Player) : Entity() {
             attacking = true
             attackTimeout = attackTimeoutValue
 
-            val px = ((player.transform.x - transform.x) / 64).toInt()
-            val py = ((player.transform.y - transform.y) / 64).toInt()
-            when {
-                px > 0 -> direction = Direction.RIGHT
-                px < 0 -> direction = Direction.LEFT
-                py > 0 -> direction = Direction.UP
-                py < 0 -> direction = Direction.DOWN
+            var px = (player.transform.x - transform.x)
+            var py = (player.transform.y - transform.y)
+            val ln = Math.sqrt((px*px+py*py).toDouble()).toFloat()
+            px /= ln
+            py /= ln
+            val inCharge = Math.abs(px) > Math.abs(py)
+            if (inCharge) {
+                direction = if(px > 0){
+                    Direction.RIGHT
+                } else {
+                    Direction.LEFT
+                }
+            }
+            else {
+                direction = if(py > 0) {
+                    Direction.DOWN
+                } else {
+                    Direction.UP
+                }
+            }
+
+            when (direction) {
+                Direction.LEFT -> attackArea = Vector4f(transform.x - 64.0f, transform.y, 128.0f, 48.0f)
+                Direction.RIGHT -> attackArea = Vector4f(transform.x, transform.y, 144.0f, 48.0f)
+                Direction.UP -> attackArea = Vector4f(transform.x, transform.y - 64.0f, 48.0f, 128.0f)
+                Direction.DOWN -> attackArea = Vector4f(transform.x, transform.y, 48.0f, 128.0f)
+            }
+
+            attackAreaVisualTransform.x = transform.x
+            attackAreaVisualTransform.y = transform.y
+            attackAreaVisualTransform.z = 1.1f
+            attackAreaVisualSprite.visible = true
+
+            if (direction == Direction.LEFT || direction == Direction.RIGHT) {
+                attackAreaVisualTransform.sy = attackArea.w
+                attackAreaVisualTransform.sx = 0.0f
+            }
+            else if (direction == Direction.UP || direction == Direction.DOWN) {
+                attackAreaVisualTransform.sy = 0.0f
+                attackAreaVisualTransform.sx = attackArea.z
             }
         }
     }
@@ -116,37 +153,52 @@ open class Enemy(val random: Random, val player: Player) : Entity() {
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-        if (attacking) {
-            when (direction) {
-                Direction.LEFT -> attackArea = Vector4f(transform.x - 72.0f, transform.y, 72.0f, 64.0f)
-                Direction.RIGHT -> attackArea = Vector4f(transform.x, transform.y, 64.0f + 72.0f, 64.0f)
-                Direction.UP -> attackArea = Vector4f(transform.x, transform.y - 72.0f, 64.0f, 72.0f)
-                Direction.DOWN -> attackArea = Vector4f(transform.x, transform.y, 64.0f, 64.0f + 72.0f)
-            }
+        if (health <= 0) {
+            attacking = false
+        }
 
+        if (attacking) {
             if (prepareAttack < 1.0f) {
-                prepareAttack += 0.01f
+                if (direction == Direction.LEFT) {
+                    attackAreaVisualTransform.sx = attackArea.z * prepareAttack
+                    attackAreaVisualTransform.x = transform.x - (attackArea.z * prepareAttack) * 0.5f
+                }
+                else if (direction == Direction.RIGHT) {
+                    attackAreaVisualTransform.sx = attackArea.z * prepareAttack
+                    attackAreaVisualTransform.x = transform.x + (attackArea.z * prepareAttack) * 0.5f
+                }
+                else if (direction == Direction.UP) {
+                    attackAreaVisualTransform.sy = attackArea.w * prepareAttack
+                    attackAreaVisualTransform.y = transform.y - (attackArea.w * prepareAttack) * 0.5f
+                }
+                else if (direction == Direction.DOWN) {
+                    attackAreaVisualTransform.sy = attackArea.w * prepareAttack
+                    attackAreaVisualTransform.y = transform.y + (attackArea.w * prepareAttack) * 0.5f
+                }
+
+                prepareAttack += attackSpeed
             }
             else {
                 prepareAttack = 0.0f
                 attacking = false
 
-                val baseDamage = strength * 1.5f
-                val critChange = Math.min((0.05f * agility) - (0.005f * player.agility), 0.0f)
+                val baseDamage = strength * 3.0f
+                val critChange = Math.min((0.075f * agility) - (0.005f * player.agility), 0.0f)
                 val critted = random.nextFloat() < critChange
-                var damage = baseDamage * random.nextFloat()
+                var damage = baseDamage * (random.nextFloat() + 0.1f)
                 if (critted) {
-                    damage *= random.nextInt(4) + 1.5f
+                    damage *= random.nextInt(4) + 2.0f
                 }
 
-                if (player.transform.x + 32.0f >= attackArea.x && player.transform.x <= attackArea.x + attackArea.z
-                &&  player.transform.y + 32.0f >= attackArea.y && player.transform.y <= attackArea.y + attackArea.w) {
+                if (player.transform.x + 28.0f >= attackArea.x && player.transform.x + 4.0f <= attackArea.x + attackArea.z
+                &&  player.transform.y + 28.0f >= attackArea.y && player.transform.y + 4.0f <= attackArea.y + attackArea.w) {
                     player.healthDamaged += Math.max(1, damage.toInt())
                     player.inventory.updateHealthText()
                 }
             }
         }
         else {
+            attackAreaVisualSprite.visible = false
             if (attackTimeout > 0) {
                 attackTimeout -= 1
             }

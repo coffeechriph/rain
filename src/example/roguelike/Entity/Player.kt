@@ -57,6 +57,9 @@ class Player : Entity() {
     var xpUntilNextLevel = 100
         private set
     var facingDirection = Direction.DOWN
+    var closeToEnemy = false
+    var targetedEnemy = -1
+        private set
 
     private val inputTimestamps = ArrayList<InputTimestamp>()
     private var lastDirection = Direction.DOWN
@@ -65,6 +68,7 @@ class Player : Entity() {
     private var dodgeTick = 0.0f
     private var dodgeTimeout = 0.0f
     private var stopMovement = 0.0f
+    private var targetIndex = 0
 
     fun addXp(increase: Int) {
         this.xp += increase
@@ -79,6 +83,22 @@ class Player : Entity() {
             baseLuck = (baseLuck.toFloat() * 1.1f).toInt()
         }
         inventory.updateEquippedItems()
+    }
+
+    fun targetEnemy(enemies: ArrayList<Enemy>) {
+        if (enemies.size <= 0) {
+            targetIndex = -1
+            return
+        }
+
+        targetIndex %= enemies.size
+        if (targetIndex >= 0 && targetIndex < enemies.size) {
+            targetedEnemy = targetIndex
+        }
+        else if (targetIndex >= enemies.size) {
+            targetIndex = enemies.size - 1
+            targetedEnemy = targetIndex
+        }
     }
 
     fun setPosition(pos: Vector2i) {
@@ -111,6 +131,10 @@ class Player : Entity() {
 
         if (!inventory.visible) {
             setDirectionBasedOnInput(input)
+
+            if (input.keyState(Input.Key.KEY_TAB) == Input.InputState.PRESSED) {
+                targetIndex++
+            }
 
             if (attack.isReady()) {
                 if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
@@ -153,14 +177,16 @@ class Player : Entity() {
     }
 
     private fun movement() {
-        if (facingDirection == Direction.LEFT) {
-            animator.setAnimation("walk_left")
-        } else if (facingDirection == Direction.RIGHT) {
-            animator.setAnimation("walk_right")
-        } else if (facingDirection == Direction.UP) {
-            animator.setAnimation("walk_up")
-        } else if (facingDirection == Direction.DOWN) {
-            animator.setAnimation("walk_down")
+        if (!closeToEnemy) {
+            facingDirection = lastDirection
+        }
+
+        // Delay before movement starts
+        when (facingDirection) {
+            Direction.LEFT -> animator.setAnimation("walk_left")
+            Direction.RIGHT -> animator.setAnimation("walk_right")
+            Direction.UP -> animator.setAnimation("walk_up")
+            Direction.DOWN -> animator.setAnimation("walk_down")
         }
 
         if (facingDirection == Direction.NONE) {
@@ -218,10 +244,10 @@ class Player : Entity() {
                 var velX = 0.0f
                 var velY = 0.0f
                 when (dodgeDirection) {
-                    Direction.LEFT -> velX -= speed * 4
-                    Direction.RIGHT -> velX += speed * 4
-                    Direction.UP -> velY -= speed * 4
-                    Direction.DOWN -> velY += speed * 4
+                    Direction.LEFT -> velX -= speed * 2
+                    Direction.RIGHT -> velX += speed * 2
+                    Direction.UP -> velY -= speed * 2
+                    Direction.DOWN -> velY += speed * 2
                 }
 
                 transform.x += velX
@@ -230,11 +256,11 @@ class Player : Entity() {
             }
 
             dodgeTick += (10.0f / 60.0f)
-            if (dodgeTick >= 1.0f) {
+            if (dodgeTick >= 3.0f) {
                 dodgeMovement = false
                 dodgeTick = 0.0f
                 dodgeDirection = Direction.NONE
-                dodgeTimeout = 2.0f
+                dodgeTimeout = 3.0f
             }
         }
     }

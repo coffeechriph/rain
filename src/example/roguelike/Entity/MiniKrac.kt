@@ -9,10 +9,11 @@ import rain.api.scene.Scene
 
 class MiniKrac(random: Random, player: Player): Enemy(random, player) {
     init {
-        strengthFactor = 0.75f
+        strengthFactor = 0.65f
         healthFactor = 0.65f
-        agilityFactor = 3.0f
+        agilityFactor = 2.0f
         walkingSpeedFactor = 1.0f
+        attackSpeed = 0.015f
     }
 
     override fun onCollision(entity: Entity) {
@@ -51,8 +52,5 @@ class MiniKrac(random: Random, player: Player): Enemy(random, player) {
 
         transform.z = 1.0f + transform.y * 0.001f
         handleDamage(transform)
-        if (attackTimeout > 0) {
-            attackTimeout -= 1
-        }
     }
 }

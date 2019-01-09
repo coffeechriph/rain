@@ -4,6 +4,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import example.roguelike.Entity.*
 import org.joml.*
 import rain.api.entity.DirectionType
+import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
@@ -65,7 +66,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
         return viableTiles.removeAt(rand.nextInt(viableTiles.size))
     }
 
-    internal fun generateEnemiesInRoom(random: Random, enemySystem: EntitySystem<Enemy>, enemyMaterial: Material, player: Player, count: Int, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
+    internal fun generateEnemiesInRoom(random: Random, enemySystem: EntitySystem<Enemy>, enemyMaterial: Material, enemyAttackSystem: EntitySystem<Entity>, enemyAttackMaterial: Material, player: Player, count: Int, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
         for (i in 0 until count) {
             val p = findNoneEdgeTile(random)
             if (p == null) {
@@ -79,6 +80,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
             } else {
                 MiniKrac(random, player)
             }
+
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
@@ -86,9 +88,20 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
                     .attachBoxColliderComponent(width = 60.0f, height = 40.0f, aliveOnStart = false)
                     .build()
 
+            enemyAttackSystem.newEntity(kracGuy.attackAreaVisual)
+                    .attachTransformComponent()
+                    .attachSpriteComponent(enemyAttackMaterial)
+
+            val attackSprite = enemyAttackSystem.findSpriteComponent(kracGuy.getId())!!
+            attackSprite.visible = false
+            attackSprite.textureTileOffset.set(5,7)
+
+            kracGuy.attackAreaVisualSprite = attackSprite
+            kracGuy.attackAreaVisualTransform = enemyAttackSystem.findTransformComponent(kracGuy.getId())!!
+
             val levelFactor = (player.currentLevel*1.5f).toInt()
-            kracGuy.strength = (random.nextInt(levelFactor) + levelFactor*5 * kracGuy.strengthFactor).toInt()
-            kracGuy.agility = (random.nextInt(levelFactor) + levelFactor*2 * kracGuy.agilityFactor).toInt()
+            kracGuy.strength = (random.nextInt(levelFactor) + levelFactor*10 * kracGuy.strengthFactor).toInt()
+            kracGuy.agility = (random.nextInt(levelFactor) + levelFactor*4 * kracGuy.agilityFactor).toInt()
             kracGuy.health = (100 + random.nextInt(levelFactor) * kracGuy.healthFactor).toInt()
             kracGuy.sprite.visible = false
 

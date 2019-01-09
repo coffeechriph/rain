@@ -52,11 +52,15 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
     private var rooms = ArrayList<Room>()
     private lateinit var random: Random
     private lateinit var enemySystem: EntitySystem<Enemy>
+    private lateinit var enemyAttackSystem: EntitySystem<Entity>
     private lateinit var enemyTexture: Texture2d
     private lateinit var enemyMaterial: Material
+    private lateinit var enemyAttackMaterial: Material
     private lateinit var collisionSystem: EntitySystem<Entity>
     private lateinit var containerSystem: EntitySystem<Container>
     private lateinit var levelItemSystem: EntitySystem<Item>
+    private lateinit var enemyTargetEntity: Entity
+    private lateinit var enemyTargetSystem: EntitySystem<Entity>
     private lateinit var xpBallSystem: EntitySystem<XpBall>
     private lateinit var navMesh: NavMesh
     var startPosition = Vector2i()
@@ -121,6 +125,53 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
             enemy.lastY = y
         }
 
+        player.targetEnemy(activeEnemies)
+        if (player.targetedEnemy > -1 && player.targetedEnemy < activeEnemies.size) {
+            val enemy = activeEnemies[player.targetedEnemy]
+            if (!enemy.sprite.visible) {
+                val targetSprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
+                targetSprite.visible = false
+            }
+            else {
+                var pdx = player.transform.x - enemy.transform.x
+                var pdy = player.transform.y - enemy.transform.y
+                val pln = Math.sqrt((pdx * pdx + pdy * pdy).toDouble()).toFloat()
+                pdx /= pln
+                pdy /= pln
+
+                val inCharge = Math.abs(pdx) > Math.abs(pdy)
+                if (inCharge) {
+                    if (pdx > 0) {
+                        player.facingDirection = Direction.LEFT
+                    } else {
+                        player.facingDirection = Direction.RIGHT
+                    }
+                } else {
+                    if (pdy > 0) {
+                        player.facingDirection = Direction.UP
+                    } else {
+                        player.facingDirection = Direction.DOWN
+                    }
+                }
+
+                player.closeToEnemy = true
+                val targetSprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
+                targetSprite.visible = true
+
+                val targetTransform = enemyTargetSystem.findTransformComponent(enemyTargetEntity.getId())!!
+                targetTransform.z = 19.0f
+                targetTransform.x = activeEnemies[player.targetedEnemy].transform.x
+                targetTransform.y = activeEnemies[player.targetedEnemy].transform.y
+                targetTransform.sx = 64.0f
+                targetTransform.sy = 64.0f
+            }
+        }
+        else {
+            player.closeToEnemy = false
+            val targetSprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
+            targetSprite.visible = false
+        }
+
         for (enemy in activeEnemies) {
             if (enemy.health <= 0) {
                 if (enemy.sprite.visible) {
@@ -151,27 +202,8 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
             val dx = player.transform.x - enemy.transform.x
             val dy = player.transform.y - enemy.transform.y
             val dxln = Math.sqrt((dx * dx + dy * dy).toDouble())
-            if (dxln <= 72.0) {
+            if (dxln <= 128.0) {
                 enemy.attack()
-            }
-
-            val pdx = dx/dxln
-            val pdy = dy/dxln
-            val inCharge = if (Math.abs(pdx) > Math.abs(pdy)) { true } else { false }
-
-            if (inCharge) {
-                if (dx > 0.0f) {
-                    player.facingDirection = Direction.LEFT
-                } else if (dx < 0.0f) {
-                    player.facingDirection = Direction.RIGHT
-                }
-            }
-            else {
-                if (dy > 0.0f) {
-                    player.facingDirection = Direction.UP
-                } else if (dy < 0.0f) {
-                    player.facingDirection = Direction.DOWN
-                }
             }
 
             enemy.healthBar.transform.sx = enemy.health / 2.0f
@@ -187,7 +219,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 val kx = player.transform.x - enemy.transform.x
                 val ky = player.transform.y - enemy.transform.y
                 val dd = Math.sqrt((kx*kx+ky*ky).toDouble())
-                if (dd > 64.0f) {
+                if (dd > 32.0f) {
                     val worldX = enemy.transform.x / 64
                     val worldY = enemy.transform.y / 64
                     val px = (player.transform.x / 64).toInt()
@@ -253,14 +285,14 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 val pdx = player.transform.x - enemy.transform.x
                 val pdy = player.transform.y - enemy.transform.y
                 val pln = Math.sqrt((pdx*pdx+pdy*pdy).toDouble());
-                if (pln <= 48.0f) {
+                if (pln <= 16.0f) {
                     enemy.traversing = false
                 }
                 else {
                     val dx3 = (target.x + 32) - enemy.transform.x
                     val dy3 = (target.y + 32) - enemy.transform.y
                     val ln2 = Math.sqrt((dx3 * dx3 + dy3 * dy3).toDouble());
-                    if (ln2 <= 8.0f) {
+                    if (ln2 <= 4.0f) {
                         enemy.pathIndex += 1
                         if (enemy.pathIndex >= enemy.path.size - 1) {
                             enemy.traversing = false
@@ -350,6 +382,9 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
         enemySystem = scene.newSystem()
 
+        enemyAttackMaterial = resourceFactory.createMaterial("enemyAttackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, true, false)
+        enemyAttackSystem = scene.newSystem()
+
         collisionSystem = scene.newSystem()
         containerSystem = scene.newSystem()
         levelItemSystem = scene.newSystem()
@@ -366,6 +401,15 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         val lightTransform = Transform()
         lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
+
+        enemyTargetSystem = scene.newSystem()
+        enemyTargetEntity = Entity()
+        enemyTargetSystem.newEntity(enemyTargetEntity)
+                .attachTransformComponent()
+                .attachSpriteComponent(itemMaterial)
+        val enemyTargetEntitySprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
+        enemyTargetEntitySprite.visible = false
+        enemyTargetEntitySprite.textureTileOffset.set(4,7)
     }
 
     fun switchCell(resourceFactory: ResourceFactory, cellX: Int, cellY: Int) {
@@ -1386,7 +1430,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         for (room in rooms) {
             val lightCount = random.nextInt(5) + 3
             val thisRoomEnemyCount = (room.tiles.size/64)
-            room.generateEnemiesInRoom(random, enemySystem, enemyMaterial, player, thisRoomEnemyCount, healthBarSystem, healthBarMaterial)
+            room.generateEnemiesInRoom(random, enemySystem, enemyMaterial, enemyAttackSystem, enemyAttackMaterial, player, thisRoomEnemyCount, healthBarSystem, healthBarMaterial)
             val thisRoomContainerCount = room.tiles.size/72
             room.generateContainersInRoom(random, thisRoomContainerCount, containerSystem, itemMaterial, resourceFactory)
             room.generateLightsInRoom(random, map, mapWidth, width, height, lightCount, random.nextInt(10) == 1, torchSystem, torchMaterial, resourceFactory)
