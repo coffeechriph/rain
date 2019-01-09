@@ -5,13 +5,10 @@ import org.joml.Vector2i
 import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
+import java.util.*
 
 class Player : Entity() {
-    private var leftActive = false
-    private var rightActive = false
-    private var upActive = false
-    private var downActive = false
-
+    class InputTimestamp(var direction: Direction, var time: Long)
     var playerMovedCell = false
     var cellX = 0
         private set
@@ -59,6 +56,15 @@ class Player : Entity() {
         private set
     var xpUntilNextLevel = 100
         private set
+    var facingDirection = Direction.DOWN
+
+    private val inputTimestamps = ArrayList<InputTimestamp>()
+    private var lastDirection = Direction.DOWN
+    private var dodgeMovement = false
+    private var dodgeDirection = Direction.NONE
+    private var dodgeTick = 0.0f
+    private var dodgeTimeout = 0.0f
+    private var stopMovement = 0.0f
 
     fun addXp(increase: Int) {
         this.xp += increase
@@ -107,26 +113,14 @@ class Player : Entity() {
             setDirectionBasedOnInput(input)
 
             if (attack.isReady()) {
-                if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
-                    attack.attack(Direction.LEFT)
-                } else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
-                    attack.attack(Direction.RIGHT)
-                } else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
-                    attack.attack(Direction.UP)
-                } else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
-                    attack.attack(Direction.DOWN)
+                if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
+                    attack.attack(facingDirection)
+                    stopMovement = 0.1f
                 }
             }
         }
-        else {
-            leftActive = false
-            rightActive = false
-            upActive = false
-            downActive = false
-        }
 
         movement()
-        keepPlayerWithinBorder()
 
         if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {
             inventory.visible = !inventory.visible
@@ -159,80 +153,164 @@ class Player : Entity() {
     }
 
     private fun movement() {
-        var velX = 0.0f
-        var velY = 0.0f
-        val c = (1.0f / 60.0f)
-        if (leftActive) {
-            velX -= 100.0f * c
-        }
-
-        if (rightActive) {
-            velX += 100.0f * c
-        }
-
-        if (upActive) {
-            velY -= 100.0f * c
-        }
-
-        if (downActive) {
-            velY += 100.0f * c
-        }
-
-        if (level.collides(transform.x + velX, transform.y, 32.0f, 32.0f)) {
-            velX = 0.0f
-        }
-
-        if (level.collides(transform.x, transform.y + velY, 32.0f, 32.0f)) {
-            velY = 0.0f
-        }
-
-        if (velX < 0.0f) {
+        if (facingDirection == Direction.LEFT) {
             animator.setAnimation("walk_left")
-        } else if (velX > 0.0f) {
+        } else if (facingDirection == Direction.RIGHT) {
             animator.setAnimation("walk_right")
-        } else if (velY < 0.0f) {
+        } else if (facingDirection == Direction.UP) {
             animator.setAnimation("walk_up")
-        } else if (velY > 0.0f) {
+        } else if (facingDirection == Direction.DOWN) {
             animator.setAnimation("walk_down")
         }
 
-        if (velX == 0.0f && velY == 0.0f) {
+        if (facingDirection == Direction.NONE) {
             animator.setAnimation("idle")
         }
 
-        transform.x += velX
-        transform.y += velY
+        if (dodgeTimeout > 0.0f) {
+            dodgeTimeout -= 0.1f
+        }
+        else {
+            dodgeTimeout = 0.0f
+        }
+
+        if (stopMovement > 0.0f) {
+            stopMovement -= (1.0f / 60.0f)
+            return
+        }
+        else {
+            stopMovement = 0.0f
+        }
+
+        val speed = 100.0f * (1.0f / 60.0f)
+        if (!dodgeMovement) {
+            if (inputTimestamps.size <= 0) {
+                return
+            }
+
+            var velX = 0.0f
+            var velY = 0.0f
+            lastDirection = (inputTimestamps.sortedBy { i -> i.time })[0].direction
+            when (lastDirection) {
+                Direction.LEFT -> velX -= speed
+                Direction.RIGHT -> velX += speed
+                Direction.UP -> velY -= speed
+                Direction.DOWN -> velY += speed
+                Direction.NONE -> {
+                }
+            }
+
+            if (level.collides(transform.x + velX, transform.y, 32.0f, 32.0f)) {
+                velX = 0.0f
+            }
+
+            if (level.collides(transform.x, transform.y + velY, 32.0f, 32.0f)) {
+                velY = 0.0f
+            }
+
+            transform.x += velX
+            transform.y += velY
+            keepPlayerWithinBorder(velX, velY)
+        }
+        else {
+            // Delay before movement starts
+            if (dodgeTick > 0.32f) {
+                var velX = 0.0f
+                var velY = 0.0f
+                when (dodgeDirection) {
+                    Direction.LEFT -> velX -= speed * 4
+                    Direction.RIGHT -> velX += speed * 4
+                    Direction.UP -> velY -= speed * 4
+                    Direction.DOWN -> velY += speed * 4
+                }
+
+                transform.x += velX
+                transform.y += velY
+                keepPlayerWithinBorder(velX, velY)
+            }
+
+            dodgeTick += (10.0f / 60.0f)
+            if (dodgeTick >= 1.0f) {
+                dodgeMovement = false
+                dodgeTick = 0.0f
+                dodgeDirection = Direction.NONE
+                dodgeTimeout = 2.0f
+            }
+        }
     }
 
     private fun setDirectionBasedOnInput(input: Input) {
-        if (input.keyState(Input.Key.KEY_A) == Input.InputState.PRESSED) {
-            leftActive = true
-        } else if (input.keyState(Input.Key.KEY_A) == Input.InputState.RELEASED) {
-            leftActive = false
+        if (!dodgeMovement && dodgeTimeout <= 0.0f) {
+            if (input.keyState(Input.Key.KEY_Q) == Input.InputState.PRESSED) {
+                dodgeMovement = true
+
+                if (facingDirection == Direction.UP) {
+                    dodgeDirection = Direction.LEFT
+                }
+                else if (facingDirection == Direction.DOWN) {
+                    dodgeDirection = Direction.LEFT
+                }
+                else if (facingDirection == Direction.LEFT) {
+                    dodgeDirection = Direction.UP
+                }
+                else if (facingDirection == Direction.RIGHT) {
+                    dodgeDirection = Direction.UP
+                }
+            }
+            else if (input.keyState(Input.Key.KEY_E) == Input.InputState.PRESSED) {
+                dodgeMovement = true
+                if (facingDirection == Direction.UP) {
+                    dodgeDirection = Direction.RIGHT
+                }
+                else if (facingDirection == Direction.DOWN) {
+                    dodgeDirection = Direction.RIGHT
+                }
+                else if (facingDirection == Direction.LEFT) {
+                    dodgeDirection = Direction.DOWN
+                }
+                else if (facingDirection == Direction.RIGHT) {
+                    dodgeDirection = Direction.DOWN
+                }
+            }
         }
 
-        if (input.keyState(Input.Key.KEY_D) == Input.InputState.PRESSED) {
-            rightActive = true
-        } else if (input.keyState(Input.Key.KEY_D) == Input.InputState.RELEASED) {
-            rightActive = false
+        if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
+            inputTimestamps.add(InputTimestamp(Direction.LEFT, System.currentTimeMillis()))
+        } else if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.RELEASED) {
+            removeInputDirection(Direction.LEFT)
         }
 
-        if (input.keyState(Input.Key.KEY_W) == Input.InputState.PRESSED) {
-            upActive = true
-        } else if (input.keyState(Input.Key.KEY_W) == Input.InputState.RELEASED) {
-            upActive = false
+        if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
+            inputTimestamps.add(InputTimestamp(Direction.RIGHT, System.currentTimeMillis()))
+        } else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.RELEASED) {
+            removeInputDirection(Direction.RIGHT)
         }
 
-        if (input.keyState(Input.Key.KEY_S) == Input.InputState.PRESSED) {
-            downActive = true
-        } else if (input.keyState(Input.Key.KEY_S) == Input.InputState.RELEASED) {
-            downActive = false
+        if (input.keyState(Input.Key.KEY_UP) == Input.InputState.PRESSED) {
+            inputTimestamps.add(InputTimestamp(Direction.UP, System.currentTimeMillis()))
+        } else if (input.keyState(Input.Key.KEY_UP) == Input.InputState.RELEASED) {
+            removeInputDirection(Direction.UP)
+        }
+
+        if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.PRESSED) {
+            inputTimestamps.add(InputTimestamp(Direction.DOWN, System.currentTimeMillis()))
+        } else if (input.keyState(Input.Key.KEY_DOWN) == Input.InputState.RELEASED) {
+            removeInputDirection(Direction.DOWN)
+        }
+    }
+
+    private fun removeInputDirection(dir: Direction) {
+        for (i in inputTimestamps) {
+            if (i.direction == dir) {
+                inputTimestamps.remove(i)
+                break
+            }
         }
     }
 
     // TODO: This method uses constant window dimensions
-    private fun keepPlayerWithinBorder() {
-        if (transform.x < 0 && leftActive) {
+    private fun keepPlayerWithinBorder(velX: Float, velY: Float) {
+        if (transform.x < 0 && velX < 0.0f) {
             if (cellX > 0) {
                 transform.x = 1280.0f
 
@@ -240,7 +318,7 @@ class Player : Entity() {
                 cellX -= 1
             }
         }
-        else if (transform.x > 1280 && rightActive) {
+        else if (transform.x > 1280 && velX > 0.0f) {
             if (cellX < level.maxCellX) {
                 transform.x = 0.0f
 
@@ -249,7 +327,7 @@ class Player : Entity() {
             }
         }
 
-        if (transform.y < 0 && upActive) {
+        if (transform.y < 0 && velY < 0.0f) {
             if (cellY > 0) {
                 transform.y = 768.0f
 
@@ -257,7 +335,7 @@ class Player : Entity() {
                 cellY -= 1
             }
         }
-        else if (transform.y > 768 && downActive) {
+        else if (transform.y > 768 && velY > 0.0f) {
             if (cellY < level.maxCellY) {
                 transform.y = 0.0f
 

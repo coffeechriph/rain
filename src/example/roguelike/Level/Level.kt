@@ -150,12 +150,37 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
             val dx = player.transform.x - enemy.transform.x
             val dy = player.transform.y - enemy.transform.y
-            if (Math.sqrt((dx * dx + dy * dy).toDouble()) <= 64.0) {
-                enemy.attack(player)
-                player.inventory.updateHealthText()
+            val dxln = Math.sqrt((dx * dx + dy * dy).toDouble())
+            if (dxln <= 72.0) {
+                enemy.attack()
+            }
+
+            val pdx = dx/dxln
+            val pdy = dy/dxln
+            val inCharge = if (Math.abs(pdx) > Math.abs(pdy)) { true } else { false }
+
+            if (inCharge) {
+                if (dx > 0.0f) {
+                    player.facingDirection = Direction.LEFT
+                } else if (dx < 0.0f) {
+                    player.facingDirection = Direction.RIGHT
+                }
+            }
+            else {
+                if (dy > 0.0f) {
+                    player.facingDirection = Direction.UP
+                } else if (dy < 0.0f) {
+                    player.facingDirection = Direction.DOWN
+                }
             }
 
             enemy.healthBar.transform.sx = enemy.health / 2.0f
+
+            // Enemies will not move when attacking
+            if (enemy.attacking) {
+                enemy.collider.setVelocity(0.0f, 0.0f)
+                continue
+            }
 
             if (!enemy.traversing) {
                 enemy.collider.setVelocity(0.0f,0.0f)

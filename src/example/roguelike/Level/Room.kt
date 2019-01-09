@@ -75,9 +75,9 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
             val enemy = random.nextInt(2)
 
             val kracGuy = if (enemy == 0) {
-                Krac(random)
+                Krac(random, player)
             } else {
-                MiniKrac(random)
+                MiniKrac(random, player)
             }
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()

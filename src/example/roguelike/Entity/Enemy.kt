@@ -2,12 +2,13 @@ package example.roguelike.Entity
 
 import org.joml.Random
 import org.joml.Vector2i
+import org.joml.Vector4f
 import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
 import kotlin.math.sin
 
-open class Enemy(val random: Random) : Entity() {
+open class Enemy(val random: Random, val player: Player) : Entity() {
     var cellX = 0
         private set
     var cellY = 0
@@ -28,6 +29,7 @@ open class Enemy(val random: Random) : Entity() {
     var path = ArrayList<Vector2i>()
     var pathIndex = 0
     var traverseSleep = 0L
+    var direction: Direction = Direction.NONE
     var lastPlayerAngle = 0.0f
     lateinit var transform: Transform
     lateinit var collider: Collider
@@ -43,6 +45,12 @@ open class Enemy(val random: Random) : Entity() {
     var pushDirection = Vector2i(0,0)
     var lastX = -1
     var lastY = -1
+
+    // Attack
+    var attacking = false
+        private set
+    private var prepareAttack = 0.0f
+    private var attackArea = Vector4f()
 
     // TODO: Constant window size
     fun setPosition(pos: Vector2i) {
@@ -72,20 +80,19 @@ open class Enemy(val random: Random) : Entity() {
         }
     }
 
-    fun attack(player: Player) {
+    fun attack() {
         if (attackTimeout == 0) {
-            val baseDamage = strength * 1.5f
-            val critChange = Math.min((0.05f * agility) - (0.005f * player.agility), 0.0f)
-            val critted = random.nextFloat() < critChange
-            var damage = baseDamage * random.nextFloat()
-            if (critted) {
-                damage *= random.nextInt(4) + 1.5f
-            }
-
-            player.healthDamaged += Math.max(1, damage.toInt())
-
-            // TODO: Make this time based
+            attacking = true
             attackTimeout = attackTimeoutValue
+
+            val px = ((player.transform.x - transform.x) / 64).toInt()
+            val py = ((player.transform.y - transform.y) / 64).toInt()
+            when {
+                px > 0 -> direction = Direction.RIGHT
+                px < 0 -> direction = Direction.LEFT
+                py > 0 -> direction = Direction.UP
+                py < 0 -> direction = Direction.DOWN
+            }
         }
     }
 
@@ -109,5 +116,40 @@ open class Enemy(val random: Random) : Entity() {
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
+        if (attacking) {
+            when (direction) {
+                Direction.LEFT -> attackArea = Vector4f(transform.x - 72.0f, transform.y, 72.0f, 64.0f)
+                Direction.RIGHT -> attackArea = Vector4f(transform.x, transform.y, 64.0f + 72.0f, 64.0f)
+                Direction.UP -> attackArea = Vector4f(transform.x, transform.y - 72.0f, 64.0f, 72.0f)
+                Direction.DOWN -> attackArea = Vector4f(transform.x, transform.y, 64.0f, 64.0f + 72.0f)
+            }
+
+            if (prepareAttack < 1.0f) {
+                prepareAttack += 0.01f
+            }
+            else {
+                prepareAttack = 0.0f
+                attacking = false
+
+                val baseDamage = strength * 1.5f
+                val critChange = Math.min((0.05f * agility) - (0.005f * player.agility), 0.0f)
+                val critted = random.nextFloat() < critChange
+                var damage = baseDamage * random.nextFloat()
+                if (critted) {
+                    damage *= random.nextInt(4) + 1.5f
+                }
+
+                if (player.transform.x + 32.0f >= attackArea.x && player.transform.x <= attackArea.x + attackArea.z
+                &&  player.transform.y + 32.0f >= attackArea.y && player.transform.y <= attackArea.y + attackArea.w) {
+                    player.healthDamaged += Math.max(1, damage.toInt())
+                    player.inventory.updateHealthText()
+                }
+            }
+        }
+        else {
+            if (attackTimeout > 0) {
+                attackTimeout -= 1
+            }
+        }
     }
 }

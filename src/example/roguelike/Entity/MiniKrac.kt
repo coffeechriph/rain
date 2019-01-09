@@ -7,14 +7,12 @@ import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.scene.Scene
 
-class MiniKrac(random: Random): Enemy(random) {
-    private var idleDir = 0
-
+class MiniKrac(random: Random, player: Player): Enemy(random, player) {
     init {
         strengthFactor = 0.75f
         healthFactor = 0.65f
         agilityFactor = 3.0f
-        walkingSpeedFactor = 1.3f
+        walkingSpeedFactor = 1.0f
     }
 
     override fun onCollision(entity: Entity) {
@@ -49,19 +47,9 @@ class MiniKrac(random: Random): Enemy(random) {
     }
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
+        super.update(scene, input, system, deltaTime)
+
         transform.z = 1.0f + transform.y * 0.001f
-
-        /*if (animator.animationTime >= 1.0f) {
-            idleDir = Random(0).nextInt(3)
-
-            when(idleDir) {
-                0 -> animator.setAnimation("idle_up")
-                1 -> animator.setAnimation("idle_left")
-                2 -> animator.setAnimation("idle_right")
-                else -> animator.setAnimation("idle_down")
-            }
-        }*/
-
         handleDamage(transform)
         if (attackTimeout > 0) {
             attackTimeout -= 1
