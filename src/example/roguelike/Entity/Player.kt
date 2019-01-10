@@ -52,7 +52,6 @@ class Player : Entity() {
     var xpUntilNextLevel = 100
         private set
     var facingDirection = Direction.DOWN
-    var closeToEnemy = false
     var targetedEnemy = -1
         private set
 
@@ -92,18 +91,22 @@ class Player : Entity() {
 
     fun targetEnemy(enemies: ArrayList<Enemy>) {
         if (enemies.size <= 0) {
-            targetIndex = -1
+            targetIndex = 0
+            targetedEnemy = -1
             return
         }
 
-        if (closeToEnemy) {
+        if (targetIndex >= 0 && targetIndex < enemies.size) {
+            targetedEnemy = targetIndex % enemies.size
+        } else if (targetIndex >= enemies.size) {
             targetIndex %= enemies.size
+            targetedEnemy = targetIndex
+        }
 
-            if (targetIndex >= 0 && targetIndex < enemies.size) {
-                targetedEnemy = targetIndex
-            } else if (targetIndex >= enemies.size) {
-                targetIndex = enemies.size - 1
-                targetedEnemy = targetIndex
+        if (targetedEnemy >= 0 && targetedEnemy < enemies.size) {
+            if (enemies[targetedEnemy].health <= 0) {
+                targetedEnemy = -1
+                targetIndex = -1
             }
         }
     }
@@ -200,7 +203,7 @@ class Player : Entity() {
     }
 
     private fun movement() {
-        if (!closeToEnemy) {
+        if (targetedEnemy == -1) {
             facingDirection = lastDirection
         }
 

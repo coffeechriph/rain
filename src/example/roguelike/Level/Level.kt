@@ -154,7 +154,6 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                     }
                 }
 
-                player.closeToEnemy = true
                 val targetSprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
                 targetSprite.visible = true
 
@@ -167,7 +166,6 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
             }
         }
         else {
-            player.closeToEnemy = false
             val targetSprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
             targetSprite.visible = false
         }
