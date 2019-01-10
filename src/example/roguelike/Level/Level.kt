@@ -228,7 +228,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                     if (px < width && py < height && px >= 0 && py >= 0) {
                         val path = navMesh.findPath(Vector2i(worldX.toInt(), worldY.toInt()), Vector2i(px, py))
                         if (path[path.size-1].x == px && path[path.size-1].y == py) {
-                            if (path.size > 2) {
+                            if (path.size > 1) {
                                 enemy.path = path
                                 enemy.pathIndex = 0
                                 enemy.traversing = true
@@ -600,7 +600,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
         val px = ((player.transform.x) / 64.0f).toInt()
         val py = ((player.transform.y) / 64.0f).toInt()
-        spreadLight(px, py, Vector4f(0.48f, 0.62f, 0.69f, 0.75f))
+        spreadLight(px, py, Vector4f(0.48f, 0.62f, 0.69f, 1.0f))
 
         var x = 0.0f
         var y = 0.0f

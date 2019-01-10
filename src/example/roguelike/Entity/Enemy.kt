@@ -192,7 +192,7 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
 
                 if (player.transform.x + 28.0f >= attackArea.x && player.transform.x + 4.0f <= attackArea.x + attackArea.z
                 &&  player.transform.y + 28.0f >= attackArea.y && player.transform.y + 4.0f <= attackArea.y + attackArea.w) {
-                    player.healthDamaged += Math.max(1, damage.toInt())
+                    player.damagePlayer(Math.max(1, damage.toInt()))
                     player.inventory.updateHealthText()
                 }
             }

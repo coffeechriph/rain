@@ -1,5 +1,6 @@
 package rain.vulkan
 
+import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW.glfwGetFramebufferSize
 import org.lwjgl.system.MemoryUtil
@@ -245,11 +246,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
     private fun drawRenderPass(nextImage: Int) {
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
-
-        // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
-        val projectionMatrixBuffer = memAlloc(16 * 4)
-        camera.projection.get(projectionMatrixBuffer)
-
         issueDrawingCommands()
 
         renderpass.end(renderCommandBuffers[frameIndex])
@@ -257,8 +253,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
     private fun issueDrawingCommands() {
         val obsoletePipelines = ArrayList<Pipeline>()
+        // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
         val projectionMatrixBuffer = memAlloc(16 * 4)
-        camera.projection.get(projectionMatrixBuffer)
+        val pvMatrix = Matrix4f(camera.projection)
+        pvMatrix.mul(camera.view)
+        pvMatrix.get(projectionMatrixBuffer)
 
         for (draw in drawOpsQueue) {
             val mat = draw.material as VulkanMaterial

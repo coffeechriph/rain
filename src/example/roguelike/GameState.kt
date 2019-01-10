@@ -75,7 +75,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
         scene.addTilemap(level.frontTilemap)
 
         camera = Camera(Vector2f(0.0f, 20.0f))
-        scene.setActiveCamera(camera)
+        scene.activeCamera = camera
 
         player.setPosition(level.getFirstTilePos())
         level.switchCell(resourceFactory, player.cellX, player.cellY)

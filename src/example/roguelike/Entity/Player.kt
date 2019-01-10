@@ -30,12 +30,7 @@ class Player : Entity() {
     var baseHealth = 100
         private set
     var healthDamaged = 0
-        set (value) {
-            field = value
-            inCombatCooldown = 100
-            inCombat = true
-            regenHealthTimeout = 0
-        }
+        private set
     var baseStamina = 5
         private set
     var baseStrength = 5
@@ -69,6 +64,16 @@ class Player : Entity() {
     private var dodgeTimeout = 0.0f
     private var stopMovement = 0.0f
     private var targetIndex = 0
+    private var damageShake = 0.0f
+    private var yBeforeShake = 0.0f
+
+    fun damagePlayer(value: Int) {
+        inCombatCooldown = 100
+        inCombat = true
+        regenHealthTimeout = 0
+        damageShake = 1.0f
+        healthDamaged += value
+    }
 
     fun addXp(increase: Int) {
         this.xp += increase
@@ -91,13 +96,15 @@ class Player : Entity() {
             return
         }
 
-        targetIndex %= enemies.size
-        if (targetIndex >= 0 && targetIndex < enemies.size) {
-            targetedEnemy = targetIndex
-        }
-        else if (targetIndex >= enemies.size) {
-            targetIndex = enemies.size - 1
-            targetedEnemy = targetIndex
+        if (closeToEnemy) {
+            targetIndex %= enemies.size
+
+            if (targetIndex >= 0 && targetIndex < enemies.size) {
+                targetedEnemy = targetIndex
+            } else if (targetIndex >= enemies.size) {
+                targetIndex = enemies.size - 1
+                targetedEnemy = targetIndex
+            }
         }
     }
 
@@ -128,6 +135,22 @@ class Player : Entity() {
 
     override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
         transform.z = 1.0f + transform.y * 0.001f
+
+        if (damageShake > 0.0f) {
+            val shake = Math.sin(damageShake.toDouble() * Math.PI * 32).toFloat() * 3
+            transform.y += shake
+            scene.activeCamera.view.translate(0.0f, shake * 2, 0.0f)
+            damageShake -= 0.05f
+
+            if (damageShake <= 0.0f) {
+                transform.y = yBeforeShake
+                damageShake = 0.0f
+            }
+        }
+        else {
+            //scene.activeCamera.view.identity()
+            yBeforeShake = transform.y
+        }
 
         if (!inventory.visible) {
             setDirectionBasedOnInput(input)

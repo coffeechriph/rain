@@ -22,7 +22,7 @@ class Scene {
         private set
     private var physicsContactListener = PhysicsContactListener()
 
-    private var camera = Camera(Vector2f(0.0f, 20.0f))
+    var activeCamera = Camera(Vector2f(0.0f, 20.0f))
     private lateinit var emitterMaterial: Material
 
     fun<T: Entity> newSystem(): EntitySystem<T> {
@@ -45,10 +45,6 @@ class Scene {
 
     fun removeEntitySystem(system: EntitySystem<*>) {
         entitySystems.remove(system)
-    }
-
-    fun setActiveCamera(camera: Camera) {
-        this.camera = camera
     }
 
     internal fun init(resourceFactory: ResourceFactory) {
@@ -131,7 +127,7 @@ class Scene {
     }
 
     internal fun render(renderer: Renderer) {
-        renderer.setActiveCamera(camera)
+        renderer.setActiveCamera(activeCamera)
         val submitListSorted = ArrayList<Drawable>()
         val submitListParticles = ArrayList<Drawable>()
 

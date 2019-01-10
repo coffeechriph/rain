@@ -32,7 +32,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
     private var buttonsAnimation = 0.0f
 
     override fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
-        scene.setActiveCamera(camera)
+        scene.activeCamera = camera
 
         menuContainer = gui.newContainer(0.0f, 0.0f, 1280.0f, 768.0f)
         menuContainer.skin.backgroundColors["button"] = Vector3f(143.0f / 255.0f, 114.0f / 255.0f, 73.0f / 255.0f)

@@ -65,6 +65,7 @@ dependencies {
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.noReflect = true
+    kotlinOptions.noStdlib = true
     kotlinOptions.freeCompilerArgs = ['-Xno-param-assertions']
 }
 
