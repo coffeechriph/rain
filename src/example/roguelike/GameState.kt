@@ -69,7 +69,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
         healthBarSystem = scene.newSystem()
 
         // TODO: Constant window dimensions
-        level.create(resourceFactory, scene, 8960 / 64, 5040 / 64, 1280 / 64, 768 / 64)
+        level.create(resourceFactory, scene, 8960 / 64, 5376 / 64, 1280 / 64, 768 / 64)
         level.buildFirstRoom()
         scene.addTilemap(level.backTilemap)
         scene.addTilemap(level.frontTilemap)

@@ -60,11 +60,18 @@ class Player : Entity() {
     private var stopMovement = 0.0f
     private var targetIndex = 0
     private var damageShake = 0.0f
-    private var yBeforeShake = 0.0f
+    private var damagePushVelX = 0.0f
+    private var damagePushVelY = 0.0f
 
-    fun damagePlayer(value: Int) {
+    fun damagePlayer(value: Int, fromX: Float, fromY: Float) {
         damageShake = 1.0f
         healthDamaged += value
+
+        val dx = transform.x - fromX
+        val dy = transform.y - fromY
+        val ln = Math.sqrt((dx*dx+dy*dy).toDouble()).toFloat()
+        damagePushVelX = dx / ln
+        damagePushVelY = dy / ln
     }
 
     fun addXp(increase: Int) {
@@ -134,7 +141,15 @@ class Player : Entity() {
 
         if (damageShake > 0.0f) {
             val shake = Math.sin(damageShake.toDouble() * Math.PI * 32).toFloat() * 3
-            transform.y += shake
+
+            if (!level.collides(transform.x + damagePushVelX, transform.y, 64.0f, 64.0f)) {
+                transform.x += damagePushVelX
+            }
+
+            if (!level.collides(transform.x, transform.y + damagePushVelY, 64.0f, 64.0f)) {
+                transform.y += damagePushVelY
+            }
+
             scene.activeCamera.view.translate(0.0f, shake * 2, 0.0f)
 
             val cl = Math.max(Math.min(1.0f,shake),0.0f)
@@ -142,14 +157,12 @@ class Player : Entity() {
             damageShake -= 0.05f
 
             if (damageShake <= 0.0f) {
-                transform.y = yBeforeShake
                 damageShake = 0.0f
             }
         }
         else {
             sprite.color.set(0.0f, 0.0f, 0.0f, 0.0f)
             scene.activeCamera.view.identity()
-            yBeforeShake = transform.y
         }
 
         if (!inventory.visible) {
@@ -220,8 +233,7 @@ class Player : Entity() {
                 Direction.RIGHT -> velX += speed
                 Direction.UP -> velY -= speed
                 Direction.DOWN -> velY += speed
-                Direction.NONE -> {
-                }
+                Direction.NONE -> {}
             }
 
             if (level.collides(transform.x + velX, transform.y, 32.0f, 32.0f)) {
@@ -246,6 +258,14 @@ class Player : Entity() {
                     Direction.RIGHT -> velX += speed * 2
                     Direction.UP -> velY -= speed * 2
                     Direction.DOWN -> velY += speed * 2
+                }
+
+                if (level.collides(transform.x + velX, transform.y, 32.0f, 32.0f)) {
+                    velX = 0.0f
+                }
+
+                if (level.collides(transform.x, transform.y + velY, 32.0f, 32.0f)) {
+                    velY = 0.0f
                 }
 
                 transform.x += velX

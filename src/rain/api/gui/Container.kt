@@ -283,6 +283,10 @@ class Container(private val material: Material, private val textMaterial: Materi
                     val uy1 = vertList[i*8+6]
                     val uy2 = vertList[i*8+7]
 
+                    if (textVertexDataIndex >= textVertexData.size) {
+                        throw RuntimeException("Index out of bounds: $textVertexDataIndex, ${textVertexData.size}, $textSize")
+                    }
+
                     textVertexData[textVertexDataIndex++] = cx1
                     textVertexData[textVertexDataIndex++] = cy1
                     textVertexData[textVertexDataIndex++] = depth

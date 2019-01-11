@@ -1,8 +1,8 @@
 package example.roguelike.Entity
 
 import org.joml.Random
+import org.joml.Vector2f
 import org.joml.Vector2i
-import org.joml.Vector4f
 import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
@@ -51,7 +51,7 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
     var attacking = false
         private set
     private var prepareAttack = 0.0f
-    private var attackArea = Vector4f()
+    private var attackArea = Vector2f()
     var attackAreaVisual = Entity()
     lateinit var attackAreaVisualSprite: Sprite
     lateinit var attackAreaVisualTransform: Transform
@@ -111,10 +111,10 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
             }
 
             when (direction) {
-                Direction.LEFT -> attackArea = Vector4f(transform.x - 64.0f, transform.y, 128.0f, 48.0f)
-                Direction.RIGHT -> attackArea = Vector4f(transform.x, transform.y, 144.0f, 48.0f)
-                Direction.UP -> attackArea = Vector4f(transform.x, transform.y - 64.0f, 48.0f, 128.0f)
-                Direction.DOWN -> attackArea = Vector4f(transform.x, transform.y, 48.0f, 128.0f)
+                Direction.LEFT -> attackArea = Vector2f(-128.0f, 48.0f)
+                Direction.RIGHT -> attackArea = Vector2f(128.0f, 48.0f)
+                Direction.UP -> attackArea = Vector2f(48.0f, -128.0f)
+                Direction.DOWN -> attackArea = Vector2f(48.0f, 128.0f)
             }
 
             attackAreaVisualTransform.x = transform.x
@@ -123,12 +123,12 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
             attackAreaVisualSprite.visible = true
 
             if (direction == Direction.LEFT || direction == Direction.RIGHT) {
-                attackAreaVisualTransform.sy = attackArea.w
+                attackAreaVisualTransform.sy = attackArea.y
                 attackAreaVisualTransform.sx = 0.0f
             }
             else if (direction == Direction.UP || direction == Direction.DOWN) {
                 attackAreaVisualTransform.sy = 0.0f
-                attackAreaVisualTransform.sx = attackArea.z
+                attackAreaVisualTransform.sx = attackArea.x
             }
         }
     }
@@ -160,20 +160,20 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
         if (attacking) {
             if (prepareAttack < 1.0f) {
                 if (direction == Direction.LEFT) {
-                    attackAreaVisualTransform.sx = attackArea.z * prepareAttack
-                    attackAreaVisualTransform.x = transform.x - (attackArea.z * prepareAttack) * 0.5f
+                    attackAreaVisualTransform.sx = attackArea.x * prepareAttack
+                    attackAreaVisualTransform.x = transform.x + (attackArea.x * prepareAttack) * 0.5f
                 }
                 else if (direction == Direction.RIGHT) {
-                    attackAreaVisualTransform.sx = attackArea.z * prepareAttack
-                    attackAreaVisualTransform.x = transform.x + (attackArea.z * prepareAttack) * 0.5f
+                    attackAreaVisualTransform.sx = attackArea.x * prepareAttack
+                    attackAreaVisualTransform.x = transform.x + (attackArea.x * prepareAttack) * 0.5f
                 }
                 else if (direction == Direction.UP) {
-                    attackAreaVisualTransform.sy = attackArea.w * prepareAttack
-                    attackAreaVisualTransform.y = transform.y - (attackArea.w * prepareAttack) * 0.5f
+                    attackAreaVisualTransform.sy = attackArea.y * prepareAttack
+                    attackAreaVisualTransform.y = transform.y + (attackArea.y * prepareAttack) * 0.5f
                 }
                 else if (direction == Direction.DOWN) {
-                    attackAreaVisualTransform.sy = attackArea.w * prepareAttack
-                    attackAreaVisualTransform.y = transform.y + (attackArea.w * prepareAttack) * 0.5f
+                    attackAreaVisualTransform.sy = attackArea.y * prepareAttack
+                    attackAreaVisualTransform.y = transform.y + (attackArea.y * prepareAttack) * 0.5f
                 }
 
                 prepareAttack += attackSpeed
@@ -190,9 +190,13 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
                     damage *= random.nextInt(4) + 2.0f
                 }
 
-                if (player.transform.x + 28.0f >= attackArea.x && player.transform.x + 4.0f <= attackArea.x + attackArea.z
-                &&  player.transform.y + 28.0f >= attackArea.y && player.transform.y + 4.0f <= attackArea.y + attackArea.w) {
-                    player.damagePlayer(Math.max(1, damage.toInt()))
+                val ax = if (attackArea.x > 0.0f) { transform.x } else { transform.x + attackArea.x }
+                val ay = if (attackArea.y > 0.0f) { transform.y } else { transform.y + attackArea.y }
+
+                // Attacking in Y direction
+                if (player.transform.x + 12.0f >= ax && player.transform.x - 12.0f <= ax + Math.abs(attackArea.x)
+                 && player.transform.y + 12.0f >= ay && player.transform.y - 12.0f <= ay + Math.abs(attackArea.y)) {
+                    player.damagePlayer(Math.max(1, damage.toInt()), transform.x, transform.y)
                     player.inventory.updateHealthText()
                 }
             }

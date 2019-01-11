@@ -894,48 +894,39 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
     }
 
     private fun addWallBlockersAtEdges() {
-        // Find tiles at the edge of a cell
-        // If they are solid we want to extend them into the neighbouring cell
-        // This is to remove the buggy cell change which causes wall stucks and spasm
         var x = 0
         var y = 0
-        for (i in 0 until maxCellX * maxCellY) {
-            if (y < mapHeight - 1) {
-                for (k in 0 until width) {
-                    if (map[(x + k) + y * mapWidth] == 1) {
-                        map[(x + k) + (y + 1) * mapWidth] = 1
+        for (i in 0 until mapWidth*mapHeight) {
+            if (x % width == 0) {
+                if (x < mapWidth - 1) {
+                    if (map[x + y*mapWidth] == 0) {
+                        map[(x + 1) + y * mapWidth] = 0
+                    }
+                }
+                if (x > 0) {
+                    if (map[x + y*mapWidth] == 0) {
+                        map[(x - 1) + y * mapWidth] = 0
                     }
                 }
             }
 
-            if (y > 0) {
-                for (k in 0 until width) {
-                    if (map[(x + k) + y * mapWidth] == 1) {
-                        map[(x + k) + (y - 1) * mapWidth] = 1
+            if (y % height == 0) {
+                if (y < mapHeight - 1) {
+                    if (map[x + y*mapWidth] == 0) {
+                        map[x + (y + 1) * mapWidth] = 0
+                    }
+                }
+                if (y > 0) {
+                    if (map[x + y*mapWidth] == 0) {
+                        map[x + (y - 1) * mapWidth] = 0
                     }
                 }
             }
 
-            if (x < mapWidth - 1 && y + width < mapHeight) {
-                for (k in 0 until width) {
-                    if (map[x + (y + k) * mapWidth] == 1) {
-                        map[(x + 1) + (y + k) * mapWidth] = 1
-                    }
-                }
-            }
-
-            if (x > 0 && y + width < mapHeight) {
-                for (k in 0 until width) {
-                    if (map[x + (y + k) * mapWidth] == 1) {
-                        map[(x - 1) + (y + k) * mapWidth] = 1
-                    }
-                }
-            }
-
-            x += width
+            x += 1
             if (x >= mapWidth) {
                 x = 0
-                y += height
+                y += 1
             }
         }
     }
