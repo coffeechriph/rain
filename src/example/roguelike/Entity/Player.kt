@@ -41,10 +41,6 @@ class Player : Entity() {
         private set
 
     var currentLevel = 0
-    private var regenHealthTimeout = 0
-    private var inCombatCooldown = 0
-    private var inCombat = false
-
     var playerXpLevel = 0
         private set
     var xp = 0
@@ -67,9 +63,6 @@ class Player : Entity() {
     private var yBeforeShake = 0.0f
 
     fun damagePlayer(value: Int) {
-        inCombatCooldown = 100
-        inCombat = true
-        regenHealthTimeout = 0
         damageShake = 1.0f
         healthDamaged += value
     }
@@ -178,31 +171,6 @@ class Player : Entity() {
 
         if (input.keyState(Input.Key.KEY_I) == Input.InputState.PRESSED) {
             inventory.visible = !inventory.visible
-        }
-
-        if (inCombat) {
-            if (inCombatCooldown > 0) {
-                inCombatCooldown -= 1
-            }
-            else if (inCombatCooldown <= 0) {
-                inCombat = false
-                inCombatCooldown = 0
-            }
-        }
-        else {
-            if (healthDamaged > 0 && regenHealthTimeout == 0) {
-                healthDamaged -= 4
-                if (healthDamaged < 0) {
-                    healthDamaged = 0
-                }
-
-                regenHealthTimeout = 80
-                inventory.updateHealthText()
-            }
-
-            if (regenHealthTimeout > 0) {
-                regenHealthTimeout -= 1
-            }
         }
     }
 

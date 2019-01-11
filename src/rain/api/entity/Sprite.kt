@@ -30,12 +30,12 @@ data class Sprite internal constructor(val entity: Long, val material: Material,
 
         val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
         val ibuf = buffer.asFloatBuffer()
-        ibuf.put(16, textureTileOffset.x.toFloat())
-        ibuf.put(17, textureTileOffset.y.toFloat())
-        ibuf.put(18, color.x)
-        ibuf.put(19, color.y)
-        ibuf.put(20, color.z)
-        ibuf.put(21, color.w)
+        ibuf.put(16, color.x)
+        ibuf.put(17, color.y)
+        ibuf.put(18, color.z)
+        ibuf.put(19, color.w)
+        ibuf.put(20, textureTileOffset.x.toFloat())
+        ibuf.put(21, textureTileOffset.y.toFloat())
         return modelMatrixBuffer
     }
 }

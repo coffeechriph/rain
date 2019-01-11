@@ -8,8 +8,8 @@ layout(location = 1) out vec4 Color;
 
 layout(push_constant) uniform ModelMatrix {
     mat4 matrix;
-    vec2 textureOffset;
     vec4 color;
+    vec2 textureOffset;
 } modelMatrix;
 
 layout(set = 0, binding = 0) uniform SceneData {
