@@ -365,7 +365,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         maxCellY = mapHeight / height
         texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
-        tilemapMaterial = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/basic.frag.spv", texture, enableBlend = false)
+        tilemapMaterial = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/tilemap.frag.spv", texture, enableBlend = false)
         itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture)
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight

@@ -143,6 +143,9 @@ class Player : Entity() {
             val shake = Math.sin(damageShake.toDouble() * Math.PI * 32).toFloat() * 3
             transform.y += shake
             scene.activeCamera.view.translate(0.0f, shake * 2, 0.0f)
+
+            val cl = Math.max(Math.min(1.0f,shake),0.0f)
+            sprite.color.set(cl,cl,cl,cl)
             damageShake -= 0.05f
 
             if (damageShake <= 0.0f) {
@@ -151,7 +154,8 @@ class Player : Entity() {
             }
         }
         else {
-            //scene.activeCamera.view.identity()
+            sprite.color.set(0.0f, 0.0f, 0.0f, 0.0f)
+            scene.activeCamera.view.identity()
             yBeforeShake = transform.y
         }
 

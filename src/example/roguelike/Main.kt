@@ -1,7 +1,5 @@
 package example.roguelike
 
-import org.lwjgl.system.Configuration
-import rain.ENABLE_LOGGING
 import rain.api.Api
 
 fun main(args: Array<String>) {
