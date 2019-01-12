@@ -1,9 +1,10 @@
 package rain.vulkan
 
 import org.lwjgl.system.MemoryUtil.memAlloc
-import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_ALL
 import rain.api.gfx.BlendMode
 import rain.api.gfx.Material
+import rain.api.gfx.TexelBuffer
 import rain.api.gfx.Texture2d
 import rain.log
 
@@ -17,6 +18,7 @@ internal class VulkanMaterial(vk: Vk,
                               internal val vertexShader: ShaderModule,
                               internal val fragmentShader: ShaderModule,
                               internal val texture2d: Array<Texture2d>,
+                              internal val uniformTexelBuffer: TexelBuffer?,
                               val depthWriteEnabled: Boolean = true,
                               val blendEnabled: Boolean = true,
                               val srcColor: BlendMode,
@@ -26,6 +28,8 @@ internal class VulkanMaterial(vk: Vk,
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
     internal val sceneData = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
+    internal val texelBufferUniform = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
+
     var isValid = false
         private set
         get() {
@@ -54,6 +58,11 @@ internal class VulkanMaterial(vk: Vk,
 
             if (!sceneData.isValid) {
                 log("Material $name has invalid scene data!")
+                return false
+            }
+
+            if (!texelBufferUniform.isValid) {
+                log("Material $name has invalid texel buffer uniform!")
                 return false
             }
 
@@ -92,14 +101,20 @@ internal class VulkanMaterial(vk: Vk,
         sceneData.update(sceneDataBuffer)
         descriptorPool = DescriptorPool()
         for (i in 0 until texture2d.size) {
-            descriptorPool.withTexture(texture2d[i] as VulkanTexture2d, VK10.VK_SHADER_STAGE_ALL)
+            descriptorPool.withTexture(texture2d[i] as VulkanTexture2d, VK_SHADER_STAGE_ALL)
         }
 
         descriptorPool
-            .withUniformBuffer(sceneData, VK10.VK_SHADER_STAGE_ALL)
+            .withUniformBuffer(sceneData, VK_SHADER_STAGE_ALL)
 
         if (texture2d.isNotEmpty()) {
-            descriptorPool.withUniformBuffer(textureDataUBO, VK10.VK_SHADER_STAGE_ALL)
+            descriptorPool.withUniformBuffer(textureDataUBO, VK_SHADER_STAGE_ALL)
+        }
+
+        if (uniformTexelBuffer != null) {
+            texelBufferUniform.create(uniformTexelBuffer.getData().remaining().toLong())
+            texelBufferUniform.update(uniformTexelBuffer.getData())
+            descriptorPool.withUniformTexelBuffer(texelBufferUniform, VK_SHADER_STAGE_ALL)
         }
 
         log("Descriptor pool for material: $name")

@@ -10,6 +10,7 @@ import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.entity.Transform
 import rain.api.gfx.*
+import rain.log
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import kotlin.math.floor
@@ -284,7 +285,8 @@ class Container(private val material: Material, private val textMaterial: Materi
                     val uy2 = vertList[i*8+7]
 
                     if (textVertexDataIndex >= textVertexData.size) {
-                        throw RuntimeException("Index out of bounds: $textVertexDataIndex, ${textVertexData.size}, $textSize")
+                        log("Index out of bounds: $textVertexDataIndex, ${textVertexData.size}, $textSize")
+                        break
                     }
 
                     textVertexData[textVertexDataIndex++] = cx1

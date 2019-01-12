@@ -5,7 +5,6 @@ import org.lwjgl.system.MemoryUtil.memFree
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import rain.assertion
-import java.nio.LongBuffer
 
 internal class DescriptorPool {
     var isValid = false
@@ -18,9 +17,11 @@ internal class DescriptorPool {
         private set
     private var uniformBuffers = ArrayList<UniformBufferDescriptor>()
     private var textureDescriptors = ArrayList<TextureDescriptor>()
+    private var uniformTexelBuffers = ArrayList<UniformTexelBufferDescriptor>()
 
     internal class TextureDescriptor(val buffer: VulkanTexture2d, val stageFlags: Int)
     internal class UniformBufferDescriptor(val buffer: UniformBuffer, val stageFlags: Int)
+    internal class UniformTexelBufferDescriptor(val buffer: UniformTexelBuffer, val stageFlags: Int)
 
     fun invalidate() {
         isValid = false
@@ -35,6 +36,12 @@ internal class DescriptorPool {
     fun withTexture(texture: VulkanTexture2d, stageFlags: Int): DescriptorPool {
         val textures = TextureDescriptor(texture, stageFlags)
         textureDescriptors.add(textures)
+        return this
+    }
+
+    fun withUniformTexelBuffer(uniformTexelBuffer: UniformTexelBuffer, stageFlags: Int): DescriptorPool {
+        val uniform = UniformTexelBufferDescriptor(uniformTexelBuffer, stageFlags)
+        uniformTexelBuffers.add(uniform)
         return this
     }
 
@@ -62,6 +69,16 @@ internal class DescriptorPool {
                     .pImmutableSamplers(immutableSampler)
         }
 
+        for (texel in uniformTexelBuffers) {
+            descriptorSetLayoutBinding[bindingIndex]
+                    .binding(bindingIndex)
+                    .descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER)
+                    .descriptorCount(1)
+                    .stageFlags(VK_SHADER_STAGE_ALL)
+                    .pImmutableSamplers(null)
+            bindingIndex += 1
+        }
+
         // Descriptor set create info
         val descriptorSetLayoutCreateInfo = VkDescriptorSetLayoutCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO)
@@ -84,6 +101,9 @@ internal class DescriptorPool {
         if (textureDescriptors.isNotEmpty()) {
             poolSizeCount += 1
         }
+        if (uniformTexelBuffers.isNotEmpty()) {
+            poolSizeCount += 1
+        }
 
         val descriptorPoolSize = VkDescriptorPoolSize.calloc(poolSizeCount)
         descriptorPoolSize[0]
@@ -95,6 +115,13 @@ internal class DescriptorPool {
             descriptorPoolSize[1]
                     .type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
                     .descriptorCount(textureDescriptors.size)
+        }
+
+        // TODO: This won't work in case we have a texel buffer but no texture and uniform buffers
+        if (uniformTexelBuffers.isNotEmpty()) {
+            descriptorPoolSize[2]
+                    .type(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER)
+                    .descriptorCount(uniformTexelBuffers.size)
         }
 
         val descriptorPoolCreateInfo = VkDescriptorPoolCreateInfo.calloc()
@@ -160,6 +187,27 @@ internal class DescriptorPool {
                     .pImageInfo(samplerInfo)
                     .dstArrayElement(0)
                     .dstBinding(bindingIndex)
+            bindingIndex += 1
+        }
+
+        for (i in 0 until uniformTexelBuffers.size) {
+            val pBufferView = memAllocLong(1)
+            pBufferView.put(0, uniformTexelBuffers[i].buffer.bufferView)
+
+            val pBufferInfo = VkDescriptorBufferInfo.calloc(1)
+                    .buffer(uniformTexelBuffers[i].buffer.rawBuffer.buffer)
+                    .offset(0)
+                    .range(VK10.VK_WHOLE_SIZE)
+
+            writeDescriptorSet[i]
+                    .sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
+                    .pNext(0)
+                    .dstSet(pDescriptorSet[0])
+                    .descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER)
+                    .pBufferInfo(pBufferInfo)
+                    .dstArrayElement(0)
+                    .dstBinding(bindingIndex)
+                    .pTexelBufferView(pBufferView)
             bindingIndex += 1
         }
 

@@ -396,7 +396,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
         enemySystem = scene.newSystem()
 
-        enemyAttackMaterial = resourceFactory.createMaterial("enemyAttackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, true, false)
+        enemyAttackMaterial = resourceFactory.createMaterial("enemyAttackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, null, true, false)
         enemyAttackSystem = scene.newSystem()
 
         collisionSystem = scene.newSystem()
@@ -411,7 +411,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
         lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 4)))
-        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture, true, true, BlendMode.BLEND_FACTOR_DST_COLOR, BlendMode.BLEND_FACTOR_ZERO)
+        lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture, null, true, true, BlendMode.BLEND_FACTOR_DST_COLOR, BlendMode.BLEND_FACTOR_ZERO)
         val lightTransform = Transform()
         lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
