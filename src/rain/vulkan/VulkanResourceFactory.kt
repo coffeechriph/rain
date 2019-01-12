@@ -93,6 +93,12 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return material
     }
 
+    override fun createTexelBuffer(): TexelBuffer {
+        val texelBuffer = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, this)
+        texelBuffer.create(1024)
+        return texelBuffer
+    }
+
     override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, texelBuffer: TexelBuffer?, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
         log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
 

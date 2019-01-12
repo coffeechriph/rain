@@ -26,7 +26,7 @@ open class Rain {
         private set
     lateinit var gui: Gui
         private set
-    val scene = Scene()
+    lateinit var scene: Scene
 
     var showMouse = true
         set(value) {
@@ -49,6 +49,7 @@ open class Rain {
             Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
         }
 
+        scene = Scene(resourceFactory)
         gui = Gui(resourceFactory, vulkanRenderer)
         stateManager = StateManager(resourceFactory, scene, gui, input)
     }

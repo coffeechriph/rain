@@ -52,11 +52,7 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
             dataBuffer.asFloatBuffer().put(vertices).flip()
 
             vertexCount = vertices.size / vertexSize
-            if (bufferState == VertexBufferState.STATIC) {
-                rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
-            } else {
-                rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
-            }
+            rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
         }
     }
 

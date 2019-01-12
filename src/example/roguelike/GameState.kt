@@ -41,9 +41,9 @@ class GameState(stateManager: StateManager): State(stateManager) {
     override fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
         mobTexture = resourceFactory.loadTexture2d("mobTexture","./data/textures/dwarf.png", TextureFilter.NEAREST)
         mobTexture.setTiledTexture(16,16)
-        mobMaterial = resourceFactory.createMaterial("mobMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture)
+        mobMaterial = resourceFactory.createMaterial("mobMaterial","./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", mobTexture)
         player = Player()
-        playerSystem = scene.newSystem(mobMaterial)
+        playerSystem = scene.newSystem(mobTexture)
         playerSystem.newEntity(player)
                 .attachTransformComponent()
                 .attachSpriteComponent()
@@ -54,9 +54,9 @@ class GameState(stateManager: StateManager): State(stateManager) {
 
         val attackTexture = resourceFactory.loadTexture2d("attackTexture","./data/textures/attack.png", TextureFilter.NEAREST)
         attackTexture.setTiledTexture(16,16)
-        attackMaterial = resourceFactory.createMaterial("attackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", attackTexture)
+        attackMaterial = resourceFactory.createMaterial("attackMaterial", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", attackTexture)
 
-        attackSystem = scene.newSystem(attackMaterial)
+        attackSystem = scene.newSystem(attackTexture)
         attackSystem.newEntity(player.attack)
                 .attachTransformComponent()
                 .attachSpriteComponent()
@@ -64,8 +64,8 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .build()
 
         val healthTexture = resourceFactory.loadTexture2d("healthTexture","./data/textures/health.png", TextureFilter.NEAREST)
-        healthMaterial = resourceFactory.createMaterial("healthMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", healthTexture)
-        healthBarSystem = scene.newSystem(healthMaterial)
+        healthMaterial = resourceFactory.createMaterial("healthMaterial", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", healthTexture)
+        healthBarSystem = scene.newSystem(healthTexture)
 
         // TODO: Constant window dimensions
         level.create(resourceFactory, scene, 8960 / 64, 5376 / 64, 1280 / 64, 768 / 64)

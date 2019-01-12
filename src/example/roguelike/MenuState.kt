@@ -69,7 +69,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         bannerMaterial = resourceFactory.createMaterial("bannerMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", bannerTexture)
         bannerEntity = Entity()
 
-        bannerEntitySystem = scene.newSystem(bannerMaterial)
+        bannerEntitySystem = scene.newSystem(bannerTexture)
         bannerEntitySystem.newEntity(bannerEntity)
                 .attachTransformComponent()
                 .attachSpriteComponent()

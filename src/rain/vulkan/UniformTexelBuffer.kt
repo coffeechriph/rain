@@ -1,16 +1,14 @@
 package rain.vulkan
 
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAllocLong
 import org.lwjgl.util.vma.Vma
-import org.lwjgl.util.vma.Vma.vmaMapMemory
-import org.lwjgl.util.vma.Vma.vmaUnmapMemory
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkBufferViewCreateInfo
+import rain.api.gfx.TexelBuffer
 import rain.assertion
 import java.nio.ByteBuffer
 
-internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBuffer: CommandPool.CommandBuffer, private val setupQueue: Queue, private val resourceFactory: VulkanResourceFactory) {
+internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBuffer: CommandPool.CommandBuffer, private val setupQueue: Queue, private val resourceFactory: VulkanResourceFactory): TexelBuffer {
     lateinit var rawBuffer: RawBuffer
     var bufferView: Long = 0
         private set
@@ -50,17 +48,9 @@ internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBu
         isValid = true
     }
 
-    internal fun update(bufferData: ByteBuffer) {
-        val pData = MemoryUtil.memAllocPointer(4)
-        val err = vmaMapMemory(vk.vmaAllocator, rawBuffer.allocation, pData)
-
-        val data = pData.get(0)
-        MemoryUtil.memFree(pData)
-        if (err != VK_SUCCESS) {
-            assertion("Failed to map uniform buffer memory: " + VulkanResult(err))
+    override fun update(data: ByteBuffer) {
+        if (::rawBuffer.isInitialized) {
+            rawBuffer.buffer(vk.vmaAllocator, data)
         }
-
-        MemoryUtil.memCopy(MemoryUtil.memAddress(bufferData), data, bufferData.remaining().toLong())
-        vmaUnmapMemory(vk.vmaAllocator, rawBuffer.allocation)
     }
 }

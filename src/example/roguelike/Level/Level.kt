@@ -382,7 +382,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
         texture.setTiledTexture(16,16)
         tilemapMaterial = resourceFactory.createMaterial("tilemapMaterial","./data/shaders/tilemap.vert.spv", "./data/shaders/tilemap.frag.spv", texture, enableBlend = false)
-        itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture)
+        itemMaterial = resourceFactory.createMaterial("itemMaterial", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", texture)
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
         this.width = width
@@ -393,20 +393,20 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
         enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
-        enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
-        enemySystem = scene.newSystem(enemyMaterial)
+        enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", enemyTexture)
+        enemySystem = scene.newSystem(enemyTexture)
 
-        enemyAttackMaterial = resourceFactory.createMaterial("enemyAttackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, null, true, false)
-        enemyAttackSystem = scene.newSystem(enemyAttackMaterial)
+        enemyAttackMaterial = resourceFactory.createMaterial("enemyAttackMaterial", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", texture, null, true, false)
+        enemyAttackSystem = scene.newSystem(texture)
 
         collisionSystem = scene.newSystem(null)
-        containerSystem = scene.newSystem(itemMaterial)
-        levelItemSystem = scene.newSystem(itemMaterial)
-        xpBallSystem = scene.newSystem(itemMaterial)
+        containerSystem = scene.newSystem(texture)
+        levelItemSystem = scene.newSystem(texture)
+        xpBallSystem = scene.newSystem(texture)
 
         torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
-        torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture)
-        torchSystem = scene.newSystem(torchMaterial)
+        torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", torchTexture)
+        torchSystem = scene.newSystem(torchTexture)
 
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
@@ -416,7 +416,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
 
-        enemyTargetSystem = scene.newSystem(itemMaterial)
+        enemyTargetSystem = scene.newSystem(texture)
         enemyTargetEntity = Entity()
         enemyTargetSystem.newEntity(enemyTargetEntity)
                 .attachTransformComponent()

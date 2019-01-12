@@ -69,6 +69,10 @@ internal class VulkanMaterial(vk: Vk,
             return field
         }
 
+    override fun getTexelBuffer(): TexelBuffer {
+        return texelBufferUniform
+    }
+
     override fun getTexture2d(): Array<Texture2d> {
         return texture2d
     }
@@ -112,9 +116,7 @@ internal class VulkanMaterial(vk: Vk,
         }
 
         if (uniformTexelBuffer != null) {
-            texelBufferUniform.create(uniformTexelBuffer.getData().remaining().toLong())
-            texelBufferUniform.update(uniformTexelBuffer.getData())
-            descriptorPool.withUniformTexelBuffer(texelBufferUniform, VK_SHADER_STAGE_ALL)
+            descriptorPool.withUniformTexelBuffer(uniformTexelBuffer!! as UniformTexelBuffer, VK_SHADER_STAGE_ALL)
         }
 
         log("Descriptor pool for material: $name")

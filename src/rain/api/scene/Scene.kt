@@ -6,18 +6,20 @@ import com.badlogic.gdx.physics.box2d.World
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.entity.metersToPixels
 import rain.api.gfx.*
 
-class Scene {
+class Scene(val resourceFactory: ResourceFactory) {
     private lateinit var quadVertexBuffer: VertexBuffer
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
     private val simpleDraws = ArrayList<SimpleDraw>()
+    private val spriteBatchers = ArrayList<SpriteBatcher>()
     lateinit var physicWorld: World
         private set
     private var physicsContactListener = PhysicsContactListener()
@@ -25,9 +27,17 @@ class Scene {
     var activeCamera = Camera(Vector2f(0.0f, 20.0f))
     private lateinit var emitterMaterial: Material
 
-    fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
+    fun<T: Entity> newSystem(texture2d: Texture2d?): EntitySystem<T> {
+        val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer() } else { null }
+
+        val material = resourceFactory.createMaterial("entitySystem${texture2d}", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", texture2d, texelBuffer)
         val system = EntitySystem<T>(this, material)
         entitySystems.add(system as EntitySystem<Entity>)
+
+        if (material != null) {
+            spriteBatchers.add(SpriteBatcher(system, material, resourceFactory))
+        }
+
         return system
     }
 
@@ -43,6 +53,7 @@ class Scene {
         simpleDraws.add(simpleDraw)
     }
 
+    // TODO: Remove sprite batchers as well when systems are deleted
     fun removeEntitySystem(system: EntitySystem<*>) {
         entitySystems.remove(system)
     }
@@ -70,6 +81,11 @@ class Scene {
         physicWorld.step(1.0f / 60.0f, 6, 2)
         physicWorld.clearForces()
 
+        for (batcher in spriteBatchers) {
+            batcher.batch()
+            batcher.update()
+        }
+
         for (system in entitySystems) {
             for (entity in system.getEntityList()) {
                 entity!!.update(this, input, system, deltaTime)
@@ -93,13 +109,6 @@ class Scene {
                 }
 
                 animator.animationTime += deltaTime * animator.animation.speed
-            }
-
-            for (sprite in system.getSpriteList()) {
-                if (!sprite!!.visible) {
-                    continue
-                }
-
             }
 
             for (emitter in system.getParticleEmitterList()) {
@@ -148,14 +157,18 @@ class Scene {
             submitListSorted.add(Drawable(simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, simpleDraw.transform.z))
         }
 
+        for (batcher in spriteBatchers) {
+            submitListSorted.add(Drawable(batcher.material, memAlloc(0), batcher.vertexBuffer, 0.0f))
+        }
+
         for (system in entitySystems) {
-            for (sprite in system.getSpriteList()) {
+            /*for (sprite in system.getSpriteList()) {
                 if (!sprite!!.visible) {
                     continue
                 }
 
                 submitListSorted.add(Drawable(system.material!!, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
-            }
+            }*/
 
             for (emitter in system.getParticleEmitterList()) {
                 if (!emitter!!.enabled) {
@@ -192,6 +205,7 @@ class Scene {
         tilemaps.clear()
         cameras.clear()
         simpleDraws.clear()
+        spriteBatchers.clear()
         physicWorld.dispose()
     }
 }
