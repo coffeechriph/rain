@@ -43,10 +43,10 @@ class GameState(stateManager: StateManager): State(stateManager) {
         mobTexture.setTiledTexture(16,16)
         mobMaterial = resourceFactory.createMaterial("mobMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", mobTexture)
         player = Player()
-        playerSystem = scene.newSystem()
+        playerSystem = scene.newSystem(mobMaterial)
         playerSystem.newEntity(player)
                 .attachTransformComponent()
-                .attachSpriteComponent(mobMaterial)
+                .attachSpriteComponent()
                 .attachAnimatorComponent()
                 .build()
 
@@ -56,16 +56,16 @@ class GameState(stateManager: StateManager): State(stateManager) {
         attackTexture.setTiledTexture(16,16)
         attackMaterial = resourceFactory.createMaterial("attackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", attackTexture)
 
-        attackSystem = scene.newSystem()
+        attackSystem = scene.newSystem(attackMaterial)
         attackSystem.newEntity(player.attack)
                 .attachTransformComponent()
-                .attachSpriteComponent(attackMaterial)
+                .attachSpriteComponent()
                 .attachAnimatorComponent()
                 .build()
 
         val healthTexture = resourceFactory.loadTexture2d("healthTexture","./data/textures/health.png", TextureFilter.NEAREST)
         healthMaterial = resourceFactory.createMaterial("healthMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", healthTexture)
-        healthBarSystem = scene.newSystem()
+        healthBarSystem = scene.newSystem(healthMaterial)
 
         // TODO: Constant window dimensions
         level.create(resourceFactory, scene, 8960 / 64, 5376 / 64, 1280 / 64, 768 / 64)

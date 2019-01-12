@@ -4,10 +4,9 @@ import org.joml.Matrix4f
 import org.joml.Vector2i
 import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil.memAlloc
-import rain.api.gfx.Material
 import java.nio.ByteBuffer
 
-data class Sprite internal constructor(val entity: Long, val material: Material, val transform: Transform, val textureTileOffset: Vector2i) {
+data class Sprite internal constructor(val entity: Long, val transform: Transform, val textureTileOffset: Vector2i) {
     var visible = true
 
     // TODO: Color will be added to the source atm

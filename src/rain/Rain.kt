@@ -86,7 +86,7 @@ open class Rain {
                     numUpdates++
                 }
 
-                scene.render(vulkanRenderer)
+                scene.render(vulkanRenderer, resourceFactory)
                 gui.render()
                 vulkanRenderer.render()
             }

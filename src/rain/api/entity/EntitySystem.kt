@@ -11,10 +11,10 @@ import rain.api.gfx.ResourceFactory
 import rain.api.scene.Scene
 import rain.assertion
 
-val pixelsToMeters = 1.0f / 64.0f
-val metersToPixels = 64.0f / 1.0f
+const val pixelsToMeters = 1.0f / 64.0f
+const val metersToPixels = 64.0f / 1.0f
 
-class EntitySystem<T: Entity>(val scene: Scene) {
+class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     private var entityId: Long = 0
     private var entities = ArrayList<Long>()
     private var entityWrappers = ArrayList<T?>()
@@ -128,14 +128,17 @@ class EntitySystem<T: Entity>(val scene: Scene) {
             return this
         }
 
-        fun attachSpriteComponent(material: Material): Builder<T> {
+        fun attachSpriteComponent(): Builder<T> {
             if (system.spriteComponentsMap.containsKey(entityId)) {
                 assertion("A sprite component already exists for entity $entityId!")
+            }
+            if (system.material == null) {
+                assertion("Sprite components may not be attached to a system without a material!")
             }
 
             val tr = system.findTransformComponent(entityId)
                     ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
-            val c = Sprite(entityId, material, tr, Vector2i())
+            val c = Sprite(entityId, tr, Vector2i())
             system.spriteComponents.add(c)
             system.spriteComponentsMap.put(entityId, c)
             return this

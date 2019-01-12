@@ -5,7 +5,6 @@ import org.joml.*
 import rain.api.entity.DirectionType
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
-import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 
 enum class RoomType {
@@ -65,7 +64,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
         return viableTiles.removeAt(rand.nextInt(viableTiles.size))
     }
 
-    internal fun generateEnemiesInRoom(random: Random, enemySystem: EntitySystem<Enemy>, enemyMaterial: Material, enemyAttackSystem: EntitySystem<Entity>, enemyAttackMaterial: Material, player: Player, count: Int, healthBarSystem: EntitySystem<HealthBar>, healthBarMaterial: Material) {
+    internal fun generateEnemiesInRoom(random: Random, enemySystem: EntitySystem<Enemy>, enemyAttackSystem: EntitySystem<Entity>, player: Player, count: Int, healthBarSystem: EntitySystem<HealthBar>) {
         for (i in 0 until count) {
             val p = findNoneEdgeTile(random)
             if (p == null) {
@@ -82,13 +81,13 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
 
             enemySystem.newEntity(kracGuy)
                     .attachTransformComponent()
-                    .attachSpriteComponent(enemyMaterial)
+                    .attachSpriteComponent()
                     .attachAnimatorComponent()
                     .build()
 
             enemyAttackSystem.newEntity(kracGuy.attackAreaVisual)
                     .attachTransformComponent()
-                    .attachSpriteComponent(enemyAttackMaterial)
+                    .attachSpriteComponent()
 
             val attackSprite = enemyAttackSystem.findSpriteComponent(kracGuy.getId())!!
             attackSprite.visible = false
@@ -108,7 +107,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
 
             healthBarSystem.newEntity(kracGuy.healthBar)
                     .attachTransformComponent()
-                    .attachSpriteComponent(healthBarMaterial)
+                    .attachSpriteComponent()
                     .build()
 
             kracGuy.healthBar.sprite.visible = false
@@ -120,7 +119,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
         }
     }
 
-    internal fun generateContainersInRoom(random: Random, count: Int, containerSystem: EntitySystem<Container>, itemMaterial: Material, resourceFactory: ResourceFactory) {
+    internal fun generateContainersInRoom(random: Random, count: Int, containerSystem: EntitySystem<Container>, resourceFactory: ResourceFactory) {
         for (i in 0 until count) {
             val tile = findNoneEdgeTile(random)
             if (tile == null) {
@@ -130,7 +129,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
             val container = Container(random.nextInt(2), random.nextInt(7) + 1)
             containerSystem.newEntity(container)
                     .attachTransformComponent()
-                    .attachSpriteComponent(itemMaterial)
+                    .attachSpriteComponent()
                     .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
                     .build()
 
@@ -149,7 +148,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
         }
     }
 
-    internal fun generateLightsInRoom(random: Random, map: IntArray, mapWidth: Int, width: Int, height: Int, torches: Int, campfire: Boolean, torchSystem: EntitySystem<LightSource>, torchMaterial: Material, resourceFactory: ResourceFactory) {
+    internal fun generateLightsInRoom(random: Random, map: IntArray, mapWidth: Int, width: Int, height: Int, torches: Int, campfire: Boolean, torchSystem: EntitySystem<LightSource>, resourceFactory: ResourceFactory) {
         var numTorches = 0
         for (tile in tiles) {
             val x = tile.x
@@ -160,7 +159,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
                 val et = LightSource(x / width, y / height, Vector3f(0.9f, 0.55f, 0.1f))
                 torchSystem.newEntity(et)
                         .attachTransformComponent()
-                        .attachSpriteComponent(torchMaterial)
+                        .attachSpriteComponent()
                         .attachParticleEmitter(resourceFactory, 10, 16.0f, 1.0f, Vector2f(0.0f, -10.0f), DirectionType.LINEAR, 4.0f, 0.5f)
                         .build()
                 val etTransform = torchSystem.findTransformComponent(et.getId())

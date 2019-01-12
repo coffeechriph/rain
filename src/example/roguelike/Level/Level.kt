@@ -179,7 +179,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                         val xpBall = XpBall(player)
                         xpBallSystem.newEntity(xpBall)
                                 .attachTransformComponent()
-                                .attachSpriteComponent(itemMaterial)
+                                .attachSpriteComponent()
                                 .build()
 
                         var px = enemy.transform.x.toInt() + (Math.sin(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
@@ -352,7 +352,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                             random.nextInt(finalQuality)+1,random.nextInt(finalQuality)+1)
                     levelItemSystem.newEntity(item)
                             .attachTransformComponent()
-                            .attachSpriteComponent(itemMaterial)
+                            .attachSpriteComponent()
                             .build()
                     val angle = random.nextFloat()*Math.PI
                     val direction = Vector2f(Math.sin(angle).toFloat(), Math.cos(angle).toFloat())
@@ -394,19 +394,19 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
         enemyTexture.setTiledTexture(16,16)
         enemyMaterial = resourceFactory.createMaterial("enemyMaterial","./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", enemyTexture)
-        enemySystem = scene.newSystem()
+        enemySystem = scene.newSystem(enemyMaterial)
 
         enemyAttackMaterial = resourceFactory.createMaterial("enemyAttackMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", texture, null, true, false)
-        enemyAttackSystem = scene.newSystem()
+        enemyAttackSystem = scene.newSystem(enemyAttackMaterial)
 
-        collisionSystem = scene.newSystem()
-        containerSystem = scene.newSystem()
-        levelItemSystem = scene.newSystem()
-        xpBallSystem = scene.newSystem()
+        collisionSystem = scene.newSystem(null)
+        containerSystem = scene.newSystem(itemMaterial)
+        levelItemSystem = scene.newSystem(itemMaterial)
+        xpBallSystem = scene.newSystem(itemMaterial)
 
         torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
         torchMaterial = resourceFactory.createMaterial("torchMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", torchTexture)
-        torchSystem = scene.newSystem()
+        torchSystem = scene.newSystem(torchMaterial)
 
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
@@ -416,11 +416,11 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         lightTransform.z = 17.0f
         scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
 
-        enemyTargetSystem = scene.newSystem()
+        enemyTargetSystem = scene.newSystem(itemMaterial)
         enemyTargetEntity = Entity()
         enemyTargetSystem.newEntity(enemyTargetEntity)
                 .attachTransformComponent()
-                .attachSpriteComponent(itemMaterial)
+                .attachSpriteComponent()
         val enemyTargetEntitySprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
         enemyTargetEntitySprite.visible = false
         enemyTargetEntitySprite.textureTileOffset.set(4,7)
@@ -805,7 +805,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         exitPosition = Vector2i(width/2, height/2)
 
         mapBackIndices[exitPosition.x + exitPosition.y * mapWidth] = TileIndex(2, endRoom.type.ordinal)
-        room.generateLightsInRoom(random, map, mapWidth, width, height, width*2+height*2, false, torchSystem, torchMaterial, resourceFactory)
+        room.generateLightsInRoom(random, map, mapWidth, width, height, width*2+height*2, false, torchSystem, resourceFactory)
 
         // Put campfire next to exit on first level
         val tx = exitPosition.x % width
@@ -831,7 +831,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         val container = Container(0, 5)
         containerSystem.newEntity(container)
                 .attachTransformComponent()
-                .attachSpriteComponent(itemMaterial)
+                .attachSpriteComponent()
                 .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
                 .build()
 
@@ -1427,10 +1427,10 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         for (room in rooms) {
             val lightCount = random.nextInt(5) + 3
             val thisRoomEnemyCount = (room.tiles.size/64)
-            room.generateEnemiesInRoom(random, enemySystem, enemyMaterial, enemyAttackSystem, enemyAttackMaterial, player, thisRoomEnemyCount, healthBarSystem, healthBarMaterial)
+            room.generateEnemiesInRoom(random, enemySystem, enemyAttackSystem, player, thisRoomEnemyCount, healthBarSystem)
             val thisRoomContainerCount = room.tiles.size/72
-            room.generateContainersInRoom(random, thisRoomContainerCount, containerSystem, itemMaterial, resourceFactory)
-            room.generateLightsInRoom(random, map, mapWidth, width, height, lightCount, random.nextInt(10) == 1, torchSystem, torchMaterial, resourceFactory)
+            room.generateContainersInRoom(random, thisRoomContainerCount, containerSystem, resourceFactory)
+            room.generateLightsInRoom(random, map, mapWidth, width, height, lightCount, random.nextInt(10) == 1, torchSystem, resourceFactory)
         }
     }
 }

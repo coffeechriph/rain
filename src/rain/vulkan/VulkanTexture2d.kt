@@ -220,4 +220,44 @@ internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: Vu
     fun invalidate() {
         isValid = false
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VulkanTexture2d
+
+        if (id != other.id) return false
+        if (vk != other.vk) return false
+        if (resourceFactory != other.resourceFactory) return false
+        if (texture != other.texture) return false
+        if (allocation != other.allocation) return false
+        if (textureView != other.textureView) return false
+        if (textureSampler != other.textureSampler) return false
+        if (isValid != other.isValid) return false
+        if (width != other.width) return false
+        if (height != other.height) return false
+        if (texCoordWidth != other.texCoordWidth) return false
+        if (texCoordHeight != other.texCoordHeight) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + vk.hashCode()
+        result = 31 * result + resourceFactory.hashCode()
+        result = 31 * result + texture.hashCode()
+        result = 31 * result + allocation.hashCode()
+        result = 31 * result + textureView.hashCode()
+        result = 31 * result + textureSampler.hashCode()
+        result = 31 * result + isValid.hashCode()
+        result = 31 * result + width
+        result = 31 * result + height
+        result = 31 * result + texCoordWidth.hashCode()
+        result = 31 * result + texCoordHeight.hashCode()
+        return result
+    }
+
+
 }

@@ -25,8 +25,8 @@ class Scene {
     var activeCamera = Camera(Vector2f(0.0f, 20.0f))
     private lateinit var emitterMaterial: Material
 
-    fun<T: Entity> newSystem(): EntitySystem<T> {
-        val system = EntitySystem<T>(this)
+    fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
+        val system = EntitySystem<T>(this, material)
         entitySystems.add(system as EntitySystem<Entity>)
         return system
     }
@@ -126,7 +126,7 @@ class Scene {
         }
     }
 
-    internal fun render(renderer: Renderer) {
+    internal fun render(renderer: Renderer, resourceFactory: ResourceFactory) {
         renderer.setActiveCamera(activeCamera)
         val submitListSorted = ArrayList<Drawable>()
         val submitListParticles = ArrayList<Drawable>()
@@ -154,7 +154,7 @@ class Scene {
                     continue
                 }
 
-                submitListSorted.add(Drawable(sprite.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
+                submitListSorted.add(Drawable(system.material!!, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
             }
 
             for (emitter in system.getParticleEmitterList()) {
