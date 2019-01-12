@@ -111,6 +111,18 @@ class Player : Entity() {
         }
     }
 
+    fun damageEnemies(enemies: ArrayList<Enemy>) {
+        if (attack.isActive()) {
+            for (enemy in enemies) {
+                if (enemy.transform.x + 32.0f >= attack.transform.x - 32.0f && enemy.transform.x - 32.0f <= attack.transform.x + 32.0f &&
+                    enemy.transform.y + 32.0f >= attack.transform.y - 32.0f && enemy.transform.y - 32.0f <= attack.transform.y + 32.0f) {
+                    enemy.damage(this)
+                    break
+                }
+            }
+        }
+    }
+
     fun setPosition(pos: Vector2i) {
         cellX = pos.x / 1280
         cellY = pos.y / 768
@@ -125,12 +137,18 @@ class Player : Entity() {
         animator = system.findAnimatorComponent(getId())!!
         transform.setScale(64.0f,64.0f)
 
-        animator.addAnimation("idle", 0, 0, 0, 0.0f)
+        animator.addAnimation("idle_down", 0, 0, 0, 0.0f)
         animator.addAnimation("walk_down", 0, 4, 0, 4.0f)
+
+        animator.addAnimation("idle_right", 0, 0, 1, 0.0f)
         animator.addAnimation("walk_right", 0, 4, 1, 4.0f)
+
+        animator.addAnimation("idle_left", 0, 0, 2, 0.0f)
         animator.addAnimation("walk_left", 0, 4, 2, 4.0f)
+
+        animator.addAnimation("idle_up", 0, 0, 3, 0.0f)
         animator.addAnimation("walk_up", 0, 4, 3, 4.0f)
-        animator.setAnimation("idle")
+        animator.setAnimation("idle_down")
 
         attack = Attack(transform)
         attack.attacker = this
@@ -192,16 +210,13 @@ class Player : Entity() {
             facingDirection = lastDirection
         }
 
-        // Delay before movement starts
-        when (facingDirection) {
-            Direction.LEFT -> animator.setAnimation("walk_left")
-            Direction.RIGHT -> animator.setAnimation("walk_right")
-            Direction.UP -> animator.setAnimation("walk_up")
-            Direction.DOWN -> animator.setAnimation("walk_down")
-        }
-
-        if (facingDirection == Direction.NONE) {
-            animator.setAnimation("idle")
+        if (inputTimestamps.size <= 0) {
+            when (facingDirection) {
+                Direction.LEFT  -> animator.setAnimation("idle_left")
+                Direction.RIGHT -> animator.setAnimation("idle_right")
+                Direction.UP    -> animator.setAnimation("idle_up")
+                Direction.DOWN  -> animator.setAnimation("idle_down")
+            }
         }
 
         if (dodgeTimeout > 0.0f) {
@@ -229,10 +244,22 @@ class Player : Entity() {
             var velY = 0.0f
             lastDirection = (inputTimestamps.sortedBy { i -> i.time })[0].direction
             when (lastDirection) {
-                Direction.LEFT -> velX -= speed
-                Direction.RIGHT -> velX += speed
-                Direction.UP -> velY -= speed
-                Direction.DOWN -> velY += speed
+                Direction.LEFT -> {
+                    velX -= speed
+                    animator.setAnimation("walk_left")
+                }
+                Direction.RIGHT -> {
+                    velX += speed
+                    animator.setAnimation("walk_right")
+                }
+                Direction.UP -> {
+                    velY -= speed
+                    animator.setAnimation("walk_up")
+                }
+                Direction.DOWN -> {
+                    velY += speed
+                    animator.setAnimation("walk_down")
+                }
                 Direction.NONE -> {}
             }
 

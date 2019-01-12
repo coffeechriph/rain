@@ -11,11 +11,12 @@ import rain.api.scene.Scene
     1. onCollision method which takes in two entities that collided.
     2. parent entity to allow this entities transform the be linked to the parent
  */
-class Attack(val parentTransform: Transform) : Entity() {
+class Attack(private val parentTransform: Transform) : Entity() {
     private var active = false
     private var direction = Direction.DOWN
     private var activeTime = 0
     lateinit var attacker: Entity
+    lateinit var transform: Transform
 
     fun attack(direction: Direction) {
         active = true
@@ -31,7 +32,7 @@ class Attack(val parentTransform: Transform) : Entity() {
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
-        val transform = system.findTransformComponent(getId())!!
+        transform = system.findTransformComponent(getId())!!
         transform.setPosition(1200.0f,600.0f, 9.0f)
         transform.setScale(96.0f,96.0f)
 
@@ -51,26 +52,27 @@ class Attack(val parentTransform: Transform) : Entity() {
         val animator = system.findAnimatorComponent(getId())!!
 
         if (active) {
-            val body = system.findColliderComponent(getId())!!
-            val transform = system.findTransformComponent(getId())!!
             transform.z = parentTransform.z + 0.01f
-            body.setActive(true)
 
             when(direction) {
                 Direction.LEFT -> {
-                    body.setPosition(parentTransform.x - 32, parentTransform.y)
+                    transform.x = parentTransform.x - 32
+                    transform.y = parentTransform.y
                     animator.setAnimation("left")
                 }
                 Direction.RIGHT -> {
-                    body.setPosition(parentTransform.x + 32, parentTransform.y)
+                    transform.x = parentTransform.x + 32
+                    transform.y = parentTransform.y
                     animator.setAnimation("right")
                 }
                 Direction.UP -> {
-                    body.setPosition(parentTransform.x, parentTransform.y - 32)
+                    transform.x = parentTransform.x
+                    transform.y = parentTransform.y - 32
                     animator.setAnimation("up")
                 }
                 Direction.DOWN -> {
-                    body.setPosition(parentTransform.x, parentTransform.y + 32)
+                    transform.x = parentTransform.x
+                    transform.y = parentTransform.y + 32
                     animator.setAnimation("down")
                 }
             }
@@ -79,7 +81,6 @@ class Attack(val parentTransform: Transform) : Entity() {
             activeTime++
             if (activeTime > 10) {
                 active = false
-                body.setActive(false)
                 activeTime = 0
             }
         }

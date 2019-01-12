@@ -1,6 +1,5 @@
 package example.roguelike.Level
 
-import com.badlogic.gdx.physics.box2d.BodyDef
 import example.roguelike.Entity.*
 import org.joml.*
 import rain.api.entity.DirectionType
@@ -85,7 +84,6 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
                     .attachTransformComponent()
                     .attachSpriteComponent(enemyMaterial)
                     .attachAnimatorComponent()
-                    .attachBoxColliderComponent(width = 60.0f, height = 40.0f, aliveOnStart = false)
                     .build()
 
             enemyAttackSystem.newEntity(kracGuy.attackAreaVisual)
@@ -106,8 +104,6 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
             kracGuy.sprite.visible = false
 
             val et = enemySystem.findTransformComponent(kracGuy.getId())!!
-            kracGuy.collider.setDamping(0.0f)
-            kracGuy.collider.setFriction(0.0f)
             kracGuy.healthBar.parentTransform = et
 
             healthBarSystem.newEntity(kracGuy.healthBar)
@@ -135,7 +131,6 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
             containerSystem.newEntity(container)
                     .attachTransformComponent()
                     .attachSpriteComponent(itemMaterial)
-                    .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
                     .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
                     .build()
 
@@ -149,10 +144,7 @@ class Room(val tiles: MutableList<Vector2i>, val area: Vector4i, val type: RoomT
             emitter.enabled = false
 
             container.setPosition(Vector2i(tile.x*64 + 32, tile.y*64 + 32))
-            container.collider.setDensity(1000.0f)
-            container.collider.setFriction(1.0f)
             container.sprite.visible = false
-            container.collider.setActive(false)
             containers.add(container)
         }
     }

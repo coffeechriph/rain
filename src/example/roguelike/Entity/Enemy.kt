@@ -3,6 +3,7 @@ package example.roguelike.Entity
 import org.joml.Random
 import org.joml.Vector2f
 import org.joml.Vector2i
+import org.joml.Vector4f
 import rain.api.Input
 import rain.api.entity.*
 import rain.api.scene.Scene
@@ -32,7 +33,6 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
     var direction: Direction = Direction.NONE
     var lastPlayerAngle = 0.0f
     lateinit var transform: Transform
-    lateinit var collider: Collider
     lateinit var sprite: Sprite
     lateinit var animator: Animator
 
@@ -62,9 +62,8 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
         transform.z = 1.0f + pos.y%768 * 0.001f
         cellX = pos.x / 1280
         cellY = pos.y / 768
-        collider.setPosition(pos.x.toFloat()%1280, pos.y.toFloat()%768)
-        transform.x = collider.getPosition().x
-        transform.y = collider.getPosition().y
+        transform.x = pos.x.toFloat()%1280
+        transform.y = pos.y.toFloat()%768
     }
 
     fun damage(player: Player) {
@@ -147,7 +146,6 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
         transform = system.findTransformComponent(getId())!!
-        collider = system.findColliderComponent(getId())!!
         sprite = system.findSpriteComponent(getId())!!
         animator = system.findAnimatorComponent(getId())!!
     }
@@ -190,12 +188,17 @@ open class Enemy(private val random: Random, val player: Player) : Entity() {
                     damage *= random.nextInt(4) + 2.0f
                 }
 
-                val ax = if (attackArea.x > 0.0f) { transform.x } else { transform.x + attackArea.x }
-                val ay = if (attackArea.y > 0.0f) { transform.y } else { transform.y + attackArea.y }
+                val area = when (direction) {
+                    Direction.LEFT -> Vector4f(transform.x - 128.0f - 32.0f, transform.y - 24.0f, 128.0f, 48.0f)
+                    Direction.RIGHT -> Vector4f(transform.x + 32.0f, transform.y - 24.0f, 128.0f, 48.0f)
+                    Direction.UP -> Vector4f(transform.x - 24.0f, transform.y - 128.0f - 32.0f, 48.0f, 128.0f)
+                    Direction.DOWN -> Vector4f(transform.x - 24.0f, transform.y + 32.0f, 48.0f, 128.0f)
+                    Direction.NONE -> {Vector4f(0.0f, 0.0f, 0.0f, 0.0f)}
+                }
 
                 // Attacking in Y direction
-                if (player.transform.x + 12.0f >= ax && player.transform.x - 12.0f <= ax + Math.abs(attackArea.x)
-                 && player.transform.y + 12.0f >= ay && player.transform.y - 12.0f <= ay + Math.abs(attackArea.y)) {
+                if (player.transform.x + 12.0f >= area.x && player.transform.x - 12.0f <= area.x + area.z
+                 && player.transform.y + 12.0f >= area.y && player.transform.y - 12.0f <= area.y + area.w) {
                     player.damagePlayer(Math.max(1, damage.toInt()), transform.x, transform.y)
                     player.inventory.updateHealthText()
                 }

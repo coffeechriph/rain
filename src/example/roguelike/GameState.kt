@@ -61,7 +61,6 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .attachTransformComponent()
                 .attachSpriteComponent(attackMaterial)
                 .attachAnimatorComponent()
-                .attachBoxColliderComponent(32.0f, 32.0f)
                 .build()
 
         val healthTexture = resourceFactory.loadTexture2d("healthTexture","./data/textures/health.png", TextureFilter.NEAREST)

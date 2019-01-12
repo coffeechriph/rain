@@ -125,6 +125,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
             enemy.lastY = y
         }
 
+        player.damageEnemies(activeEnemies)
         player.targetEnemy(activeEnemies)
         if (player.targetedEnemy > -1 && player.targetedEnemy < activeEnemies.size) {
             val enemy = activeEnemies[player.targetedEnemy]
@@ -181,9 +182,24 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                                 .attachSpriteComponent(itemMaterial)
                                 .build()
 
-                        val px = (Math.sin(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
-                        val py = (Math.cos(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
-                        xpBall.setPosition(xpBallSystem, Vector2i(enemy.transform.x.toInt() + px, enemy.transform.y.toInt() + py))
+                        var px = enemy.transform.x.toInt() + (Math.sin(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
+                        var py = enemy.transform.y.toInt() + (Math.cos(random.nextFloat()*Math.PI*2) * 32.0f).toInt()
+
+                        if (px < 0) {
+                            px = 0
+                        }
+                        if (px > (width-1)*64.0f) {
+                            px = ((width - 1) * 64.0f).toInt()
+                        }
+
+                        if (py < 0) {
+                            py = 0
+                        }
+                        if (py > (height-1)*64.0f) {
+                            py = ((height - 1) * 64.0f).toInt()
+                        }
+
+                        xpBall.setPosition(xpBallSystem, Vector2i(px, py))
                         xpBall.transform.sx = random.nextFloat() * 16.0f + 40.0f
                         xpBall.transform.sy = random.nextFloat() * 16.0f + 40.0f
                         xpBall.sprite.textureTileOffset.x = 5
@@ -192,15 +208,17 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 }
 
                 enemy.sprite.visible = false
-                enemy.collider.setActive(false)
                 enemy.healthBar.sprite.visible = false
                 continue
             }
 
-            val dx = player.transform.x - enemy.transform.x
-            val dy = player.transform.y - enemy.transform.y
-            val dxln = Math.sqrt((dx * dx + dy * dy).toDouble())
-            if (dxln <= 128.0) {
+            val etx = (enemy.transform.x / 64.0f).toInt()
+            val ety = (enemy.transform.y / 64.0f).toInt()
+            val ptx = (player.transform.x / 64.0f).toInt()
+            val pty = (player.transform.y / 64.0f).toInt()
+
+            if (etx == ptx && Math.abs(pty-ety) <= 2 ||
+                ety == pty && Math.abs(ptx-etx) <= 2) {
                 enemy.attack()
             }
 
@@ -208,12 +226,10 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
             // Enemies will not move when attacking
             if (enemy.attacking) {
-                enemy.collider.setVelocity(0.0f, 0.0f)
                 continue
             }
 
             if (!enemy.traversing) {
-                enemy.collider.setVelocity(0.0f,0.0f)
                 val kx = player.transform.x - enemy.transform.x
                 val ky = player.transform.y - enemy.transform.y
                 val dd = Math.sqrt((kx*kx+ky*ky).toDouble())
@@ -261,7 +277,8 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
                 if (enemy.pushBack == 0) {
                     enemy.pushBackImmune = false
-                    enemy.collider.setVelocity(vx * enemy.walkingSpeedFactor * 100, vy * enemy.walkingSpeedFactor * 100)
+                    enemy.transform.x += vx * enemy.walkingSpeedFactor
+                    enemy.transform.y += vy * enemy.walkingSpeedFactor
                     if (vy > 0.0f) {
                         enemy.animator.setAnimation("walk_down")
                     }
@@ -270,35 +287,27 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                     }
                 }
                 else if (enemy.pushBack > 5) {
-                    enemy.collider.applyLinearImpulseToCenter(enemy.pushDirection.x.toFloat() * 10, enemy.pushDirection.y.toFloat() * 10)
+                    enemy.transform.x += enemy.pushDirection.x.toFloat()
+                    enemy.transform.y += enemy.pushDirection.y.toFloat()
                     enemy.pushBack -= 1
                     enemy.animator.setAnimation("idle_down")
                 }
                 else {
                     enemy.pushBack -= 1
-                    enemy.collider.setVelocity(0.0f, 0.0f)
                     enemy.animator.setAnimation("idle_down")
                 }
 
-                val pdx = player.transform.x - enemy.transform.x
-                val pdy = player.transform.y - enemy.transform.y
-                val pln = Math.sqrt((pdx*pdx+pdy*pdy).toDouble());
-                if (pln <= 16.0f) {
-                    enemy.traversing = false
-                }
-                else {
-                    val dx3 = (target.x + 32) - enemy.transform.x
-                    val dy3 = (target.y + 32) - enemy.transform.y
-                    val ln2 = Math.sqrt((dx3 * dx3 + dy3 * dy3).toDouble());
-                    if (ln2 <= 4.0f) {
-                        enemy.pathIndex += 1
-                        if (enemy.pathIndex >= enemy.path.size - 1) {
-                            enemy.traversing = false
-                        }
-                    }
-                    else if (enemy.pathIndex >= 3) {
+                val dx3 = (target.x + 32) - enemy.transform.x
+                val dy3 = (target.y + 32) - enemy.transform.y
+                val ln2 = Math.sqrt((dx3 * dx3 + dy3 * dy3).toDouble());
+                if (ln2 <= 4.0f) {
+                    enemy.pathIndex += 1
+                    if (enemy.pathIndex >= enemy.path.size - 1) {
                         enemy.traversing = false
                     }
+                }
+                else if (enemy.pathIndex >= 3) {
+                    enemy.traversing = false
                 }
             }
             else {
@@ -307,6 +316,13 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         }
 
         for (container in activeContainers) {
+            if (!container.open && !container.looted) {
+                if (player.attack.transform.x + 32.0f >= container.transform.x - 32.0f && player.attack.transform.x - 32.0f <= container.transform.x + 32.0f &&
+                    player.attack.transform.y + 32.0f >= container.transform.y - 32.0f && player.attack.transform.y - 32.0f <= container.transform.y + 32.0f) {
+                    container.open = true
+                }
+            }
+
             if (container.open && !container.looted) {
                 container.looted = true
                 val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
@@ -342,7 +358,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                     val direction = Vector2f(Math.sin(angle).toFloat(), Math.cos(angle).toFloat())
                     direction.x *= 64.0f
                     direction.y *= 64.0f
-                    item.setPosition(levelItemSystem, Vector2i(container.collider.getPosition().x.toInt()+direction.x.toInt(), container.collider.getPosition().y.toInt()+direction.y.toInt()))
+                    item.setPosition(levelItemSystem, Vector2i(container.transform.x.toInt()+direction.x.toInt(), container.transform.y.toInt()+direction.y.toInt()))
                     item.cellX = player.cellX
                     item.cellY = player.cellY
                     item.transform.sx = 40.0f
@@ -414,12 +430,10 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         for (enemy in activeEnemies) {
             enemy.sprite.visible = false
             enemy.healthBar.sprite.visible = false
-            enemy.collider.setActive(false)
         }
 
         for (container in activeContainers) {
             container.sprite.visible = false
-            container.collider.setActive(false)
         }
 
         for (lights in activeLightSources) {
@@ -447,7 +461,6 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 if (enemy.cellX == cellX && enemy.cellY == cellY) {
                     enemy.sprite.visible = enemy.health > 0 && enemy.cellX == cellX && enemy.cellY == cellY
                     enemy.healthBar.sprite.visible = enemySystem.findSpriteComponent(enemy.getId())!!.visible
-                    enemy.collider.setActive(enemy.sprite.visible)
                     if (enemy.sprite.visible) {
                         activeEnemies.add(enemy)
                     }
@@ -461,7 +474,6 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
             for (container in room.containers) {
                 if (container.cellX == cellX && container.cellY == cellY) {
                     container.sprite.visible = container.cellX == cellX && container.cellY == cellY
-                    container.collider.setActive(container.sprite.visible)
                     val emitter = containerSystem.findBurstEmitterComponent(container.getId())!!
                     emitter.enabled = container.sprite.visible
                     activeContainers.add(container)
@@ -820,7 +832,6 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         containerSystem.newEntity(container)
                 .attachTransformComponent()
                 .attachSpriteComponent(itemMaterial)
-                .attachBoxColliderComponent(64.0f, 48.0f, BodyDef.BodyType.StaticBody)
                 .attachBurstParticleEmitter(resourceFactory, 25, 16.0f, 0.2f, Vector2f(0.0f, -50.0f), DirectionType.LINEAR, 32.0f, 0.5f)
                 .build()
 
@@ -834,10 +845,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         emitter2.enabled = true
 
         container.setPosition(Vector2i((tx+1)*64 + 32, ty*64 + 32))
-        container.collider.setDensity(1000.0f)
-        container.collider.setFriction(1.0f)
         container.sprite.visible = true
-        container.collider.setActive(false)
         room.containers.add(container)
     }
 

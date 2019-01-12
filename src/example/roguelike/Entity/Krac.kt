@@ -1,7 +1,6 @@
 package example.roguelike.Entity
 
 import org.joml.Random
-import org.joml.Vector2i
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -14,22 +13,6 @@ class Krac(random: Random, player: Player): Enemy(random, player) {
         agilityFactor = 0.1f
         walkingSpeedFactor = 0.55f
         attackSpeed = 0.007f
-    }
-
-    override fun onCollision(entity: Entity) {
-        if (entity is Attack && entity.attacker is Player) {
-            val player = entity.attacker as Player
-            damage(player)
-        }
-        else if (entity is Enemy && !entity.pushBackImmune) {
-            val dx = (entity.transform.x - transform.x) * 0.1f
-            val dy = (entity.transform.y - transform.y) * 0.1f
-            entity.pushBack = 8
-            entity.pushDirection = Vector2i(dx.toInt(),dy.toInt())
-            entity.traversing = false
-            entity.pushBackImmune = true
-            pushBackImmune = true
-        }
     }
 
     override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
