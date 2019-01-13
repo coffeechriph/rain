@@ -27,15 +27,22 @@ class Scene(val resourceFactory: ResourceFactory) {
     var activeCamera = Camera(Vector2f(0.0f, 20.0f))
     private lateinit var emitterMaterial: Material
 
-    fun<T: Entity> newSystem(texture2d: Texture2d?): EntitySystem<T> {
-        val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
+    fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
+        //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
+        lateinit var system: EntitySystem<T>
+        if (material != null) {
+            // TODO: We only have to copy the material if we use batching
+            val materialCopy = material.copy()
+            system = EntitySystem<T>(this, materialCopy)
+            entitySystems.add(system as EntitySystem<Entity>)
 
-        val material = resourceFactory.createMaterial("entitySystem${texture2d}", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", texture2d, texelBuffer)
-        val system = EntitySystem<T>(this, material)
-        entitySystems.add(system as EntitySystem<Entity>)
-
-        if (texture2d != null) {
-            spriteBatchers.add(SpriteBatcher(system, material, resourceFactory))
+            if (material.useBatching()) {
+                spriteBatchers.add(SpriteBatcher(system, materialCopy, resourceFactory))
+            }
+        }
+        else {
+            system = EntitySystem<T>(this, null)
+            entitySystems.add(system as EntitySystem<Entity>)
         }
 
         return system
@@ -70,7 +77,12 @@ class Scene(val resourceFactory: ResourceFactory) {
         )
         this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
         val fireTexture = resourceFactory.loadTexture2d("fireTexture", "./data/textures/fire.png", TextureFilter.NEAREST)
-        this.emitterMaterial = resourceFactory.createMaterial("emitterMaterial", "./data/shaders/particle.vert.spv", "./data/shaders/particle.frag.spv", fireTexture)
+        this.emitterMaterial = resourceFactory.buildMaterial()
+                .withName("emitterMaterial")
+                .withVertexShader("./data/shaders/particle.vert.spv")
+                .withFragmentShader("./data/shaders/particle.frag.spv")
+                .withTexture(fireTexture)
+                .build()
 
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)

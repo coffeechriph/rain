@@ -38,6 +38,8 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     private val deleteRawBufferQueue = ArrayDeque<DeleteBuffer>()
     private val deleteBufferView = ArrayDeque<DeleteBufferView>()
 
+    private val materialBuilder = MaterialBuilder(this::createMaterial)
+
     init {
         this.materials = ArrayList()
         this.textures = HashMap()
@@ -76,8 +78,19 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return buffer
     }
 
-    // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
-    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, texelBuffer: TexelBuffer?, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
+    override fun buildMaterial(): MaterialBuilder {
+        return materialBuilder
+    }
+
+    internal fun createMaterial(name: String, vertex: ShaderModule, fragment: ShaderModule, texture2d: Texture2d?, useBatching: Boolean = false, depthWriteEnabled: Boolean = true, enableBlend: Boolean = true, srcColor: BlendMode = BlendMode.BLEND_FACTOR_SRC_ALPHA, dstColor: BlendMode = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, srcAlpha: BlendMode = BlendMode.BLEND_FACTOR_ONE, dstAlpha: BlendMode = BlendMode.BLEND_FACTOR_ZERO): Material {
+        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
+        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, vertex, fragment, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
+        material.batching = useBatching
+        materials.add(material)
+        return material
+    }
+
+    private fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, useBatching: Boolean, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
         log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
 
         // TODO: We should be able to actually load the shaders at a later time on the main thread
@@ -95,10 +108,44 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         }
 
         val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
-        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, logicalDevice, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, texelBuffer, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
+        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
+        material.batching = useBatching
+
+        if (useBatching) {
+            material.texelBufferUniform = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, this)
+            material.texelBufferUniform.create(256)
+            material.descriptorPool.withUniformTexelBuffer(material.texelBufferUniform, VK10.VK_SHADER_STAGE_ALL)
+            material.descriptorPool.build(vk.logicalDevice)
+        }
+
         materials.add(material)
         return material
     }
+
+    // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
+    /*override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, useBatching: Boolean, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
+        log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
+
+        // TODO: We should be able to actually load the shaders at a later time on the main thread
+        // In order to make this method thread-safe
+        if (!shaders.containsKey(vertexShaderFile)) {
+            val vertex = ShaderModule(uniqueId())
+            vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
+            shaders[vertexShaderFile] = vertex
+        }
+
+        if (!shaders.containsKey(fragmentShaderFile)) {
+            val fragment = ShaderModule(uniqueId())
+            fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
+            shaders[fragmentShaderFile] = fragment
+        }
+
+        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
+        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
+        material.batching = useBatching
+        materials.add(material)
+        return material
+    }*/
 
     override fun createTexelBuffer(initialSize: Long): TexelBuffer {
         val texelBuffer = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, this)
@@ -106,7 +153,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return texelBuffer
     }
 
-    override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, texelBuffer: TexelBuffer?, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
+    /*override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
         log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
 
         // TODO: We should be able to actually load the shaders at a later time on the main thread
@@ -124,10 +171,10 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         }
 
         val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)} }
-        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, logicalDevice, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, texelBuffer, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
+        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
         materials.add(material)
         return material
-    }
+    }*/
 
     // TODO: We should be able to actually load the texture at a later time on the main thread
     // In order to make this method thread-safe

@@ -8,17 +8,15 @@ import rain.api.gfx.TexelBuffer
 import rain.api.gfx.Texture2d
 import rain.log
 
-internal class VulkanMaterial(vk: Vk,
-                              setupCommandBuffer: CommandPool.CommandBuffer,
-                              setupQueue: Queue,
-                              resourceFactory: VulkanResourceFactory,
-                              logicalDevice: LogicalDevice,
+internal class VulkanMaterial(val vk: Vk,
+                              private val setupCommandBuffer: CommandPool.CommandBuffer,
+                              private val setupQueue: Queue,
+                              val resourceFactory: VulkanResourceFactory,
                               val id: Long,
                               val name: String,
                               internal val vertexShader: ShaderModule,
                               internal val fragmentShader: ShaderModule,
                               internal val texture2d: Array<Texture2d>,
-                              uniformTexelBuffer: TexelBuffer?,
                               val depthWriteEnabled: Boolean = true,
                               val blendEnabled: Boolean = true,
                               val srcColor: BlendMode,
@@ -30,6 +28,7 @@ internal class VulkanMaterial(vk: Vk,
     internal val sceneData = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
     internal lateinit var texelBufferUniform: UniformTexelBuffer
 
+    var batching = false
     var isValid = false
         private set
         get() {
@@ -73,8 +72,26 @@ internal class VulkanMaterial(vk: Vk,
         return ::texelBufferUniform.isInitialized
     }
 
+    override fun useBatching(): Boolean {
+        return batching
+    }
+
     override fun getTexelBuffer(): TexelBuffer {
         return texelBufferUniform
+    }
+
+    override fun copy(): Material {
+        val material = resourceFactory.createMaterial(name + "copy", vertexShader, fragmentShader, texture2d[0])
+
+        val vmat = material as VulkanMaterial
+        if (vmat.batching) {
+            vmat.texelBufferUniform = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
+            vmat.texelBufferUniform.create(256)
+            vmat.descriptorPool.withUniformTexelBuffer(vmat.texelBufferUniform, VK_SHADER_STAGE_ALL)
+            vmat.descriptorPool.build(vk.logicalDevice)
+        }
+
+        return material
     }
 
     override fun getTexture2d(): Array<Texture2d> {
@@ -119,13 +136,8 @@ internal class VulkanMaterial(vk: Vk,
             descriptorPool.withUniformBuffer(textureDataUBO, VK_SHADER_STAGE_ALL)
         }
 
-        if (uniformTexelBuffer != null) {
-            texelBufferUniform = uniformTexelBuffer as UniformTexelBuffer
-            descriptorPool.withUniformTexelBuffer(texelBufferUniform, VK_SHADER_STAGE_ALL)
-        }
-
         log("Descriptor pool for material: $name")
-        descriptorPool.build(logicalDevice)
+        descriptorPool.build(vk.logicalDevice)
         isValid = true
     }
 

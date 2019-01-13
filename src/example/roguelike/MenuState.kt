@@ -65,9 +65,16 @@ class MenuState(stateManager: StateManager): State(stateManager) {
 
         bannerTexture = resourceFactory.loadTexture2d("bannerTexture", "./data/textures/banner.png", TextureFilter.NEAREST)
         bannerTexture.setTiledTexture(256,64)
+        val bannerMaterial = resourceFactory.buildMaterial()
+                .withName("bannerMaterial")
+                .withVertexShader("./data/shaders/sprite.vert.spv")
+                .withFragmentShader("./data/shaders/sprite.frag.spv")
+                .withTexture(bannerTexture)
+                .build()
+
         bannerEntity = Entity()
 
-        bannerEntitySystem = scene.newSystem(bannerTexture)
+        bannerEntitySystem = scene.newSystem(bannerMaterial)
         bannerEntitySystem.newEntity(bannerEntity)
                 .attachTransformComponent()
                 .attachSpriteComponent()

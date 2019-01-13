@@ -14,9 +14,18 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
     fun init() {
         font = Font("./data/fonts/FreeSans.ttf")
         font.buildBitmap(resourceFactory, 1024, 1024, 20.0f)
-        textMaterial = resourceFactory.createMaterial("guiTextMaterial","./data/shaders/text.vert.spv", "./data/shaders/text.frag.spv", font.texture)
+        textMaterial = resourceFactory.buildMaterial()
+                .withName("guiTextMaterial")
+                .withVertexShader("./data/shaders/text.vert.spv")
+                .withFragmentShader("./data/shaders/text.frag.spv")
+                .withTexture(font.texture)
+                .build()
 
-        componentMaterial = resourceFactory.createMaterial("guiMaterial","./data/shaders/gui.vert.spv", "./data/shaders/gui.frag.spv", texture2d = null)
+        componentMaterial = resourceFactory.buildMaterial()
+                .withName("guiMaterial")
+                .withVertexShader("./data/shaders/gui.vert.spv")
+                .withFragmentShader("./data/shaders/gui.frag.spv")
+                .build()
     }
 
     fun newContainer(x: Float, y: Float, w: Float, h: Float): Container {

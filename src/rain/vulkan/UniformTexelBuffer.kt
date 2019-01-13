@@ -49,6 +49,7 @@ internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBu
 
         bufferView = pBufferView[0]
         isValid = true
+        referencesHasChanged = true
     }
 
     override fun update(data: ByteBuffer) {
