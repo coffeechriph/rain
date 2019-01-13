@@ -29,6 +29,7 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
         }
 
         val pBufferCreateInfo = VkBufferCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
                 .size(bufferSize)
                 .usage(bufferUsage)
 
@@ -69,7 +70,7 @@ internal class RawBuffer(private val setupCommandBuffer: CommandPool.CommandBuff
     }
 
     private fun mapDataDirect(vmaAllocator: Long, bufferData: ByteBuffer) {
-        val pData = memAllocPointer(4)
+        val pData = memAllocPointer(1)
         val err = vmaMapMemory(vmaAllocator, allocation, pData)
 
         val data = pData.get(0)

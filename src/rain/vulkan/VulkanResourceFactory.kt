@@ -2,6 +2,7 @@ package rain.vulkan
 
 import org.lwjgl.util.vma.Vma
 import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK10.vkDestroyBufferView
 import org.lwjgl.vulkan.VK10.vkDeviceWaitIdle
 import rain.api.gfx.*
 import rain.assertion
@@ -13,6 +14,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     data class DeleteBuffer(val buffer: Long, val allocation: Long)
     data class DeleteTexture(val image: Long, val allocation: Long, val imageView: Long, val sampler: Long)
     data class DeleteMaterial(val pool: Long)
+    data class DeleteBufferView(val bufferView: Long)
 
     private var resourceId: Long = 0
     private val logicalDevice: LogicalDevice
@@ -34,6 +36,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     private val deleteTextureQueue = ArrayDeque<DeleteTexture>()
     private val deleteShaderQueue = ArrayDeque<Long>()
     private val deleteRawBufferQueue = ArrayDeque<DeleteBuffer>()
+    private val deleteBufferView = ArrayDeque<DeleteBufferView>()
 
     init {
         this.materials = ArrayList()
@@ -51,6 +54,10 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
 
     internal fun queueRawBufferDeletion(buffer: DeleteBuffer) {
         deleteRawBufferQueue.add(buffer)
+    }
+
+    internal fun queueBufferViewDeletion(view: DeleteBufferView) {
+        deleteBufferView.add(view)
     }
 
     override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
@@ -93,9 +100,9 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return material
     }
 
-    override fun createTexelBuffer(): TexelBuffer {
+    override fun createTexelBuffer(initialSize: Long): TexelBuffer {
         val texelBuffer = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, this)
-        texelBuffer.create(1024)
+        texelBuffer.create(initialSize)
         return texelBuffer
     }
 
@@ -275,6 +282,11 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
                 val buffer = deleteRawBufferQueue.pop()
                 VK10.vkDestroyBuffer(logicalDevice.device, buffer.buffer, null)
                 Vma.vmaFreeMemory(vk.vmaAllocator, buffer.allocation)
+            }
+
+            while (deleteBufferView.isNotEmpty()) {
+                val view = deleteBufferView.pop()
+                vkDestroyBufferView(logicalDevice.device, view.bufferView, null)
             }
 
             vkDeviceWaitIdle(vk.logicalDevice.device)

@@ -28,13 +28,13 @@ class Scene(val resourceFactory: ResourceFactory) {
     private lateinit var emitterMaterial: Material
 
     fun<T: Entity> newSystem(texture2d: Texture2d?): EntitySystem<T> {
-        val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer() } else { null }
+        val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
 
         val material = resourceFactory.createMaterial("entitySystem${texture2d}", "./data/shaders/sprite.vert.spv", "./data/shaders/sprite.frag.spv", texture2d, texelBuffer)
         val system = EntitySystem<T>(this, material)
         entitySystems.add(system as EntitySystem<Entity>)
 
-        if (material != null) {
+        if (texture2d != null) {
             spriteBatchers.add(SpriteBatcher(system, material, resourceFactory))
         }
 
@@ -158,7 +158,9 @@ class Scene(val resourceFactory: ResourceFactory) {
         }
 
         for (batcher in spriteBatchers) {
-            submitListSorted.add(Drawable(batcher.material, memAlloc(0), batcher.vertexBuffer, 0.0f))
+            if (batcher.hasSprites()) {
+                submitListSorted.add(Drawable(batcher.material, memAlloc(4), batcher.vertexBuffer, 0.0f))
+            }
         }
 
         for (system in entitySystems) {

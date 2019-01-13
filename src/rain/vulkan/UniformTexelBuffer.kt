@@ -19,6 +19,8 @@ internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBu
             return !::rawBuffer.isInitialized || rawBuffer.buffer == 0L || field
         }
 
+    var referencesHasChanged = false
+
     fun invalidate() {
         isValid = false
     }
@@ -33,8 +35,9 @@ internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBu
 
         // TODO: Allow client to specify format
         val pBufferViewCreateInfo = VkBufferViewCreateInfo.calloc()
+                .sType(VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO)
                 .buffer(rawBuffer.buffer)
-                .format(VK_FORMAT_R32_SFLOAT)
+                .format(VK_FORMAT_R32G32B32A32_SFLOAT)
                 .offset(0)
                 .range(VK_WHOLE_SIZE)
 
@@ -49,8 +52,26 @@ internal class UniformTexelBuffer(private val vk: Vk, private val setupCommandBu
     }
 
     override fun update(data: ByteBuffer) {
-        if (::rawBuffer.isInitialized) {
-            rawBuffer.buffer(vk.vmaAllocator, data)
+        val bf = rawBuffer.buffer
+        rawBuffer.buffer(vk.vmaAllocator, data)
+
+        // Whole buffer has been recreated - must recreate view, descriptorSets
+        if (rawBuffer.buffer != bf) {
+            resourceFactory.queueBufferViewDeletion(VulkanResourceFactory.DeleteBufferView(bufferView))
+            val pBufferViewCreateInfo = VkBufferViewCreateInfo.calloc()
+                    .sType(VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO)
+                    .buffer(rawBuffer.buffer)
+                    .format(VK_FORMAT_R32G32B32A32_SFLOAT)
+                    .offset(0)
+                    .range(VK_WHOLE_SIZE)
+
+            val pBufferView = memAllocLong(1)
+            val err = vkCreateBufferView(vk.logicalDevice.device, pBufferViewCreateInfo, null, pBufferView)
+            if (err != VK_SUCCESS) {
+                assertion("Error creating buffer view: ${VulkanResult(err)}")
+            }
+            bufferView = pBufferView[0]
+            referencesHasChanged = true
         }
     }
 }

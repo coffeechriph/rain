@@ -32,7 +32,7 @@ internal class UniformBuffer(private val vk: Vk, private val setupCommandBuffer:
     }
 
     internal fun update(bufferData: ByteBuffer) {
-        val pData = MemoryUtil.memAllocPointer(4)
+        val pData = MemoryUtil.memAllocPointer(1)
         val err = vmaMapMemory(vk.vmaAllocator, rawBuffer.allocation, pData)
 
         val data = pData.get(0)

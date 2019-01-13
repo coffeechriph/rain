@@ -16,7 +16,7 @@ internal class Instance {
     lateinit var instance: VkInstance
         private set
 
-    private var enableValidationLayers = false
+    private var enableValidationLayers = true
 
     fun create() {
         val appInfo = VkApplicationInfo.calloc()
@@ -141,8 +141,8 @@ internal class Instance {
                 log("Validation layer: ${lp[i].layerNameString()} \"${lp[i].descriptionString()}\"")
                 if (lp[i].layerNameString() == "VK_LAYER_LUNARG_core_validation" ||
                     lp[i].layerNameString() == "VK_LAYER_LUNARG_parameter_validation" ||
-                    lp[i].layerNameString() == "VK_LAYER_LUNARG_standard_validation" ||
-                    lp[i].layerNameString() == "VK_LAYER_RENDERDOC_Capture") {
+                    lp[i].layerNameString() == "VK_LAYER_LUNARG_standard_validation" /*||
+                    lp[i].layerNameString() == "VK_LAYER_RENDERDOC_Capture"*/) {
                     pb.put(memUTF8(lp[i].layerNameString()))
                     index += 1
                 }

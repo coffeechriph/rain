@@ -18,7 +18,7 @@ internal class VulkanMaterial(vk: Vk,
                               internal val vertexShader: ShaderModule,
                               internal val fragmentShader: ShaderModule,
                               internal val texture2d: Array<Texture2d>,
-                              internal val uniformTexelBuffer: TexelBuffer?,
+                              uniformTexelBuffer: TexelBuffer?,
                               val depthWriteEnabled: Boolean = true,
                               val blendEnabled: Boolean = true,
                               val srcColor: BlendMode,
@@ -28,7 +28,7 @@ internal class VulkanMaterial(vk: Vk,
     internal val descriptorPool: DescriptorPool
     internal val textureDataUBO = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
     internal val sceneData = UniformBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
-    internal val texelBufferUniform = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
+    internal lateinit var texelBufferUniform: UniformTexelBuffer
 
     var isValid = false
         private set
@@ -61,13 +61,17 @@ internal class VulkanMaterial(vk: Vk,
                 return false
             }
 
-            if (!texelBufferUniform.isValid) {
+            if (::texelBufferUniform.isInitialized && !texelBufferUniform.isValid) {
                 log("Material $name has invalid texel buffer uniform!")
                 return false
             }
 
             return field
         }
+
+    internal fun hasTexelBuffer(): Boolean {
+        return ::texelBufferUniform.isInitialized
+    }
 
     override fun getTexelBuffer(): TexelBuffer {
         return texelBufferUniform
@@ -116,7 +120,8 @@ internal class VulkanMaterial(vk: Vk,
         }
 
         if (uniformTexelBuffer != null) {
-            descriptorPool.withUniformTexelBuffer(uniformTexelBuffer!! as UniformTexelBuffer, VK_SHADER_STAGE_ALL)
+            texelBufferUniform = uniformTexelBuffer as UniformTexelBuffer
+            descriptorPool.withUniformTexelBuffer(texelBufferUniform, VK_SHADER_STAGE_ALL)
         }
 
         log("Descriptor pool for material: $name")

@@ -21,17 +21,19 @@ layout(set = 0, binding = 1) uniform TextureData {
     vec2 uvScale;
 } textureData;
 
-layout(set = 0, binding = 2) uniform samplerBuffer instanceData;
+layout(set = 0, binding = 3) uniform textureBuffer instanceData;
 
 void main() {
     int Index = int(index);
-    mat4 iModelMatrix = mat4(texelFetch(instanceData, Index*4),
-                            texelFetch(instanceData, Index*4+4),
-                            texelFetch(instanceData, Index*4+8),
-                            texelFetch(instanceData, Index*4+12));
+    mat4 iModelMatrix = mat4(texelFetch(instanceData, Index*8),
+                            texelFetch(instanceData, Index*8+1),
+                            texelFetch(instanceData, Index*8+2),
+                            texelFetch(instanceData, Index*8+3));
+    vec4 iColor = vec4(texelFetch(instanceData, Index*8+4));
+    vec2 TextureOffset = vec2(texelFetch(instanceData, Index*8+5).rg);
 
     gl_Position = sceneData.projectionMatrix * iModelMatrix * vec4(pos.x, pos.y, 1.0, 1.0);
-    Uv = vec2(uv.x * textureData.uvScale.x + textureData.uvScale.x * modelMatrix.textureOffset.x,
-              uv.y * textureData.uvScale.y + textureData.uvScale.y * modelMatrix.textureOffset.y);
-    Color = modelMatrix.color;
+    Uv = vec2(uv.x * textureData.uvScale.x + textureData.uvScale.x * TextureOffset.x,
+              uv.y * textureData.uvScale.y + textureData.uvScale.y * TextureOffset.y);
+    Color = iColor;
 }

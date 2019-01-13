@@ -25,7 +25,6 @@ class MenuState(stateManager: StateManager): State(stateManager) {
     private lateinit var exitButton: ToggleButton
     private lateinit var bannerEntity: Entity
     private lateinit var bannerEntitySystem: EntitySystem<Entity>
-    private lateinit var bannerMaterial: Material
     private lateinit var bannerTexture: Texture2d
     private var selectedButton = 0
 
@@ -66,7 +65,6 @@ class MenuState(stateManager: StateManager): State(stateManager) {
 
         bannerTexture = resourceFactory.loadTexture2d("bannerTexture", "./data/textures/banner.png", TextureFilter.NEAREST)
         bannerTexture.setTiledTexture(256,64)
-        bannerMaterial = resourceFactory.createMaterial("bannerMaterial", "./data/shaders/basic.vert.spv", "./data/shaders/basic.frag.spv", bannerTexture)
         bannerEntity = Entity()
 
         bannerEntitySystem = scene.newSystem(bannerTexture)

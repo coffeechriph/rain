@@ -46,7 +46,7 @@ internal class DescriptorPool {
     }
 
     fun build(logicalDevice: LogicalDevice): DescriptorPool {
-        val descriptorSetLayoutBinding = VkDescriptorSetLayoutBinding.calloc(uniformBuffers.size + textureDescriptors.size)
+        val descriptorSetLayoutBinding = VkDescriptorSetLayoutBinding.calloc(uniformBuffers.size + textureDescriptors.size + uniformTexelBuffers.size)
         var bindingIndex = 0
         for (uniform in uniformBuffers) {
             descriptorSetLayoutBinding[bindingIndex]
@@ -67,6 +67,7 @@ internal class DescriptorPool {
                     .descriptorCount(1)
                     .stageFlags(VK_SHADER_STAGE_ALL)
                     .pImmutableSamplers(immutableSampler)
+            bindingIndex += 1
         }
 
         for (texel in uniformTexelBuffers) {
@@ -153,7 +154,7 @@ internal class DescriptorPool {
         descriptorSet = pDescriptorSet[0]
 
         // Write
-        val writeDescriptorSet = VkWriteDescriptorSet.calloc(uniformBuffers.size+textureDescriptors.size)
+        val writeDescriptorSet = VkWriteDescriptorSet.calloc(uniformBuffers.size+textureDescriptors.size+uniformTexelBuffers.size)
 
         bindingIndex = 0
         for (i in 0 until uniformBuffers.size) {
@@ -199,7 +200,7 @@ internal class DescriptorPool {
                     .offset(0)
                     .range(VK10.VK_WHOLE_SIZE)
 
-            writeDescriptorSet[i]
+            writeDescriptorSet[i+uniformBuffers.size+textureDescriptors.size]
                     .sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
                     .pNext(0)
                     .dstSet(pDescriptorSet[0])

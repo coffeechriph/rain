@@ -21,7 +21,7 @@ data class Sprite internal constructor(val entity: Long, val transform: Transfor
         if (::byteBuffer.isInitialized) {
             memFree(byteBuffer)
         }
-        byteBuffer = memAlloc(22*4)
+        byteBuffer = memAlloc(32*4)
 
         if (transform.updated) {
             modelMatrix.identity()

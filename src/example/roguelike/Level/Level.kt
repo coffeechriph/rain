@@ -414,7 +414,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         lightMapMaterial = resourceFactory.createMaterial("lightMapMaterial", "./data/shaders/light.vert.spv", "./data/shaders/light.frag.spv", torchTexture, null, true, true, BlendMode.BLEND_FACTOR_DST_COLOR, BlendMode.BLEND_FACTOR_ZERO)
         val lightTransform = Transform()
         lightTransform.z = 17.0f
-        scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
+        //scene.addSimpleDraw(SimpleDraw(lightTransform, lightMap, lightMapMaterial))
 
         enemyTargetSystem = scene.newSystem(texture)
         enemyTargetEntity = Entity()

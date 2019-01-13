@@ -275,6 +275,12 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 }
 
                 if (pipeline.matches(mat, buffer)) {
+                    // If a materials texel buffer has changed we must recreate the descriptor sets
+                    if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
+                        mat.texelBufferUniform.referencesHasChanged = false
+                        mat.descriptorPool.build(vk.logicalDevice)
+                    }
+
                     pipeline.material.sceneData.update(projectionMatrixBuffer)
                     pipeline.begin(renderCommandBuffers[frameIndex])
                     pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)

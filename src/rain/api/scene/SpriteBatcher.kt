@@ -9,6 +9,7 @@ import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
+import rain.log
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 
@@ -19,22 +20,30 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
     private lateinit var vertexData: FloatArray
     private lateinit var instanceData: ByteBuffer
 
+    internal fun hasSprites(): Boolean{
+        return sprites.isNotEmpty()
+    }
+
     internal fun batch() {
-        if (this.sprites.size != system.getSpriteList().size) {
-            this.sprites.clear()
+        if (system.getSpriteList().isEmpty()) {
+            return
+        }
 
-            if (::vertexData.isInitialized) {
-                memFree(instanceData)
+        val numSpritesLastFrame = this.sprites.size
+        this.sprites.clear()
+        for (sprite in system.getSpriteList()) {
+            if (sprite!!.visible) {
+                this.sprites.add(sprite)
             }
+        }
 
+        if (this.sprites.size != numSpritesLastFrame) {
+            log("Batching ${this.sprites.size} sprites")
             vertexData = FloatArray(system.getSpriteList().size * 6 * 5)
-            instanceData = memAlloc(system.getSpriteList().size * 16 * 4)
 
             var index = 0
             var vIndex = 0
-            for (sprite in system.getSpriteList()) {
-                this.sprites.add(sprite!!)
-
+            for (sprite in this.sprites) {
                 vertexData[vIndex++] = -0.5f
                 vertexData[vIndex++] = -0.5f
                 vertexData[vIndex++] = 0.0f
@@ -75,7 +84,6 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
 
             if (!::vertexBuffer.isInitialized) {
                 vertexBuffer = resourceFactory.createVertexBuffer(vertexData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2), VertexAttribute(2, 1)))
-                //texelBuffer = resourceFactory.createTexelBuffer()
             }
             else {
                 vertexBuffer.update(vertexData)
@@ -85,13 +93,13 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
 
     internal fun update() {
         if (::instanceData.isInitialized) {
-            if (instanceData.capacity() <= sprites.size * 22 * 4) {
+            if (instanceData.remaining() <= sprites.size * 32 * 4) {
                 memFree(instanceData)
-                instanceData = memAlloc(sprites.size * 22 * 4)
+                instanceData = memAlloc(sprites.size * 32 * 4)
             }
         }
         else {
-            instanceData = memAlloc(sprites.size * 22 * 4)
+            instanceData = memAlloc(sprites.size * 32 * 4)
         }
 
         for (sprite in sprites) {
