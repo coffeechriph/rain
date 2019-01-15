@@ -18,7 +18,7 @@ enum class ItemType {
     CHEST,
     GLOVES,
     BOOTS,
-    CONSUMABLE
+    POTION
 }
 
 val ITEM_COMBINATIONS = arrayOf(
@@ -31,7 +31,8 @@ val ITEM_COMBINATIONS = arrayOf(
     Pair(ItemType.CHEST, arrayOf(   "Chest Armor", "Bronze Breastplate", "Bone Cage", "Iron Breastplate", "Mithril Breastplate")),
     Pair(ItemType.LEGS, arrayOf(    "Leather Leggings", "Cloth Leggings", "Old Underwear", "Simple Leggings", "Leather Pants", "Cloth Pants")),
     Pair(ItemType.GLOVES, arrayOf(  "Leather Gloves", "Cloth Gloves", "Iron Gloves", "Bronze Gloves", "Mithril Gloves")),
-    Pair(ItemType.BOOTS, arrayOf(   "Leather Boots", "Cloth Boots", "Sandals", "Iron Boots", "Mithril Boots", "Bronze Boots"))
+    Pair(ItemType.BOOTS, arrayOf(   "Leather Boots", "Cloth Boots", "Sandals", "Iron Boots", "Mithril Boots", "Bronze Boots")),
+    Pair(ItemType.POTION, arrayOf(  "Minor Health Potion", "Lesser Health Potion", "Health Potion", "Great Health Potion"))
 )
 
 val ITEM_QUALITIES = arrayOf(
@@ -42,7 +43,17 @@ val ITEM_QUALITIES = arrayOf(
     Pair(91..98, "[Rare]"),
     Pair(98..100, "[Epic]")
 )
-class Item (val player: Player, val type: ItemType, val name: String, val stamina: Int, val strength: Int, val agility: Int, val luck: Int): Entity() {
+
+class Item (val player: Player,
+            val type: ItemType,
+            val name: String,
+            val stamina: Int,
+            val strength: Int,
+            val agility: Int,
+            val luck: Int,
+            val healthIncrease: Int,
+            val instantHealth: Boolean,
+            val increaseTick: Float): Entity() {
     var cellX = 0
     var cellY = 0
     var pickedUp = false

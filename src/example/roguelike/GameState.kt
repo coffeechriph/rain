@@ -46,6 +46,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(mobTexture)
+                .withBatching(true)
                 .build()
 
         player = Player()
@@ -65,6 +66,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(attackTexture)
+                .withBatching(true)
                 .build()
 
         attackSystem = scene.newSystem(attackMaterial)
@@ -80,6 +82,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(healthTexture)
+                .withBatching(true)
                 .build()
         healthBarSystem = scene.newSystem(healthMaterial)
 
@@ -115,7 +118,7 @@ class GameState(stateManager: StateManager): State(stateManager) {
             player.playerMovedCell = false
         }
 
-        level.update(deltaTime)
+        level.update(deltaTime, input)
 
         if (inventory.visible) {
             inventory.update(input)

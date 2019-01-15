@@ -184,13 +184,15 @@ class Scene(val resourceFactory: ResourceFactory) {
         }
 
         for (system in entitySystems) {
-            /*for (sprite in system.getSpriteList()) {
-                if (!sprite!!.visible) {
-                    continue
-                }
+            if (system.material != null && !system.material.useBatching()) {
+                for (sprite in system.getSpriteList()) {
+                    if (!sprite!!.visible) {
+                        continue
+                    }
 
-                submitListSorted.add(Drawable(system.material!!, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
-            }*/
+                    submitListSorted.add(Drawable(system.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
+                }
+            }
 
             for (emitter in system.getParticleEmitterList()) {
                 if (!emitter!!.enabled) {

@@ -5,6 +5,7 @@ import example.roguelike.Entity.*
 import org.joml.*
 import org.lwjgl.BufferUtils
 import org.lwjgl.stb.STBImageWrite
+import rain.api.Input
 import rain.api.entity.DirectionType
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
@@ -86,7 +87,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         return false
     }
 
-    fun update(deltaTime: Float) {
+    fun update(deltaTime: Float, input: Input) {
         if (delayLightUpdate == 0) {
             generateLightMap()
             delayLightUpdate = 2
@@ -126,9 +127,9 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         }
 
         player.damageEnemies(activeEnemies)
-        player.targetEnemy(activeEnemies)
-        if (player.targetedEnemy > -1 && player.targetedEnemy < activeEnemies.size) {
-            val enemy = activeEnemies[player.targetedEnemy]
+        player.targetEnemy(activeEnemies, input)
+        if (player.targetedEnemy != null) {
+            val enemy = player.targetedEnemy!!
             if (!enemy.sprite.visible) {
                 val targetSprite = enemyTargetSystem.findSpriteComponent(enemyTargetEntity.getId())!!
                 targetSprite.visible = false
@@ -160,8 +161,8 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
                 val targetTransform = enemyTargetSystem.findTransformComponent(enemyTargetEntity.getId())!!
                 targetTransform.z = 19.0f
-                targetTransform.x = activeEnemies[player.targetedEnemy].transform.x
-                targetTransform.y = activeEnemies[player.targetedEnemy].transform.y
+                targetTransform.x = enemy.transform.x
+                targetTransform.y = enemy.transform.y
                 targetTransform.sx = 64.0f
                 targetTransform.sy = 64.0f
             }
@@ -348,8 +349,15 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
                     val finalQuality = (qualityIndex*qualityIndex + qualityIndex).toInt()
 
-                    val item = Item(player, combination.first, "$qualityName $name", random.nextInt(finalQuality)+1, random.nextInt(finalQuality)+1,
-                            random.nextInt(finalQuality)+1,random.nextInt(finalQuality)+1)
+                    val item = if (combination.first != ItemType.POTION) {
+                        Item(player, combination.first, "$qualityName $name", random.nextInt(finalQuality)+1, random.nextInt(finalQuality)+1,
+                                random.nextInt(finalQuality)+1,random.nextInt(finalQuality)+1, 0, false, 0.0f)
+                    }
+                    else {
+                        val health = (combination.second.size+1)*10
+                        Item(player, combination.first, "$qualityName $name", 0, 0, 0, 0, health, true, 0.0f)
+                    }
+
                     levelItemSystem.newEntity(item)
                             .attachTransformComponent()
                             .attachSpriteComponent()
@@ -394,6 +402,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(texture)
+                .withBatching(true)
                 .build()
 
         this.mapWidth = mapWidth
@@ -411,6 +420,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(enemyTexture)
+                .withBatching(true)
                 .build()
 
         enemySystem = scene.newSystem(enemyMaterial)
@@ -422,6 +432,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 .withTexture(texture)
                 .withDepthWrite(true)
                 .withBlendEnabled(false)
+                .withBatching(true)
                 .build()
 
         enemyAttackSystem = scene.newSystem(enemyAttackMaterial)
@@ -437,6 +448,7 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(torchTexture)
+                .withBatching(true)
                 .build()
         torchSystem = scene.newSystem(torchMaterial)
 

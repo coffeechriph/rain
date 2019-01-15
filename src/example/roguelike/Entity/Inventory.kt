@@ -12,7 +12,8 @@ class Inventory(val gui: Gui, val player: Player) {
             container.visible = value
         }
 
-    private val ItemNone = Item(player, ItemType.NONE, "Empty", 0, 0, 0, 0)
+    private val ItemNone = Item(player, ItemType.NONE, "Empty", 0, 0, 0, 0,
+            0, false, 0.0f)
     var equippedWeapon: Item = ItemNone
     var equippedHead: Item = ItemNone
     var equippedGloves: Item = ItemNone
@@ -194,6 +195,7 @@ class Inventory(val gui: Gui, val player: Player) {
                     ItemType.LEGS -> equippedLegs = selectedItem
                     ItemType.BOOTS -> equippedBoots = selectedItem
                     ItemType.HEAD -> equippedHead = selectedItem
+                    ItemType.POTION -> eatConsumable()
                 }
 
                 updateEquippedItems()
@@ -221,28 +223,43 @@ class Inventory(val gui: Gui, val player: Player) {
                     equippedHead = ItemNone
                 }
 
-                val index = items.indexOf(selectedItem)
-                if (index >= 0) {
-                    val button = itemButtons[index]
-                    container.removeComponent(button)
-                    itemButtons.removeAt(index)
-                    items.remove(selectedItem)
-                }
-
-                selectedItem = ItemNone
-
-                if (selectedItemIndex >= items.size) {
-                    selectedItemIndex = items.size - 1
-                }
-
-                for (i in 0 until itemButtons.size) {
-                    itemButtons[i].y = 20.0f + i*25.0f
-                }
-                container.isDirty = true
-
-                updateEquippedItems()
-                updateSelectedItemDesc(selectedItemIndex)
+                removeItem()
             }
+        }
+    }
+
+    private fun removeItem() {
+        val index = items.indexOf(selectedItem)
+        if (index >= 0) {
+            val button = itemButtons[index]
+            container.removeComponent(button)
+            itemButtons.removeAt(index)
+            items.remove(selectedItem)
+        }
+
+        selectedItem = ItemNone
+
+        if (selectedItemIndex >= items.size) {
+            selectedItemIndex = items.size - 1
+        }
+
+        for (i in 0 until itemButtons.size) {
+            itemButtons[i].y = 20.0f + i * 25.0f
+        }
+        container.isDirty = true
+
+        updateEquippedItems()
+        updateSelectedItemDesc(selectedItemIndex)
+    }
+
+    private fun eatConsumable() {
+        if (selectedItem.instantHealth) {
+            player.healPlayer(selectedItem.healthIncrease)
+            updateHealthText()
+            removeItem()
+        }
+        else {
+            throw NotImplementedError("Slow health increase for consumables are not implemented!")
         }
     }
 

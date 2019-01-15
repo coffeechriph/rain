@@ -48,8 +48,6 @@ class Player : Entity() {
     var xpUntilNextLevel = 100
         private set
     var facingDirection = Direction.DOWN
-    var targetedEnemy = -1
-        private set
 
     private val inputTimestamps = ArrayList<InputTimestamp>()
     private var lastDirection = Direction.DOWN
@@ -58,10 +56,13 @@ class Player : Entity() {
     private var dodgeTick = 0.0f
     private var dodgeTimeout = 0.0f
     private var stopMovement = 0.0f
-    private var targetIndex = 0
     private var damageShake = 0.0f
     private var damagePushVelX = 0.0f
     private var damagePushVelY = 0.0f
+
+    var targetedEnemy: Enemy? = null
+        private set
+    private var targetedEnemyIndex = -1
 
     fun damagePlayer(value: Int, fromX: Float, fromY: Float) {
         damageShake = 1.0f
@@ -72,6 +73,10 @@ class Player : Entity() {
         val ln = Math.sqrt((dx*dx+dy*dy).toDouble()).toFloat()
         damagePushVelX = dx / ln
         damagePushVelY = dy / ln
+    }
+
+    fun healPlayer(value: Int) {
+        healthDamaged -= value
     }
 
     fun addXp(increase: Int) {
@@ -89,24 +94,29 @@ class Player : Entity() {
         inventory.updateEquippedItems()
     }
 
-    fun targetEnemy(enemies: ArrayList<Enemy>) {
-        if (enemies.size <= 0) {
-            targetIndex = 0
-            targetedEnemy = -1
-            return
+    fun targetEnemy(enemies: ArrayList<Enemy>, input: Input) {
+        if (targetedEnemy != null) {
+            if (!targetedEnemy!!.sprite.visible) {
+                targetedEnemy = null
+            }
         }
 
-        if (targetIndex >= 0 && targetIndex < enemies.size) {
-            targetedEnemy = targetIndex % enemies.size
-        } else if (targetIndex >= enemies.size) {
-            targetIndex %= enemies.size
-            targetedEnemy = targetIndex
-        }
+        if (input.keyState(Input.Key.KEY_TAB) == Input.InputState.PRESSED) {
+            targetedEnemy = null
 
-        if (targetedEnemy >= 0 && targetedEnemy < enemies.size) {
-            if (enemies[targetedEnemy].health <= 0) {
-                targetedEnemy = -1
-                targetIndex = -1
+            if (enemies.size > 0) {
+                while (targetedEnemy == null) {
+                    targetedEnemyIndex++
+                    targetedEnemyIndex %= enemies.size
+                    for ((index, enemy) in enemies.withIndex()) {
+                        if (index == targetedEnemyIndex) {
+                            if (enemy.sprite.visible) {
+                                targetedEnemy = enemy
+                                break
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -185,11 +195,6 @@ class Player : Entity() {
 
         if (!inventory.visible) {
             setDirectionBasedOnInput(input)
-
-            if (input.keyState(Input.Key.KEY_TAB) == Input.InputState.PRESSED) {
-                targetIndex++
-            }
-
             if (attack.isReady()) {
                 if (input.keyState(Input.Key.KEY_SPACE) == Input.InputState.PRESSED) {
                     attack.attack(facingDirection)
@@ -206,7 +211,7 @@ class Player : Entity() {
     }
 
     private fun movement() {
-        if (targetedEnemy == -1) {
+        if (targetedEnemy == null) {
             facingDirection = lastDirection
         }
 
