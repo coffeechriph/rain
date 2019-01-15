@@ -442,7 +442,13 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
 
         lightVertices = FloatArray(width*height*6*6){0.0f}
         lightValues = Array(width*height){Vector4f()}
-        lightMap = resourceFactory.createVertexBuffer(lightVertices, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 4)))
+        lightMap = resourceFactory.buildVertexBuffer()
+                .withVertices(lightVertices)
+                .withState(VertexBufferState.DYNAMIC)
+                .withAttribute(VertexAttribute(0, 2))
+                .withAttribute(VertexAttribute(1, 4))
+                .build()
+
         lightMapMaterial = resourceFactory.buildMaterial()
                 .withName("lightMapMaterial")
                 .withVertexShader("./data/shaders/light.vert.spv")

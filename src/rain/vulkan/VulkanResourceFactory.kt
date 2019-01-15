@@ -39,6 +39,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     private val deleteBufferView = ArrayDeque<DeleteBufferView>()
 
     private val materialBuilder = MaterialBuilder(this::createMaterial)
+    private val vertexBufferBuilder = VertexBufferBuilder(this::createVertexBuffer)
 
     init {
         this.materials = ArrayList()
@@ -62,7 +63,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         deleteBufferView.add(view)
     }
 
-    override fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
+    private fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
         log("Creating vertex buffer of size ${vertices.size * 4} bytes.")
         val buffer = VulkanVertexBuffer(uniqueId(), this)
         buffer.create(vk, setupCommandBuffer, setupQueue, vertices, attributes, state)
@@ -82,10 +83,20 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return materialBuilder
     }
 
+    override fun buildVertexBuffer(): VertexBufferBuilder {
+        return vertexBufferBuilder
+    }
+
     internal fun createMaterial(name: String, vertex: ShaderModule, fragment: ShaderModule, texture2d: Texture2d?, useBatching: Boolean = false, depthWriteEnabled: Boolean = true, enableBlend: Boolean = true, srcColor: BlendMode = BlendMode.BLEND_FACTOR_SRC_ALPHA, dstColor: BlendMode = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, srcAlpha: BlendMode = BlendMode.BLEND_FACTOR_ONE, dstAlpha: BlendMode = BlendMode.BLEND_FACTOR_ZERO): Material {
         val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
         val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, vertex, fragment, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
         material.batching = useBatching
+        if (useBatching) {
+            material.texelBufferUniform = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, this)
+            material.texelBufferUniform.create(256)
+            material.descriptorPool.withUniformTexelBuffer(material.texelBufferUniform, VK10.VK_SHADER_STAGE_ALL)
+            material.descriptorPool.build(vk.logicalDevice)
+        }
         materials.add(material)
         return material
     }

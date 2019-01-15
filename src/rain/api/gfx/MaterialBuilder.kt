@@ -11,6 +11,8 @@ class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
     private var name = "material"
     private var srcColor: BlendMode = BlendMode.BLEND_FACTOR_SRC_ALPHA
     private var dstColor: BlendMode = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
+    private var srcAlpha: BlendMode = BlendMode.BLEND_FACTOR_ONE
+    private var dstAlpha: BlendMode = BlendMode.BLEND_FACTOR_ZERO
 
     fun withName(name: String): MaterialBuilder {
         this.name = name
@@ -57,8 +59,18 @@ class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
         return this
     }
 
+    fun withSrcAlpha(mode: BlendMode): MaterialBuilder {
+        this.srcAlpha = mode
+        return this
+    }
+
+    fun withDstAlpha(mode: BlendMode): MaterialBuilder {
+        this.dstAlpha = mode
+        return this
+    }
+
     fun build(): Material {
-        val material = handler(name, vertexShaderFile, fragmentShaderFile, texture2d, useBatching, depthWrite, blendEnabled, srcColor, dstColor, BlendMode.BLEND_FACTOR_ONE, BlendMode.BLEND_FACTOR_ZERO)
+        val material = handler(name, vertexShaderFile, fragmentShaderFile, texture2d, useBatching, depthWrite, blendEnabled, srcColor, dstColor, srcAlpha, dstAlpha)
         reset()
         return material
     }
@@ -73,5 +85,7 @@ class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
         blendEnabled = true
         srcColor = BlendMode.BLEND_FACTOR_SRC_ALPHA
         dstColor = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
+        srcAlpha = BlendMode.BLEND_FACTOR_ONE
+        dstAlpha = BlendMode.BLEND_FACTOR_ZERO
     }
 }

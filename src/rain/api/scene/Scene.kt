@@ -12,6 +12,8 @@ import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.entity.metersToPixels
 import rain.api.gfx.*
+import rain.vulkan.DataType
+import rain.vulkan.VertexAttribute
 
 class Scene(val resourceFactory: ResourceFactory) {
     private lateinit var quadVertexBuffer: VertexBuffer
@@ -41,7 +43,7 @@ class Scene(val resourceFactory: ResourceFactory) {
             }
         }
         else {
-            system = EntitySystem<T>(this, null)
+            system = EntitySystem(this, null)
             entitySystems.add(system as EntitySystem<Entity>)
         }
 
@@ -75,7 +77,13 @@ class Scene(val resourceFactory: ResourceFactory) {
                 0.5f, -0.5f, 1.0f, 0.0f,
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
-        this.quadVertexBuffer = resourceFactory.createVertexBuffer(vertices, VertexBufferState.STATIC)
+        this.quadVertexBuffer = resourceFactory.buildVertexBuffer()
+                .withVertices(vertices)
+                .withState(VertexBufferState.STATIC)
+                .withAttribute(VertexAttribute(0, 2, DataType.FLOAT))
+                .withAttribute(VertexAttribute(1, 2, DataType.FLOAT))
+                .build()
+
         val fireTexture = resourceFactory.loadTexture2d("fireTexture", "./data/textures/fire.png", TextureFilter.NEAREST)
         this.emitterMaterial = resourceFactory.buildMaterial()
                 .withName("emitterMaterial")

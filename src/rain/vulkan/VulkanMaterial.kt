@@ -81,17 +81,7 @@ internal class VulkanMaterial(val vk: Vk,
     }
 
     override fun copy(): Material {
-        val material = resourceFactory.createMaterial(name + "copy", vertexShader, fragmentShader, texture2d[0])
-
-        val vmat = material as VulkanMaterial
-        if (vmat.batching) {
-            vmat.texelBufferUniform = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, resourceFactory)
-            vmat.texelBufferUniform.create(256)
-            vmat.descriptorPool.withUniformTexelBuffer(vmat.texelBufferUniform, VK_SHADER_STAGE_ALL)
-            vmat.descriptorPool.build(vk.logicalDevice)
-        }
-
-        return material
+        return resourceFactory.createMaterial(name + "copy", vertexShader, fragmentShader, texture2d[0], batching)
     }
 
     override fun getTexture2d(): Array<Texture2d> {

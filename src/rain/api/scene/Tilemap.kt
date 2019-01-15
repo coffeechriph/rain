@@ -8,6 +8,7 @@ import rain.api.gfx.ResourceFactory
 import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
 import rain.log
+import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 
 class Tilemap {
@@ -99,7 +100,13 @@ class Tilemap {
         }
 
         log("Created tilemap mesh with ${vertices.size}/${map.size * 4 * 6} vertices actually allocated.")
-        vertexBuffer = resourceFactory.createVertexBuffer(vertices.toFloatArray(), VertexBufferState.STATIC)
+        vertexBuffer = resourceFactory.buildVertexBuffer()
+                .withVertices(vertices.toFloatArray())
+                .withState(VertexBufferState.STATIC)
+                .withAttribute(VertexAttribute(0, 2))
+                .withAttribute(VertexAttribute(1, 2))
+                .build()
+
         this.tileNumX = tileNumX
         this.tileNumY = tileNumY
         this.tileWidth = tileWidth

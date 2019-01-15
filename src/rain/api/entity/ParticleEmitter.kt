@@ -67,7 +67,13 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             vi += 4
         }
 
-        vertexBuffer = resourceFactory.createVertexBuffer(bufferData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 2)))
+        vertexBuffer = resourceFactory.buildVertexBuffer()
+                .withVertices(bufferData)
+                .withState(VertexBufferState.DYNAMIC)
+                .withAttribute(VertexAttribute(0, 3))
+                .withAttribute(VertexAttribute(1, 2))
+                .build()
+
         indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
     }
 

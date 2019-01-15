@@ -83,7 +83,13 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
             }
 
             if (!::vertexBuffer.isInitialized) {
-                vertexBuffer = resourceFactory.createVertexBuffer(vertexData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2), VertexAttribute(2, 1)))
+                vertexBuffer = resourceFactory.buildVertexBuffer()
+                        .withVertices(vertexData)
+                        .withState(VertexBufferState.DYNAMIC)
+                        .withAttribute(VertexAttribute(0, 2))
+                        .withAttribute(VertexAttribute(1, 2))
+                        .withAttribute(VertexAttribute(2, 1))
+                        .build()
             }
             else {
                 vertexBuffer.update(vertexData)

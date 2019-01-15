@@ -14,7 +14,6 @@ import java.nio.ByteBuffer
 
 // TODO: Look into updating an existing buffer with new data without recreating any resources
 internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResourceFactory) : VertexBuffer {
-    internal class Buffer(var buffer: Long, var bufferMemory: Long, var bufferSize: Long)
     var isValid = false
         private set
     var vertexCount: Int = 0

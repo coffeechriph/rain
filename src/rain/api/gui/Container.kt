@@ -195,7 +195,12 @@ class Container(private val material: Material, private val textMaterial: Materi
 
         if (list.size > 0) {
             if (!::componentBuffer.isInitialized) {
-                componentBuffer = resourceFactory.createVertexBuffer(list.toFloatArray(), VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 3)))
+                componentBuffer = resourceFactory.buildVertexBuffer()
+                        .withVertices(list.toFloatArray())
+                        .withState(VertexBufferState.DYNAMIC)
+                        .withAttribute(VertexAttribute(0, 3))
+                        .withAttribute(VertexAttribute(1, 3))
+                        .build()
             }
 
             componentBuffer.update(list.toFloatArray())
@@ -348,7 +353,13 @@ class Container(private val material: Material, private val textMaterial: Materi
 
         if (textVertexDataIndex > 0) {
             if (!::textBuffer.isInitialized) {
-                textBuffer = resourceFactory.createVertexBuffer(textVertexData, VertexBufferState.DYNAMIC, arrayOf(VertexAttribute(0, 3), VertexAttribute(1, 3), VertexAttribute(2, 2)))
+                textBuffer = resourceFactory.buildVertexBuffer()
+                        .withVertices(textVertexData)
+                        .withState(VertexBufferState.DYNAMIC)
+                        .withAttribute(VertexAttribute(0, 3))
+                        .withAttribute(VertexAttribute(1, 3))
+                        .withAttribute(VertexAttribute(2, 2))
+                        .build()
             }
             else {
                 textBuffer.update(textVertexData)

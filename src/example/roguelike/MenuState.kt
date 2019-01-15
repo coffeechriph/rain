@@ -70,6 +70,7 @@ class MenuState(stateManager: StateManager): State(stateManager) {
                 .withVertexShader("./data/shaders/sprite.vert.spv")
                 .withFragmentShader("./data/shaders/sprite.frag.spv")
                 .withTexture(bannerTexture)
+                .withBatching(true)
                 .build()
 
         bannerEntity = Entity()
