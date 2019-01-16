@@ -16,7 +16,7 @@ internal class Instance {
     lateinit var instance: VkInstance
         private set
 
-    private var enableValidationLayers = true
+    private var enableValidationLayers = false
 
     fun create() {
         val appInfo = VkApplicationInfo.calloc()

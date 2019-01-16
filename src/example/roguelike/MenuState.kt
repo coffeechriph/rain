@@ -7,7 +7,6 @@ import rain.StateManager
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
-import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.Texture2d
 import rain.api.gfx.TextureFilter
@@ -67,10 +66,10 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         bannerTexture.setTiledTexture(256,64)
         val bannerMaterial = resourceFactory.buildMaterial()
                 .withName("bannerMaterial")
-                .withVertexShader("./data/shaders/sprite.vert.spv")
-                .withFragmentShader("./data/shaders/sprite.frag.spv")
+                .withVertexShader("./data/shaders/basic.vert.spv")
+                .withFragmentShader("./data/shaders/basic.frag.spv")
                 .withTexture(bannerTexture)
-                .withBatching(true)
+                .withBatching(false)
                 .build()
 
         bannerEntity = Entity()
