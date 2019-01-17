@@ -77,6 +77,9 @@ class Player : Entity() {
 
     fun healPlayer(value: Int) {
         healthDamaged -= value
+        if (healthDamaged < 0) {
+            healthDamaged = 0
+        }
     }
 
     fun addXp(increase: Int) {

@@ -253,7 +253,7 @@ class Inventory(val gui: Gui, val player: Player) {
     }
 
     private fun eatConsumable() {
-        if (selectedItem.instantHealth) {
+        if (player.healthDamaged > 0 && selectedItem.instantHealth) {
             player.healPlayer(selectedItem.healthIncrease)
             updateHealthText()
             removeItem()
