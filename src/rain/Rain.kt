@@ -20,13 +20,11 @@ open class Rain {
     private val timer = Timer()
     private lateinit var api: Api
     private lateinit var vulkanRenderer: VulkanRenderer
-    internal lateinit var stateManager: StateManager
-    internal val input = Input()
-    lateinit var resourceFactory: ResourceFactory
-        private set
-    lateinit var gui: Gui
-        private set
-    lateinit var scene: Scene
+    protected lateinit var stateManager: StateManager
+    private val input = Input()
+    private lateinit var resourceFactory: ResourceFactory
+    private lateinit var gui: Gui
+    private lateinit var scene: Scene
 
     var showMouse = true
         set(value) {

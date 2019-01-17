@@ -312,11 +312,19 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         return entityWrappersMap[entityId]
     }
 
+    /*
+        TODO: EntityWrappers should not be super necessary!
+        What we should do is supply the users with tools to build logic for entities
+        through controlled efficient components.
+            1. MoveComponent (Access to a entities Transform & Input)
+            2. PathfindComponent (Access to a entities target, transform and path)
+            3. ReactComponent<List<T: Entity>> (Access to a entities Transform, Input and a list of other entities)
+     */
     internal fun getSpriteList(): List<Sprite?> {
         return spriteComponents
     }
 
-    internal fun getEntityList(): List<T?> {
+    fun getEntityList(): List<T?> {
         return entityWrappers
     }
 
