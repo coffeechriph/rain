@@ -39,7 +39,12 @@ class GameState(stateManager: StateManager): State(stateManager) {
     private lateinit var level: Level
 
     override fun init(resourceFactory: ResourceFactory, scene: Scene, gui: Gui, input: Input) {
-        mobTexture = resourceFactory.loadTexture2d("mobTexture","./data/textures/dwarf.png", TextureFilter.NEAREST)
+        mobTexture = resourceFactory.buildTexture2d()
+                .withName("mobTexture")
+                .fromImageFile("./data/textures/dwarf.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         mobTexture.setTiledTexture(16,16)
         mobMaterial = resourceFactory.buildMaterial()
                 .withName("mobMaterial")
@@ -59,7 +64,12 @@ class GameState(stateManager: StateManager): State(stateManager) {
 
         level = Level(player, resourceFactory)
 
-        val attackTexture = resourceFactory.loadTexture2d("attackTexture","./data/textures/attack.png", TextureFilter.NEAREST)
+        val attackTexture = resourceFactory.buildTexture2d()
+                .withName("attackTexture")
+                .fromImageFile("./data/textures/attack.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         attackTexture.setTiledTexture(16,16)
         attackMaterial = resourceFactory.buildMaterial()
                 .withName("attackMaterial")
@@ -76,7 +86,12 @@ class GameState(stateManager: StateManager): State(stateManager) {
                 .attachAnimatorComponent()
                 .build()
 
-        val healthTexture = resourceFactory.loadTexture2d("healthTexture","./data/textures/health.png", TextureFilter.NEAREST)
+        val healthTexture = resourceFactory.buildTexture2d()
+                .withName("healthTexture")
+                .fromImageFile("./data/textures/health.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         healthMaterial = resourceFactory.buildMaterial()
                 .withName("healthMaterial")
                 .withVertexShader("./data/shaders/basic.vert.spv")

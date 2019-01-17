@@ -62,7 +62,12 @@ class MenuState(stateManager: StateManager): State(stateManager) {
         exitButton.text = "Exit"
         menuContainer.addComponent(exitButton)
 
-        bannerTexture = resourceFactory.loadTexture2d("bannerTexture", "./data/textures/banner.png", TextureFilter.NEAREST)
+        bannerTexture = resourceFactory.buildTexture2d()
+                .withName("bannerTexture")
+                .fromImageFile("./data/textures/banner.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         bannerTexture.setTiledTexture(256,64)
         val bannerMaterial = resourceFactory.buildMaterial()
                 .withName("bannerMaterial")

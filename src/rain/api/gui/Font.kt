@@ -88,7 +88,12 @@ class Font(ttfFile: String) {
 
         stbtt_PackEnd(pc)
 
-        texture = resourceFactory.createTexture2d("fontTexture", bitmap, width, height, 1, TextureFilter.NEAREST)
+        texture = resourceFactory.buildTexture2d()
+                .withName("fontTexture")
+                .fromImageData(bitmap, width, height, 1)
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         fontHeight = pixelHeight
         bitmapWidth = width
         bitmapHeight = height

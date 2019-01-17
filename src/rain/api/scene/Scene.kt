@@ -84,7 +84,12 @@ class Scene(val resourceFactory: ResourceFactory) {
                 .withAttribute(VertexAttribute(1, 2, DataType.FLOAT))
                 .build()
 
-        val fireTexture = resourceFactory.loadTexture2d("fireTexture", "./data/textures/fire.png", TextureFilter.NEAREST)
+        val fireTexture = resourceFactory.buildTexture2d()
+                .withName("fireTexture")
+                .fromImageFile("./data/textures/fire.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         this.emitterMaterial = resourceFactory.buildMaterial()
                 .withName("emitterMaterial")
                 .withVertexShader("./data/shaders/particle.vert.spv")

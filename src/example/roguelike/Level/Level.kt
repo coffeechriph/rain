@@ -387,7 +387,12 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         firstBuild = true
         maxCellX = mapWidth / width
         maxCellY = mapHeight / height
-        texture = resourceFactory.loadTexture2d("tilemapTexture","./data/textures/tiles.png", TextureFilter.NEAREST)
+        texture = resourceFactory.buildTexture2d()
+                .withName("tilemapTexture")
+                .fromImageFile("./data/textures/tiles.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         texture.setTiledTexture(16,16)
         tilemapMaterial = resourceFactory.buildMaterial()
                 .withName("tilemapMaterial")
@@ -413,7 +418,12 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         navMesh = NavMesh(width, height)
         navMesh.allowDiagonals = false
 
-        enemyTexture = resourceFactory.loadTexture2d("enemyTexture","./data/textures/krac2.0.png", TextureFilter.NEAREST)
+        enemyTexture = resourceFactory.buildTexture2d()
+                .withName("enemyTexture")
+                .fromImageFile("./data/textures/krac2.0.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         enemyTexture.setTiledTexture(16,16)
         enemyMaterial = resourceFactory.buildMaterial()
                 .withName("enemyMaterial")
@@ -442,7 +452,12 @@ class Level(private val player: Player, val resourceFactory: ResourceFactory) {
         levelItemSystem = scene.newSystem(itemMaterial)
         xpBallSystem = scene.newSystem(itemMaterial)
 
-        torchTexture = resourceFactory.loadTexture2d("torch", "./data/textures/torch.png", TextureFilter.NEAREST)
+        torchTexture = resourceFactory.buildTexture2d()
+                .withName("torch")
+                .fromImageFile("./data/textures/torch.png")
+                .withFilter(TextureFilter.NEAREST)
+                .build()
+
         torchMaterial = resourceFactory.buildMaterial()
                 .withName("torchMaterial")
                 .withVertexShader("./data/shaders/basic.vert.spv")

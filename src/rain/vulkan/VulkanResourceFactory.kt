@@ -28,10 +28,6 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     private val buffers: MutableList<VulkanVertexBuffer>
     private val indexBuffers: MutableList<VulkanIndexBuffer>
 
-    // TODO: Bug!
-    // TODO: We delete whatever the references of these resources are using
-    // This will cause issues when we queue them for deletion and realloc them as the newly allocated
-    // stuff will be deleted...
     private val deleteMaterialQueue = ArrayDeque<DeleteMaterial>()
     private val deleteTextureQueue = ArrayDeque<DeleteTexture>()
     private val deleteShaderQueue = ArrayDeque<Long>()
@@ -40,6 +36,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
 
     private val materialBuilder = MaterialBuilder(this::createMaterial)
     private val vertexBufferBuilder = VertexBufferBuilder(this::createVertexBuffer)
+    private val texture2dBuilder = Texture2dBuilder(this::createTexture2d, this::loadTexture2d)
 
     init {
         this.materials = ArrayList()
@@ -85,6 +82,10 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
 
     override fun buildVertexBuffer(): VertexBufferBuilder {
         return vertexBufferBuilder
+    }
+
+    override fun buildTexture2d(): Texture2dBuilder {
+        return texture2dBuilder
     }
 
     internal fun createMaterial(name: String, vertex: ShaderModule, fragment: ShaderModule, texture2d: Texture2d?, useBatching: Boolean = false, depthWriteEnabled: Boolean = true, enableBlend: Boolean = true, srcColor: BlendMode = BlendMode.BLEND_FACTOR_SRC_ALPHA, dstColor: BlendMode = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, srcAlpha: BlendMode = BlendMode.BLEND_FACTOR_ONE, dstAlpha: BlendMode = BlendMode.BLEND_FACTOR_ZERO): Material {
@@ -133,63 +134,15 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return material
     }
 
-    // TODO: Let's think about if we want to take in a String for the texture instead and load it here...
-    /*override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, useBatching: Boolean, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
-        log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
-
-        // TODO: We should be able to actually load the shaders at a later time on the main thread
-        // In order to make this method thread-safe
-        if (!shaders.containsKey(vertexShaderFile)) {
-            val vertex = ShaderModule(uniqueId())
-            vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
-            shaders[vertexShaderFile] = vertex
-        }
-
-        if (!shaders.containsKey(fragmentShaderFile)) {
-            val fragment = ShaderModule(uniqueId())
-            fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
-            shaders[fragmentShaderFile] = fragment
-        }
-
-        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
-        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
-        material.batching = useBatching
-        materials.add(material)
-        return material
-    }*/
-
     override fun createTexelBuffer(initialSize: Long): TexelBuffer {
         val texelBuffer = UniformTexelBuffer(vk, setupCommandBuffer, setupQueue, this)
         texelBuffer.create(initialSize)
         return texelBuffer
     }
 
-    /*override fun createMaterial(name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Array<Texture2d>, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode): Material {
-        log("Creating material from sources (vertex: $vertexShaderFile, fragment: $fragmentShaderFile) with texture $texture2d")
-
-        // TODO: We should be able to actually load the shaders at a later time on the main thread
-        // In order to make this method thread-safe
-        if (!shaders.containsKey(vertexShaderFile)) {
-            val vertex = ShaderModule(uniqueId())
-            vertex.loadShader(logicalDevice, vertexShaderFile, VK10.VK_SHADER_STAGE_VERTEX_BIT)
-            shaders[vertexShaderFile] = vertex
-        }
-
-        if (!shaders.containsKey(fragmentShaderFile)) {
-            val fragment = ShaderModule(uniqueId())
-            fragment.loadShader(logicalDevice, fragmentShaderFile, VK10.VK_SHADER_STAGE_FRAGMENT_BIT)
-            shaders[fragmentShaderFile] = fragment
-        }
-
-        val textures = if (texture2d.isNotEmpty()) { texture2d } else { Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)} }
-        val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, shaders[vertexShaderFile]!!, shaders[fragmentShaderFile]!!, textures, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
-        materials.add(material)
-        return material
-    }*/
-
     // TODO: We should be able to actually load the texture at a later time on the main thread
     // In order to make this method thread-safe
-    override fun loadTexture2d(name: String, textureFile: String, filter: TextureFilter): Texture2d {
+    private fun loadTexture2d(name: String, textureFile: String, filter: TextureFilter): Texture2d {
         if (!textures.containsKey(name)) {
             log("Loading texture $name from $textureFile with filter $filter.")
             val texture2d = VulkanTexture2d(uniqueId(), vk, this)
@@ -203,7 +156,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         return textures[name]!!
     }
 
-    override fun createTexture2d(name: String, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
+    private fun createTexture2d(name: String, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter): Texture2d {
         if (!textures.containsKey(name)) {
             log("Creating texture $name from source with filter $filter.")
             val texture2d = VulkanTexture2d(uniqueId(), vk, this)
