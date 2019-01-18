@@ -68,7 +68,7 @@ fun log(text: String) {
         val stackWalker = StackWalker.getInstance()
         val frame = stackWalker.walk { stream ->
             val stack = stream
-                    .filter { s -> !s.className.contains("rain") }
+                    //.filter { s -> !s.className.contains("rain") }
                     .collect(Collectors.toList())
             stack[0]
         }

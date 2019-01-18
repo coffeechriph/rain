@@ -17,7 +17,7 @@ import rain.vulkan.VertexAttribute
 
 class Scene(val resourceFactory: ResourceFactory) {
     private lateinit var quadVertexBuffer: VertexBuffer
-    private val entitySystems = ArrayList<EntitySystem<Entity>>()
+    val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
     private val simpleDraws = ArrayList<SimpleDraw>()
@@ -84,12 +84,14 @@ class Scene(val resourceFactory: ResourceFactory) {
                 .withAttribute(VertexAttribute(1, 2, DataType.FLOAT))
                 .build()
 
+        // TODO: This should not be part of the engine!
         val fireTexture = resourceFactory.buildTexture2d()
                 .withName("fireTexture")
                 .fromImageFile("./data/textures/fire.png")
                 .withFilter(TextureFilter.NEAREST)
                 .build()
 
+        // TODO: This shouldn't be part of the engine either
         this.emitterMaterial = resourceFactory.buildMaterial()
                 .withName("emitterMaterial")
                 .withVertexShader("./data/shaders/particle.vert.spv")
@@ -112,8 +114,12 @@ class Scene(val resourceFactory: ResourceFactory) {
         }
 
         for (system in entitySystems) {
-            for (entity in system.getEntityList()) {
+            /*for (entity in system.getEntityList()) {
                 entity!!.update(this, input, system, deltaTime)
+            }*/
+
+            for (move in system.getMoveComponents()) {
+                move.update()
             }
 
             for (animator in system.getAnimatorList()) {
