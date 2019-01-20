@@ -113,7 +113,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         if (directionType == DirectionType.LINEAR) {
             updateParticlesLinear(factor, psize)
         } else {
-            //updateParticlesCircular(factor, psize)
+            throw NotImplementedError("Circular emitters are not implemented!")
         }
 
         vertexBuffer.update(bufferData)
@@ -134,76 +134,31 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         particles.sortByDescending { p -> p.i }
 
         for (i in 0 until numParticles) {
-            val k = particles[i].i
+            val k = particles[i].i / particleLifetime
 
             val lx = (particles[i].x - psize * k - startSize * 0.5f).toInt()
             val ly = (particles[i].y - psize * k - startSize * 0.5f).toInt()
             val ry = (particles[i].y + psize * k + startSize * 0.5f).toInt()
             val rx = (particles[i].x + psize * k + startSize * 0.5f).toInt()
+            val kz = (k*1000).toInt() shl 2
 
-            ibuffer.put(index1, lx + (ly shl 16))
-            ibuffer.put(index1+1, k.toInt())
-            ibuffer.put(index1+2, 0)
+            ibuffer.put(index1, lx)
+            ibuffer.put(index1+1, ly)
+            ibuffer.put(index1+2, kz)
 
-            ibuffer.put(index1+3, lx + (ry shl 16))
-            ibuffer.put(index1+4, k.toInt())
-            ibuffer.put(index1+5, 1 shl 16)
+            ibuffer.put(index1+3, lx)
+            ibuffer.put(index1+4, ry)
+            ibuffer.put(index1+5, kz or (1 shl 1))
 
-            ibuffer.put(index1+6, rx + (ry shl 16))
-            ibuffer.put(index1+7, k.toInt())
-            ibuffer.put(index1+8, 1 + (1 shl 16))
+            ibuffer.put(index1+6, rx)
+            ibuffer.put(index1+7, ry)
+            ibuffer.put(index1+8, kz or 1 or (1 shl 1))
 
-            ibuffer.put(index1+9, rx + (ly shl 16))
-            ibuffer.put(index1+10, k.toInt())
-            ibuffer.put(index1+11, 1)
+            ibuffer.put(index1+9, rx)
+            ibuffer.put(index1+10, ly)
+            ibuffer.put(index1+11, kz or 1)
 
             index1 += 12
         }
     }
-
-    /*private fun updateParticlesCircular(factor: Float, psize: Float) {
-        var index1 = 0
-        for (i in 0 until numParticles) {
-            val k = (((i.toFloat() * factor) + tick) % particleLifetime)
-            val ax = Math.sin(offsets[i*2].toDouble()).toFloat()
-            val ay = Math.cos(offsets[i*2].toDouble()).toFloat()
-            val vx = (ax * particleVelocity.x) * particleLifetime
-            val vy = (ay * particleVelocity.y) * particleLifetime
-
-            particles[i].x = vx * k + offsets[i*2] + ax * particleSpread * offsets[i*2+1]
-            particles[i].y = vy * k + offsets[i*2+1] + ay * particleSpread * offsets[i*2+1]
-            particles[i].i = k / particleLifetime
-        }
-
-        particles.sortByDescending { p -> p.i }
-
-        for (i in 0 until numParticles) {
-            val k = particles[i].i
-
-            bufferData[index1] = particles[i].x - psize*k - startSize*0.5f
-            bufferData[index1 + 1] = particles[i].y - psize*k - startSize*0.5f
-            bufferData[index1 + 2] = k
-            bufferData[index1 + 3] = 0.0f
-            bufferData[index1 + 4] = 0.0f
-
-            bufferData[index1 + 5] = particles[i].x - psize*k - startSize*0.5f
-            bufferData[index1 + 6] = particles[i].y + psize*k + startSize*0.5f
-            bufferData[index1 + 7] = k
-            bufferData[index1 + 8] = 0.0f
-            bufferData[index1 + 9] = 1.0f
-
-            bufferData[index1 + 10] = particles[i].x + psize*k + startSize*0.5f
-            bufferData[index1 + 11] = particles[i].y + psize*k + startSize*0.5f
-            bufferData[index1 + 12] = k
-            bufferData[index1 + 13] = 1.0f
-            bufferData[index1 + 14] = 1.0f
-
-            bufferData[index1 + 15] = particles[i].x + psize*k + startSize*0.5f
-            bufferData[index1 + 16] = particles[i].y - psize*k - startSize*0.5f
-            bufferData[index1 + 17] = k
-            bufferData[index1 + 18] = 1.0f
-            bufferData[index1 + 19] = 0.0f
-            index1 += 20
-        }
-    }*/
 }
