@@ -60,10 +60,10 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         deleteBufferView.add(view)
     }
 
-    private fun createVertexBuffer(vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>): VulkanVertexBuffer {
-        log("Creating vertex buffer of size ${vertices.size * 4} bytes.")
+    private fun createVertexBuffer(vertices: ByteBuffer, state: VertexBufferState, attributes: Array<VertexAttribute>, dataType: DataType): VulkanVertexBuffer {
+        log("Creating vertex buffer of size ${vertices.remaining()} bytes.")
         val buffer = VulkanVertexBuffer(uniqueId(), this)
-        buffer.create(vk, setupCommandBuffer, setupQueue, vertices, attributes, state)
+        buffer.create(vk, setupCommandBuffer, setupQueue, vertices, attributes, state, dataType)
         buffers.add(buffer)
         return buffer
     }

@@ -5,4 +5,4 @@ enum class DataType {
     INT
 }
 
-data class VertexAttribute(val location: Int, val count: Int, val dataType: DataType = DataType.FLOAT)
+data class VertexAttribute(val location: Int, val count: Int)

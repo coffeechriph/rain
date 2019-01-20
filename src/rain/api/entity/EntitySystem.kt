@@ -24,7 +24,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     private var colliderComponents = ArrayList<Collider?>()
     private var particleEmitters = ArrayList<ParticleEmitter?>()
     private var burstParticleEmitters = ArrayList<BurstParticleEmitter?>()
-    private var moveComponents = ArrayList<Move>()
 
     private var spriteComponentsMap = HashMap<Long, Sprite?>()
     private var transformComponentsMap = HashMap<Long, Transform?>()
@@ -274,13 +273,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             return this
         }
 
-        fun attachMoveComponent(vx: Float, vy: Float): Builder<T> {
-            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a move component is used!")
-            val move = Move(transform, vx, vy)
-            system.moveComponents.add(move)
-            return this
-        }
-
         fun build(): Long {
             entity.init(system.scene, system)
             return system.entities[system.entities.size-1]
@@ -350,10 +342,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
 
     internal fun getBurstParticleEmitterList(): List<BurstParticleEmitter?> {
         return burstParticleEmitters
-    }
-
-    internal fun getMoveComponents(): List<Move> {
-        return moveComponents
     }
 
     private fun uniqueId(): Long {

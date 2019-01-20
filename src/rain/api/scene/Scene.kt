@@ -12,7 +12,6 @@ import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.entity.metersToPixels
 import rain.api.gfx.*
-import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 
 class Scene(val resourceFactory: ResourceFactory) {
@@ -77,11 +76,14 @@ class Scene(val resourceFactory: ResourceFactory) {
                 0.5f, -0.5f, 1.0f, 0.0f,
                 -0.5f, -0.5f, 0.0f, 0.0f
         )
+        // TODO: Optimize this
+        val byteBuffer = memAlloc(24*4)
+        byteBuffer.asFloatBuffer().put(vertices).flip()
         this.quadVertexBuffer = resourceFactory.buildVertexBuffer()
-                .withVertices(vertices)
+                .withVertices(byteBuffer)
                 .withState(VertexBufferState.STATIC)
-                .withAttribute(VertexAttribute(0, 2, DataType.FLOAT))
-                .withAttribute(VertexAttribute(1, 2, DataType.FLOAT))
+                .withAttribute(VertexAttribute(0, 2))
+                .withAttribute(VertexAttribute(1, 2))
                 .build()
 
         // TODO: This should not be part of the engine!
@@ -114,12 +116,8 @@ class Scene(val resourceFactory: ResourceFactory) {
         }
 
         for (system in entitySystems) {
-            /*for (entity in system.getEntityList()) {
+            for (entity in system.getEntityList()) {
                 entity!!.update(this, input, system, deltaTime)
-            }*/
-
-            for (move in system.getMoveComponents()) {
-                move.update()
             }
 
             for (animator in system.getAnimatorList()) {

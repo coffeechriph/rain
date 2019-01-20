@@ -2,6 +2,7 @@ package rain.api.scene
 
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.entity.Transform
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
@@ -100,8 +101,11 @@ class Tilemap {
         }
 
         log("Created tilemap mesh with ${vertices.size}/${map.size * 4 * 6} vertices actually allocated.")
+        // TODO: Optimize this!
+        val byteBuffer = memAlloc(vertices.size*4)
+        byteBuffer.asFloatBuffer().put(vertices.toFloatArray()).flip()
         vertexBuffer = resourceFactory.buildVertexBuffer()
-                .withVertices(vertices.toFloatArray())
+                .withVertices(byteBuffer)
                 .withState(VertexBufferState.STATIC)
                 .withAttribute(VertexAttribute(0, 2))
                 .withAttribute(VertexAttribute(1, 2))
@@ -167,7 +171,10 @@ class Tilemap {
         }
 
         if (vertexBuffer.valid()) {
-            vertexBuffer.update(vertices.toFloatArray())
+            // TODO: Optimize this
+            val byteBuffer = memAlloc(vertices.size*4)
+            byteBuffer.asFloatBuffer().put(vertices.toFloatArray()).flip()
+            vertexBuffer.update(byteBuffer)
         }
     }
 

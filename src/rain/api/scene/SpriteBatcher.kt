@@ -83,8 +83,11 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
             }
 
             if (!::vertexBuffer.isInitialized) {
+                // TODO: Optimize this!
+                val byteBuffer = memAlloc(vertexData.size*4)
+                byteBuffer.asFloatBuffer().put(vertexData).flip()
                 vertexBuffer = resourceFactory.buildVertexBuffer()
-                        .withVertices(vertexData)
+                        .withVertices(byteBuffer)
                         .withState(VertexBufferState.DYNAMIC)
                         .withAttribute(VertexAttribute(0, 2))
                         .withAttribute(VertexAttribute(1, 2))
@@ -92,7 +95,10 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
                         .build()
             }
             else {
-                vertexBuffer.update(vertexData)
+                // TODO: Optimize this!
+                val byteBuffer = memAlloc(vertexData.size*4)
+                byteBuffer.asFloatBuffer().put(vertexData).flip()
+                vertexBuffer.update(byteBuffer)
             }
         }
     }

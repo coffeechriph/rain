@@ -5,9 +5,7 @@ import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
 import rain.api.Window
-import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
-import rain.api.entity.Transform
+import rain.api.entity.simulateMoveManager
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
 import rain.api.scene.Scene
@@ -62,34 +60,7 @@ open class Rain {
         resourceFactory = VulkanResourceFactory(vk)
     }
 
-    class Box: Entity() {
-        val name = "Hello World"
-        val tag = "I am a box"
-        val health = 100
-        val strength = 2
-        val agility = 10
-        val rate = 1.0f
-        lateinit var transform: Transform
-        override fun <T : Entity> init(scene: Scene, system: EntitySystem<T>) {
-            transform = system.findTransformComponent(getId())!!
-        }
-        override fun <T : Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float) {
-            transform.x += deltaTime * 2
-            transform.y += deltaTime * -2
-        }
-
-    }
-    // TODO: TESTING
-    lateinit var entitySystem: EntitySystem<Box>
     open fun init() {
-        entitySystem = scene.newSystem(null)
-        for (i in 0 until 1000000) {
-            entitySystem.newEntity(Box())
-                    .attachTransformComponent()
-                    .attachMoveComponent(1.0f, -1.0f)
-                    .build()
-        }
-
     }
 
     fun run() {
@@ -153,6 +124,7 @@ open class Rain {
         window.windowDirty = false
 
         gui.update(input)
+        simulateMoveManager()
         scene.update(input, deltaTime)
         stateManager.update(deltaTime)
         input.updateKeyState()

@@ -1,15 +1,22 @@
 package rain.api.gfx
 
+import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
-import kotlin.AssertionError
+import java.nio.ByteBuffer
 
-typealias createVertexBufferHandler = (vertices: FloatArray, state: VertexBufferState, attributes: Array<VertexAttribute>) -> VertexBuffer
+typealias createVertexBufferHandler = (vertices: ByteBuffer, state: VertexBufferState, attributes: Array<VertexAttribute>, dataType: DataType) -> VertexBuffer
 class VertexBufferBuilder internal constructor(val handler: createVertexBufferHandler) {
-    private var vertices: FloatArray? = null
+    private var vertices: ByteBuffer? = null
     private var state: VertexBufferState = VertexBufferState.STATIC
     private var attributes = ArrayList<VertexAttribute>()
+    private var dataType: DataType = DataType.FLOAT
 
-    fun withVertices(vertices: FloatArray): VertexBufferBuilder {
+    fun withDataType(dataType: DataType): VertexBufferBuilder {
+        this.dataType = dataType
+        return this
+    }
+
+    fun withVertices(vertices: ByteBuffer): VertexBufferBuilder {
         this.vertices = vertices
         return this
     }
@@ -32,7 +39,7 @@ class VertexBufferBuilder internal constructor(val handler: createVertexBufferHa
             throw AssertionError("No attributes specified for vertex buffer!")
         }
 
-        val buffer = handler(vertices!!, state, attributes.toTypedArray())
+        val buffer = handler(vertices!!, state, attributes.toTypedArray(), dataType)
         reset()
         return buffer
     }
@@ -41,5 +48,6 @@ class VertexBufferBuilder internal constructor(val handler: createVertexBufferHa
         vertices = null
         state = VertexBufferState.STATIC
         attributes.clear()
+        dataType = DataType.FLOAT
     }
 }

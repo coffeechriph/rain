@@ -194,16 +194,21 @@ class Container(private val material: Material, private val textMaterial: Materi
         }
 
         if (list.size > 0) {
+            // TODO: Optimize this! We could put them directly
+            val byteBuffer = memAlloc(list.size*4)
+            val fbuffer = byteBuffer.asFloatBuffer()
+            fbuffer.put(list.toFloatArray())
+            fbuffer.flip()
             if (!::componentBuffer.isInitialized) {
                 componentBuffer = resourceFactory.buildVertexBuffer()
-                        .withVertices(list.toFloatArray())
+                        .withVertices(byteBuffer)
                         .withState(VertexBufferState.DYNAMIC)
                         .withAttribute(VertexAttribute(0, 3))
                         .withAttribute(VertexAttribute(1, 3))
                         .build()
             }
 
-            componentBuffer.update(list.toFloatArray())
+            componentBuffer.update(byteBuffer)
         }
     }
 
@@ -352,9 +357,14 @@ class Container(private val material: Material, private val textMaterial: Materi
         }
 
         if (textVertexDataIndex > 0) {
+            // TODO: Optimize this, we could put it directly
+            val byteBuffer = memAlloc(textVertexData.size*4)
+            val fbuffer = byteBuffer.asFloatBuffer()
+            fbuffer.put(textVertexData)
+            fbuffer.flip()
             if (!::textBuffer.isInitialized) {
                 textBuffer = resourceFactory.buildVertexBuffer()
-                        .withVertices(textVertexData)
+                        .withVertices(byteBuffer)
                         .withState(VertexBufferState.DYNAMIC)
                         .withAttribute(VertexAttribute(0, 3))
                         .withAttribute(VertexAttribute(1, 3))
@@ -362,7 +372,7 @@ class Container(private val material: Material, private val textMaterial: Materi
                         .build()
             }
             else {
-                textBuffer.update(textVertexData)
+                textBuffer.update(byteBuffer)
             }
         }
     }

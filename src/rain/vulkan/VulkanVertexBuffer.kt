@@ -1,6 +1,5 @@
 package rain.vulkan
 
-import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.util.vma.Vma
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo
@@ -27,11 +26,10 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
     lateinit var rawBuffer: RawBuffer
     private var vertexSize = 0
     private var bufferState = VertexBufferState.STATIC
+    private var dataType = DataType.FLOAT
 
     private lateinit var vk: Vk
     private lateinit var commandBuffer: CommandPool.CommandBuffer
-
-    private lateinit var dataBuffer: ByteBuffer
 
     fun invalidate() {
         isValid = false
@@ -42,36 +40,31 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
     }
 
     // TODO: Can we optimize this?
-    override fun update(vertices: FloatArray) {
-        if (vertices.isEmpty()) {
+    override fun update(vertices: ByteBuffer) {
+        if (vertices.remaining() <= 0) {
             vertexCount = 0
         }
         else {
-            dataBuffer = memAlloc(vertices.size*4)
-            dataBuffer.asFloatBuffer().put(vertices).flip()
-
-            vertexCount = vertices.size / vertexSize
-            rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
+            vertexCount = vertices.remaining() / vertexSize
+            rawBuffer.buffer(vk.vmaAllocator, vertices)
         }
     }
 
-    fun create(vk: Vk, commandBuffer: CommandPool.CommandBuffer, setupQueue: Queue, vertices: FloatArray, attributes: Array<VertexAttribute>, state: VertexBufferState) {
-        if (vertices.isEmpty()) {
+    fun create(vk: Vk, commandBuffer: CommandPool.CommandBuffer, setupQueue: Queue, vertices: ByteBuffer, attributes: Array<VertexAttribute>, state: VertexBufferState, dataType: DataType) {
+        if (vertices.remaining() <= 0) {
             assertion("Unable to create vertex buffer with no vertices!")
         }
 
-        dataBuffer = memAlloc(vertices.size*4)
-        dataBuffer.asFloatBuffer().put(vertices).flip()
-
+        this.dataType = dataType
         rawBuffer = RawBuffer(commandBuffer, setupQueue, resourceFactory)
 
         if (state == VertexBufferState.STATIC) {
-            rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
-            rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
+            rawBuffer.create(vk.vmaAllocator, vertices.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_GPU_ONLY)
+            rawBuffer.buffer(vk.vmaAllocator, vertices)
         }
         else {
-            rawBuffer.create(vk.vmaAllocator, dataBuffer.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
-            rawBuffer.buffer(vk.vmaAllocator, dataBuffer)
+            rawBuffer.create(vk.vmaAllocator, vertices.remaining().toLong(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Vma.VMA_MEMORY_USAGE_CPU_TO_GPU)
+            rawBuffer.buffer(vk.vmaAllocator, vertices)
         }
 
         // Assign to vertex buffer
@@ -87,8 +80,8 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
             vertexSize += attribute.count
         }
 
-        log("Vertex count: ${vertices.size}, vertex size: $vertexSize")
-        vertexCount = vertices.size / vertexSize
+        log("Vertex data size: ${vertices.remaining()}, vertex size: $vertexSize")
+        vertexCount = vertices.remaining() / vertexSize
         this.vertexSize = vertexSize
         this.vk = vk
         this.commandBuffer = commandBuffer
@@ -116,7 +109,7 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
         var index = 0
         var lastCount = 0
         for (attr in attributes) {
-            val format = getFormat(attr.dataType, attr.count)
+            val format = getFormat(dataType, attr.count)
             desc.get(index)
                     .binding(0)
                     .location(attr.location)

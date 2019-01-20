@@ -4,10 +4,12 @@ import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.gfx.IndexBuffer
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.VertexBuffer
 import rain.api.gfx.VertexBufferState
+import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import java.util.*
@@ -27,7 +29,8 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
     var enabled = true
 
     private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
-    private var bufferData: FloatArray = FloatArray(numParticles*20)
+    private var bufferData: ByteBuffer = memAlloc(numParticles*12*4)
+    private var ibuffer = bufferData.asIntBuffer()
     private var indices: IntArray = IntArray(numParticles*6)
     private var offsets: FloatArray
     private var tick = 0.0f
@@ -70,8 +73,9 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         vertexBuffer = resourceFactory.buildVertexBuffer()
                 .withVertices(bufferData)
                 .withState(VertexBufferState.DYNAMIC)
-                .withAttribute(VertexAttribute(0, 3))
-                .withAttribute(VertexAttribute(1, 2))
+                .withDataType(DataType.INT)
+                .withAttribute(VertexAttribute(0, 2))
+                .withAttribute(VertexAttribute(1, 1))
                 .build()
 
         indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
@@ -109,7 +113,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         if (directionType == DirectionType.LINEAR) {
             updateParticlesLinear(factor, psize)
         } else {
-            updateParticlesCircular(factor, psize)
+            //updateParticlesCircular(factor, psize)
         }
 
         vertexBuffer.update(bufferData)
@@ -124,7 +128,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             val k = (((i.toFloat() * factor) + tick) % particleLifetime)
             particles[i].x = vx * k + offsets[i*2]
             particles[i].y = vy * k + offsets[i*2+1]
-            particles[i].i = k / particleLifetime
+            particles[i].i = k
         }
 
         particles.sortByDescending { p -> p.i }
@@ -132,34 +136,32 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
         for (i in 0 until numParticles) {
             val k = particles[i].i
 
-            bufferData[index1] = particles[i].x - psize*k - startSize*0.5f
-            bufferData[index1 + 1] = particles[i].y - psize*k - startSize*0.5f
-            bufferData[index1 + 2] = k
-            bufferData[index1 + 3] = 0.0f
-            bufferData[index1 + 4] = 0.0f
+            val lx = (particles[i].x - psize * k - startSize * 0.5f).toInt()
+            val ly = (particles[i].y - psize * k - startSize * 0.5f).toInt()
+            val ry = (particles[i].y + psize * k + startSize * 0.5f).toInt()
+            val rx = (particles[i].x + psize * k + startSize * 0.5f).toInt()
 
-            bufferData[index1 + 5] = particles[i].x - psize*k - startSize*0.5f
-            bufferData[index1 + 6] = particles[i].y + psize*k + startSize*0.5f
-            bufferData[index1 + 7] = k
-            bufferData[index1 + 8] = 0.0f
-            bufferData[index1 + 9] = 1.0f
+            ibuffer.put(index1, lx + (ly shl 16))
+            ibuffer.put(index1+1, k.toInt())
+            ibuffer.put(index1+2, 0)
 
-            bufferData[index1 + 10] = particles[i].x + psize*k + startSize*0.5f
-            bufferData[index1 + 11] = particles[i].y + psize*k + startSize*0.5f
-            bufferData[index1 + 12] = k
-            bufferData[index1 + 13] = 1.0f
-            bufferData[index1 + 14] = 1.0f
+            ibuffer.put(index1+3, lx + (ry shl 16))
+            ibuffer.put(index1+4, k.toInt())
+            ibuffer.put(index1+5, 1 shl 16)
 
-            bufferData[index1 + 15] = particles[i].x + psize*k + startSize*0.5f
-            bufferData[index1 + 16] = particles[i].y - psize*k - startSize*0.5f
-            bufferData[index1 + 17] = k
-            bufferData[index1 + 18] = 1.0f
-            bufferData[index1 + 19] = 0.0f
-            index1 += 20
+            ibuffer.put(index1+6, rx + (ry shl 16))
+            ibuffer.put(index1+7, k.toInt())
+            ibuffer.put(index1+8, 1 + (1 shl 16))
+
+            ibuffer.put(index1+9, rx + (ly shl 16))
+            ibuffer.put(index1+10, k.toInt())
+            ibuffer.put(index1+11, 1)
+
+            index1 += 12
         }
     }
 
-    private fun updateParticlesCircular(factor: Float, psize: Float) {
+    /*private fun updateParticlesCircular(factor: Float, psize: Float) {
         var index1 = 0
         for (i in 0 until numParticles) {
             val k = (((i.toFloat() * factor) + tick) % particleLifetime)
@@ -203,5 +205,5 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             bufferData[index1 + 19] = 0.0f
             index1 += 20
         }
-    }
+    }*/
 }
