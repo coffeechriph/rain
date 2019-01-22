@@ -6,13 +6,13 @@ import rain.assertion
 class Animator internal constructor(val entityId: Long, val textureTileOffset: Vector2i) {
     internal var animationTime = 0.0f
     internal var animationIndex = 0
-    internal var animation = Animation(0, 0, 0, 0.0f)
+    internal var animation = Animation("none", 0, 0, 0, 0.0f)
         private set
     private var animations = HashMap<String, Animation>()
     var animating = true
 
     fun addAnimation(name: String, startFrame: Int, endFrame: Int, yPos: Int, speed: Float) {
-        animations[name] = Animation(startFrame, endFrame, yPos, speed)
+        animations[name] = Animation(name, startFrame, endFrame, yPos, speed)
     }
 
     fun setAnimation(name: String) {
@@ -23,5 +23,9 @@ class Animator internal constructor(val entityId: Long, val textureTileOffset: V
             textureTileOffset.x = animation.startFrame
             textureTileOffset.y = animation.yPos
         }
+    }
+
+    fun activeAnimation(): Animation {
+       return animation
     }
 }

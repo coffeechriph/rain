@@ -358,7 +358,7 @@ class Container(private val material: Material, private val textMaterial: Materi
 
         if (textVertexDataIndex > 0) {
             // TODO: Optimize this, we could put it directly
-            val byteBuffer = memAlloc(textVertexData.size*4)
+            val byteBuffer = memAlloc(textVertexDataIndex*4)
             val fbuffer = byteBuffer.asFloatBuffer()
             fbuffer.put(textVertexData)
             fbuffer.flip()

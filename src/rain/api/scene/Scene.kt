@@ -137,7 +137,7 @@ class Scene(val resourceFactory: ResourceFactory) {
                     animator.textureTileOffset.x = animator.animation.startFrame + animator.animationIndex
                 }
 
-                animator.animationTime += deltaTime * animator.animation.speed
+                animator.animationTime += animator.animation.speed * (1.0f/60.0f)
             }
 
             for (emitter in system.getParticleEmitterList()) {
