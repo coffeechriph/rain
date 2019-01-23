@@ -45,7 +45,7 @@ fun removeMoveComponent(transform: Transform) {
     moveLookup.remove(transform)
 }
 
-fun simulateMoveManager() {
+fun moveManagerSimulate() {
     for (i in 0 until nextIndex/4) {
         moveData[i*4] += moveData[i*4+2]
         moveData[i*4+1] += moveData[i*4+3]

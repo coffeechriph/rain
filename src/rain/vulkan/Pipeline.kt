@@ -3,11 +3,11 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import rain.api.entity.RenderComponent
 import rain.api.gfx.Drawable
 import rain.assertion
 import rain.log
 import java.nio.LongBuffer
-import java.util.*
 
 internal class Pipeline(internal val material: VulkanMaterial, private val vertexFormat: Array<VertexAttribute>, private val vertexInputCreateInfo: VkPipelineVertexInputStateCreateInfo) {
     var isValid = false
@@ -25,7 +25,7 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
     private lateinit var pOffset: LongBuffer
     private lateinit var pBuffer: LongBuffer
 
-    private val nextFrameDrawQueue = ArrayDeque<Drawable>()
+    val renderComponents = ArrayList<RenderComponent>()
 
     fun matches(material: VulkanMaterial, vertexBuffer: VulkanVertexBuffer): Boolean {
         return this.material.id == material.id && vertexFormat.contentEquals(vertexBuffer.attributes)
@@ -162,6 +162,42 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
         memFree(pBuffer)
         memFree(pOffset)
         isValid = false
+    }
+
+    fun drawAll(cmdBuffer: CommandPool.CommandBuffer) {
+        begin(cmdBuffer)
+        for (component in renderComponents) {
+            if (!component.visible) {
+                continue
+            }
+
+            if (component.mesh.indexBuffer == null) {
+                val vbo = component.mesh.vertexBuffer as VulkanVertexBuffer
+                val pushData = component.createUniformData()
+
+                pOffset.put(0, 0L)
+                pBuffer.put(0, vbo.rawBuffer.buffer)
+
+                vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
+
+                vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
+                vkCmdDraw(cmdBuffer.buffer, vbo.vertexCount, 1, 0, 0)
+            }
+            else {
+                val pushData = component.createUniformData()
+                val vbo = component.mesh.vertexBuffer as VulkanVertexBuffer
+                val ibo = component.mesh.indexBuffer as VulkanIndexBuffer
+
+                pOffset.put(0, 0L)
+                pBuffer.put(0, vbo.rawBuffer.buffer)
+
+                vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
+                vkCmdBindIndexBuffer(cmdBuffer.buffer, ibo.rawBuffer.buffer, 0, VK_INDEX_TYPE_UINT32)
+
+                vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
+                vkCmdDrawIndexed(cmdBuffer.buffer, ibo.indexCount, 1, 0, 0, 0)
+            }
+        }
     }
 
     fun begin(cmdBuffer: CommandPool.CommandBuffer) {

@@ -1,5 +1,6 @@
 package rain.api.gfx
 
+import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
@@ -31,10 +32,29 @@ class VertexBufferBuilder internal constructor(val handler: createVertexBufferHa
         return this
     }
 
+    fun as2dQuad(): VertexBuffer {
+        val verts = floatArrayOf (
+            -0.5f, -0.5f, 0.0f, 0.0f,
+            -0.5f, 0.5f, 0.0f, 1.0f,
+            0.5f, 0.5f, 1.0f, 1.0f,
+
+            0.5f, 0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f, 1.0f, 0.0f,
+            -0.5f, -0.5f, 0.0f, 0.0f
+       )
+
+        vertices = memAlloc(6 * 4 * 4)
+        vertices!!.asFloatBuffer().put(verts).flip()
+        val buffer = handler(vertices!!, VertexBufferState.STATIC, arrayOf(VertexAttribute(0, 2), VertexAttribute(1, 2)), DataType.FLOAT)
+        reset()
+        return buffer
+    }
+
     fun build(): VertexBuffer {
         if (vertices == null) {
             throw AssertionError("Unable to create vertex buffer without specifying vertices!")
         }
+
         if (attributes.isEmpty()) {
             throw AssertionError("No attributes specified for vertex buffer!")
         }

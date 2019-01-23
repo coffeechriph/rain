@@ -5,28 +5,35 @@ import org.joml.Vector2f
 import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
-import rain.api.gfx.IndexBuffer
-import rain.api.gfx.ResourceFactory
-import rain.api.gfx.VertexBuffer
-import rain.api.gfx.VertexBufferState
+import rain.api.gfx.*
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 import java.util.*
 
-class ParticleEmitter constructor(private val resourceFactory: ResourceFactory, val parentTransform: Transform, private val numParticles: Int, private val
-particleSize: Float, private val particleLifetime: Float, private val particleVelocity: Vector2f, private val directionType: DirectionType, private val particleSpread: Float, private val tickRate: Float = 1.0f) {
+class ParticleEmitter internal constructor(
+        material: Material,
+        resourceFactory: ResourceFactory,
+        val parentTransform: Transform,
+        private val numParticles: Int,
+        private val particleSize: Float,
+        private val particleLifetime: Float,
+        private val particleVelocity: Vector2f,
+        private val directionType: DirectionType,
+        particleSpread: Float,
+        private val tickRate: Float = 1.0f) {
     data class Particle (var x: Float, var y: Float, var i: Float)
 
-    var vertexBuffer: VertexBuffer
-        private set
-    var indexBuffer: IndexBuffer
-        private set
+    private var renderComponent: RenderComponent
     var transform = Transform()
     var startColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f)
     var endColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f)
     var startSize = 1.0f
-    var enabled = true
+    var enabled: Boolean = true
+        set(value) {
+            field = value
+            renderComponent.visible = value
+        }
 
     private var particles: Array<Particle> = Array(numParticles){ Particle(0.0f, 0.0f, 0.0f) }
     private var bufferData: ByteBuffer = memAlloc(numParticles*12*4)
@@ -70,7 +77,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             vi += 4
         }
 
-        vertexBuffer = resourceFactory.buildVertexBuffer()
+        val vertexBuffer = resourceFactory.buildVertexBuffer()
                 .withVertices(bufferData)
                 .withState(VertexBufferState.DYNAMIC)
                 .withDataType(DataType.INT)
@@ -78,30 +85,32 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
                 .withAttribute(VertexAttribute(1, 1))
                 .build()
 
-        indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
+        val indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
+        val mesh = Mesh(vertexBuffer, indexBuffer)
+        renderComponent = RenderComponent(transform, mesh, material)
+        renderManagerNewRenderComponents.add(renderComponent)
+
+        renderComponent.createUniformData = {
+            modelMatrix.identity()
+            modelMatrix.rotateZ(parentTransform.rot)
+            modelMatrix.translate(parentTransform.x + transform.x, parentTransform.y + transform.y, parentTransform.z + transform.z)
+
+            val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+            val fbuf = buffer.asFloatBuffer()
+            fbuf.put(16, startColor.x)
+            fbuf.put(17, startColor.y)
+            fbuf.put(18, startColor.z)
+            fbuf.put(19, startColor.w)
+            fbuf.put(20, endColor.x)
+            fbuf.put(21, endColor.y)
+            fbuf.put(22, endColor.z)
+            fbuf.put(23, endColor.w)
+            modelMatrixBuffer
+        }
     }
 
-    fun getUniformData(): ByteBuffer {
-        modelMatrix.identity()
-        modelMatrix.rotateZ(parentTransform.rot)
-        modelMatrix.translate(parentTransform.x + transform.x, parentTransform.y + transform.y, parentTransform.z + transform.z)
-
-        val buffer = modelMatrix.get(modelMatrixBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
-        val fbuf = buffer.asFloatBuffer()
-        fbuf.put(16, startColor.x)
-        fbuf.put(17, startColor.y)
-        fbuf.put(18, startColor.z)
-        fbuf.put(19, startColor.w)
-        fbuf.put(20, endColor.x)
-        fbuf.put(21, endColor.y)
-        fbuf.put(22, endColor.z)
-        fbuf.put(23, endColor.w)
-        return modelMatrixBuffer
-    }
-
-    fun clear() {
-        resourceFactory.deleteVertexBuffer(vertexBuffer)
-        resourceFactory.deleteIndexBuffer(indexBuffer)
+    fun destroy() {
+        renderManagerRemoveRenderComponents.add(renderComponent)
     }
 
     fun update() {
@@ -116,7 +125,7 @@ particleSize: Float, private val particleLifetime: Float, private val particleVe
             throw NotImplementedError("Circular emitters are not implemented!")
         }
 
-        vertexBuffer.update(bufferData)
+        renderComponent.mesh.vertexBuffer.update(bufferData)
     }
 
     private fun updateParticlesLinear(factor: Float, psize: Float) {

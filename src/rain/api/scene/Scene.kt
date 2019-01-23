@@ -16,7 +16,7 @@ import rain.vulkan.VertexAttribute
 
 class Scene(val resourceFactory: ResourceFactory) {
     private lateinit var quadVertexBuffer: VertexBuffer
-    val entitySystems = ArrayList<EntitySystem<Entity>>()
+    private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
     private val simpleDraws = ArrayList<SimpleDraw>()
@@ -26,7 +26,6 @@ class Scene(val resourceFactory: ResourceFactory) {
     private var physicsContactListener = PhysicsContactListener()
 
     var activeCamera = Camera(Vector2f(0.0f, 20.0f))
-    private lateinit var emitterMaterial: Material
 
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
@@ -86,21 +85,6 @@ class Scene(val resourceFactory: ResourceFactory) {
                 .withAttribute(VertexAttribute(1, 2))
                 .build()
 
-        // TODO: This should not be part of the engine!
-        val fireTexture = resourceFactory.buildTexture2d()
-                .withName("fireTexture")
-                .fromImageFile("./data/textures/fire.png")
-                .withFilter(TextureFilter.NEAREST)
-                .build()
-
-        // TODO: This shouldn't be part of the engine either
-        this.emitterMaterial = resourceFactory.buildMaterial()
-                .withName("emitterMaterial")
-                .withVertexShader("./data/shaders/particle.vert.spv")
-                .withFragmentShader("./data/shaders/particle.frag.spv")
-                .withTexture(fireTexture)
-                .build()
-
         Box2D.init()
         physicWorld = World(Vector2(0.0f, 0.0f), true)
         physicWorld.setContactListener(physicsContactListener)
@@ -140,21 +124,13 @@ class Scene(val resourceFactory: ResourceFactory) {
                 animator.animationTime += animator.animation.speed * (1.0f/60.0f)
             }
 
-            for (emitter in system.getParticleEmitterList()) {
-                if (!emitter!!.enabled) {
-                    continue
-                }
-
-                emitter.update()
-            }
-
-            for (emitter in system.getBurstParticleEmitterList()) {
+            /*for (emitter in system.getBurstParticleEmitterList()) {
                 if (!emitter!!.enabled || !emitter.simulating) {
                     continue
                 }
 
                 emitter.update()
-            }
+            }*/
 
             for (collider in system.getColliderList()) {
                 val b = collider!!.getBody()
@@ -168,10 +144,6 @@ class Scene(val resourceFactory: ResourceFactory) {
         renderer.setActiveCamera(activeCamera)
         val submitListSorted = ArrayList<Drawable>()
         val submitListParticles = ArrayList<Drawable>()
-
-        for (tilemap in tilemaps) {
-            submitListSorted.add(Drawable(tilemap.material, tilemap.getUniformData(), tilemap.vertexBuffer, tilemap.transform.z))
-        }
 
         for (simpleDraw in simpleDraws) {
             val modelMatrix = Matrix4f()
@@ -203,15 +175,7 @@ class Scene(val resourceFactory: ResourceFactory) {
                 }
             }
 
-            for (emitter in system.getParticleEmitterList()) {
-                if (!emitter!!.enabled) {
-                    continue
-                }
-
-                submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
-            }
-
-            for (emitter in system.getBurstParticleEmitterList()) {
+            /*for (emitter in system.getBurstParticleEmitterList()) {
                 if (!emitter!!.enabled || !emitter.simulating) {
                     continue
                 }
@@ -219,7 +183,7 @@ class Scene(val resourceFactory: ResourceFactory) {
                 if (!emitter.burstFinished) {
                     submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
                 }
-            }
+            }*/
         }
 
         // TODO: Right now we must draw stuff in correct order as we're using alpha blending per default..
@@ -234,8 +198,12 @@ class Scene(val resourceFactory: ResourceFactory) {
     }
 
     fun clear() {
-        entitySystems.clear()
+        for (tilemap in tilemaps) {
+            tilemap.destroy()
+        }
         tilemaps.clear()
+
+        entitySystems.clear()
         cameras.clear()
         simpleDraws.clear()
         spriteBatchers.clear()

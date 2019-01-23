@@ -45,7 +45,7 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
             vertexCount = 0
         }
         else {
-            vertexCount = vertices.remaining() / vertexSize
+            vertexCount = vertices.asFloatBuffer().remaining() / vertexSize
             rawBuffer.buffer(vk.vmaAllocator, vertices)
         }
     }
@@ -81,7 +81,7 @@ internal class VulkanVertexBuffer(val id: Long, val resourceFactory: VulkanResou
         }
 
         log("Vertex data size: ${vertices.remaining()}, vertex size: $vertexSize")
-        vertexCount = vertices.remaining() / vertexSize
+        vertexCount = vertices.asFloatBuffer().remaining() / vertexSize
         this.vertexSize = vertexSize
         this.vk = vk
         this.commandBuffer = commandBuffer

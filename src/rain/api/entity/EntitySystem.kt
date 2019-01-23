@@ -7,7 +7,9 @@ import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2f
 import org.joml.Vector2i
 import rain.api.gfx.Material
-import rain.api.gfx.ResourceFactory
+import rain.api.gfx.Mesh
+import rain.api.gfx.renderManagerNewRenderComponents
+import rain.api.gfx.renderManagerRemoveRenderComponents
 import rain.api.scene.Scene
 import rain.assertion
 
@@ -22,8 +24,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     private var spriteComponents = ArrayList<Sprite?>()
     private var animatorComponents = ArrayList<Animator?>()
     private var colliderComponents = ArrayList<Collider?>()
-    private var particleEmitters = ArrayList<ParticleEmitter?>()
-    private var burstParticleEmitters = ArrayList<BurstParticleEmitter?>()
 
     private var spriteComponentsMap = HashMap<Long, Sprite?>()
     private var transformComponentsMap = HashMap<Long, Transform?>()
@@ -32,6 +32,8 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     private var particleEmittersMap = HashMap<Long, ParticleEmitter?>()
     private var burstParticleEmitterMap = HashMap<Long, BurstParticleEmitter?>()
     private var entityWrappersMap = HashMap<Long, T?>()
+
+    private var renderComponents = HashMap<Long, RenderComponent>()
 
     fun newEntity(entity: T): Builder<T> {
         val id = uniqueId()
@@ -69,14 +71,19 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
 
         val particleEmitter = particleEmittersMap[entity.getId()]
         if (particleEmitter != null) {
-            particleEmitters.remove(particleEmitter)
+            particleEmitter.destroy()
             particleEmittersMap.remove(entity.getId())
         }
 
         val burstParticleEmitter = burstParticleEmitterMap[entity.getId()]
         if (burstParticleEmitter != null) {
-            burstParticleEmitters.remove(burstParticleEmitter)
             burstParticleEmitterMap.remove(entity.getId())
+        }
+
+        val renderComponent = renderComponents[entity.getId()]
+        if (renderComponent != null) {
+            renderManagerRemoveRenderComponents.add(renderComponent)
+            renderComponents.remove(entity.getId())
         }
 
         entityWrappersMap.remove(entity.getId())
@@ -95,17 +102,15 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         animatorComponents.clear()
         animatorComponentsMap.clear()
 
-        for (emitter in particleEmitters) {
-            emitter!!.clear()
+        for (emitter in particleEmittersMap.values) {
+            emitterManagerRemoveEmitter(emitter!!)
         }
 
-        for (emitter in burstParticleEmitters) {
-            emitter!!.clear()
+        for (emitter in burstParticleEmitterMap.values) {
+            emitterManagerRemoveBurstEmitter(emitter!!)
         }
 
-        particleEmitters.clear()
         particleEmittersMap.clear()
-        burstParticleEmitters.clear()
         burstParticleEmitterMap.clear()
 
         for (collider in colliderComponents) {
@@ -113,8 +118,16 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         }
         colliderComponents.clear()
         colliderComponentsMap.clear()
+
+        for (component in renderComponents.values) {
+            renderManagerRemoveRenderComponents.add(component)
+        }
+        renderComponents.clear()
     }
 
+    // TODO: All these attaches shouldn't care about order
+    // ánd should be "self-contained" meaning that if transform is missing then the
+    // renderer would just use a default transform.
     class Builder<T: Entity> internal constructor(private var entityId: Long, private val entity: T, private var system: EntitySystem<T>) {
         // TODO: Take in a parent transform that this transform will follow
         fun attachTransformComponent(): Builder<T> {
@@ -149,10 +162,24 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
                 assertion("A animator component already exists for entity $entityId!")
             }
 
-            val spr = system.findSpriteComponent(entityId) ?: throw IllegalStateException("A sprite component must be attached if a animator is used!")
-            val animator = Animator(entityId, spr.textureTileOffset)
+            var textureTileOffset: Vector2i? = null
+            val spr = system.findSpriteComponent(entityId)
+            if (spr != null) {
+                textureTileOffset = spr.textureTileOffset
+            }
+            else {
+                val rc = system.getRenderComponent(entityId)
+                if (rc != null) {
+                    textureTileOffset = rc.textureTileOffset
+                }
+                else {
+                    throw IllegalStateException("Must have either Sprite or RenderComponent attached in order to use a Animator!")
+                }
+            }
+
+            val animator = Animator(entityId, textureTileOffset)
             system.animatorComponents.add(animator)
-            system.animatorComponentsMap.put(entityId, animator)
+            system.animatorComponentsMap[entityId] = animator
             return this
         }
 
@@ -247,29 +274,35 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             return this
         }
 
-        fun attachParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
+        fun attachParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
             val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
 
             if (system.particleEmittersMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = ParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
-            system.particleEmitters.add(emitter)
+            val emitter = emitterManagerCreateEmitter(transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             system.particleEmittersMap[entityId] = emitter
             return this
         }
 
-        fun attachBurstParticleEmitter(resourceFactory: ResourceFactory, numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
+        fun attachBurstParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
             val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
 
             if (system.burstParticleEmitterMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 particleEmitter component attached at once!")
             }
 
-            val emitter = BurstParticleEmitter(resourceFactory, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
-            system.burstParticleEmitters.add(emitter)
+            val emitter = emitterManagerCreateBurstEmitter(transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             system.burstParticleEmitterMap[entityId] = emitter
+            return this
+        }
+
+        fun attachRenderComponent(material: Material, mesh: Mesh): Builder<T> {
+            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
+            val component = RenderComponent(transform, mesh, material)
+            renderManagerNewRenderComponents.add(component)
+            system.renderComponents.put(entityId, component)
             return this
         }
 
@@ -308,6 +341,10 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         return burstParticleEmitterMap[entityId]
     }
 
+    fun getRenderComponent(entityId: Long): RenderComponent? {
+        return renderComponents[entityId]
+    }
+
     internal fun findEntity(entityId: Long): T? {
         return entityWrappersMap[entityId]
     }
@@ -334,14 +371,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
 
     internal fun getAnimatorList(): List<Animator?> {
         return animatorComponents
-    }
-
-    internal fun getParticleEmitterList(): List<ParticleEmitter?> {
-        return particleEmitters
-    }
-
-    internal fun getBurstParticleEmitterList(): List<BurstParticleEmitter?> {
-        return burstParticleEmitters
     }
 
     private fun uniqueId(): Long {

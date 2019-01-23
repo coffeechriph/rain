@@ -11,6 +11,8 @@ import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
+import rain.api.gfx.renderManagerNewRenderComponents
+import rain.api.gfx.renderManagerRemoveRenderComponents
 import rain.api.scene.Camera
 import rain.assertion
 import rain.log
@@ -244,9 +246,91 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         frameIndex = (frameIndex+1)%swapchain.framebuffers.size
     }
 
+    private fun handleRenderManager() {
+        for (component in renderManagerRemoveRenderComponents) {
+            val mat = component.material as VulkanMaterial
+            val buffer = component.mesh.vertexBuffer as VulkanVertexBuffer
+
+            println("Removing ${mat.name}")
+            for (pipeline in pipelines) {
+                if (pipeline.matches(mat, buffer)) {
+                    for (component2 in pipeline.renderComponents) {
+                        if (component == component2) {
+                            pipeline.renderComponents.remove(component)
+                            break
+                        }
+                    }
+                    break
+                }
+            }
+        }
+        renderManagerRemoveRenderComponents.clear()
+
+        val obsoletePipelines = ArrayList<Pipeline>()
+        // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
+        val projectionMatrixBuffer = memAlloc(16 * 4)
+        val pvMatrix = Matrix4f(camera.projection)
+        pvMatrix.mul(camera.view)
+        pvMatrix.get(projectionMatrixBuffer)
+
+        // Assign render components to a pipeline so we don't have to redo that every frame
+        for (component in renderManagerNewRenderComponents) {
+            val mat = component.material as VulkanMaterial
+            val buffer = component.mesh.vertexBuffer as VulkanVertexBuffer
+
+            if (!mat.isValid || !buffer.isValid) {
+                continue
+            }
+
+            var found = false
+            for (pipeline in pipelines) {
+                if (!pipeline.isValid) {
+                    obsoletePipelines.add(pipeline)
+                    continue
+                }
+
+                if (pipeline.matches(mat, buffer)) {
+                    // If a materials texel buffer has changed we must recreate the descriptor sets
+                    if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
+                        mat.texelBufferUniform.referencesHasChanged = false
+                        mat.descriptorPool.build(vk.logicalDevice)
+                    }
+
+                    pipeline.material.sceneData.update(projectionMatrixBuffer)
+                    pipeline.renderComponents.add(component)
+                    found = true
+                }
+            }
+
+            if (!found) {
+                val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
+                pipeline.create(logicalDevice, renderpass)
+                pipeline.material.sceneData.update(projectionMatrixBuffer)
+                pipeline.renderComponents.add(component)
+                pipelines.add(pipeline)
+            }
+        }
+        pipelines.removeAll(obsoletePipelines)
+        renderManagerNewRenderComponents.clear()
+    }
+
     private fun drawRenderPass(nextImage: Int) {
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
         issueDrawingCommands()
+
+        handleRenderManager()
+        for (pipeline in pipelines) {
+            val mat = pipeline.material
+
+            // If a materials texel buffer has changed we must recreate the descriptor sets
+            if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
+                mat.texelBufferUniform.referencesHasChanged = false
+                mat.descriptorPool.build(vk.logicalDevice)
+            }
+
+            pipeline.renderComponents.sortBy { component -> component.transform.z }
+            pipeline.drawAll(renderCommandBuffers[frameIndex])
+        }
 
         renderpass.end(renderCommandBuffers[frameIndex])
     }

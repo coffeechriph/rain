@@ -3,14 +3,11 @@ package rain.api.scene
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
+import rain.api.entity.RenderComponent
 import rain.api.entity.Transform
-import rain.api.gfx.Material
-import rain.api.gfx.ResourceFactory
-import rain.api.gfx.VertexBuffer
-import rain.api.gfx.VertexBufferState
+import rain.api.gfx.*
 import rain.log
 import rain.vulkan.VertexAttribute
-import java.nio.ByteBuffer
 
 class Tilemap {
     private val modelMatrix = Matrix4f()
@@ -25,25 +22,7 @@ class Tilemap {
     var transform = Transform()
         private set
 
-    internal lateinit var vertexBuffer: VertexBuffer
-        private set
-    lateinit var material: Material
-        private set
-
-    private lateinit var vertices: ArrayList<Float>
-
-    fun getUniformData(): ByteBuffer {
-        if (transform.updated) {
-            modelMatrix.identity()
-            modelMatrix.rotateZ(transform.rot)
-            modelMatrix.translate(transform.x, transform.y, transform.z)
-            modelMatrix.scale(transform.sx, transform.sy, 0.0f)
-        }
-
-        val byteBuffer = MemoryUtil.memAlloc(16 * 4)
-        modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
-        return byteBuffer
-    }
+    private lateinit var renderComponent: RenderComponent
 
     fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32, tileNumY: Int = 32,
                tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileIndex>) {
@@ -52,7 +31,7 @@ class Tilemap {
         var x = 0.0f
         var y = 0.0f
 
-        vertices = ArrayList() // pos(vec2), uv(vec2). 6 vertices per tile
+        val vertices = ArrayList<Float>() // pos(vec2), uv(vec2). 6 vertices per tile
         // TODO: We can optimize this by specifying x,y as 1 int32 and scale them in the shader by size
         // This would allow us to have a tilemap with 65535 tiles on every axis
         for (i in 0 until tileNumX*tileNumY) {
@@ -104,18 +83,33 @@ class Tilemap {
         // TODO: Optimize this!
         val byteBuffer = memAlloc(vertices.size*4)
         byteBuffer.asFloatBuffer().put(vertices.toFloatArray()).flip()
-        vertexBuffer = resourceFactory.buildVertexBuffer()
+        val vertexBuffer = resourceFactory.buildVertexBuffer()
                 .withVertices(byteBuffer)
                 .withState(VertexBufferState.STATIC)
                 .withAttribute(VertexAttribute(0, 2))
                 .withAttribute(VertexAttribute(1, 2))
                 .build()
+        val mesh = Mesh(vertexBuffer, null)
 
         this.tileNumX = tileNumX
         this.tileNumY = tileNumY
         this.tileWidth = tileWidth
         this.tileHeight = tileHeight
-        this.material = material
+
+        renderComponent = RenderComponent(transform, mesh, material)
+        renderManagerNewRenderComponents.add(renderComponent)
+        renderComponent.createUniformData = {
+            if (transform.updated) {
+                modelMatrix.identity()
+                modelMatrix.rotateZ(transform.rot)
+                modelMatrix.translate(transform.x, transform.y, transform.z)
+                modelMatrix.scale(transform.sx, transform.sy, 0.0f)
+            }
+
+            val byteBuffer = MemoryUtil.memAlloc(16 * 4)
+            modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+            byteBuffer
+        }
     }
 
     fun update(tileIndices: Array<TileIndex>) {
@@ -124,13 +118,13 @@ class Tilemap {
         var x = 0.0f
         var y = 0.0f
 
-        vertices = ArrayList() // pos(vec2), uv(vec2). 6 vertices per tile
+        val vertices = ArrayList<Float>() // pos(vec2), uv(vec2). 6 vertices per tile
         for (i in 0 until tileNumX*tileNumY) {
             if (tileIndices[i] != TileIndexNone) {
                 val tileX = tileIndices[i].x
                 val tileY = tileIndices[i].y
-                val uvx = material.getTexture2d()[0].getTexCoordWidth()
-                val uvy = material.getTexture2d()[0].getTexCoordHeight()
+                val uvx = renderComponent.material.getTexture2d()[0].getTexCoordWidth()
+                val uvy = renderComponent.material.getTexture2d()[0].getTexCoordHeight()
 
                 vertices.add(x)
                 vertices.add(y)
@@ -170,15 +164,15 @@ class Tilemap {
             }
         }
 
-        if (vertexBuffer.valid()) {
+        if (renderComponent.mesh.vertexBuffer.valid()) {
             // TODO: Optimize this
             val byteBuffer = memAlloc(vertices.size*4)
             byteBuffer.asFloatBuffer().put(vertices.toFloatArray()).flip()
-            vertexBuffer.update(byteBuffer)
+            renderComponent.mesh.vertexBuffer.update(byteBuffer)
         }
     }
 
     fun destroy() {
-
+        renderManagerRemoveRenderComponents.add(renderComponent)
     }
 }
