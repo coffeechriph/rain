@@ -169,6 +169,8 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     }
 
     fun clearPipelines() {
+        removeQueuedRenderComponents()
+
         vkDeviceWaitIdle(logicalDevice.device)
         for (pipeline in pipelines) {
             pipeline.destroy(logicalDevice)
@@ -247,24 +249,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     }
 
     private fun handleRenderManager() {
-        for (component in renderManagerRemoveRenderComponents) {
-            val mat = component.material as VulkanMaterial
-            val buffer = component.mesh.vertexBuffer as VulkanVertexBuffer
-
-            println("Removing ${mat.name}")
-            for (pipeline in pipelines) {
-                if (pipeline.matches(mat, buffer)) {
-                    for (component2 in pipeline.renderComponents) {
-                        if (component == component2) {
-                            pipeline.renderComponents.remove(component)
-                            break
-                        }
-                    }
-                    break
-                }
-            }
-        }
-        renderManagerRemoveRenderComponents.clear()
+        removeQueuedRenderComponents()
 
         val obsoletePipelines = ArrayList<Pipeline>()
         // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
@@ -312,6 +297,26 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         }
         pipelines.removeAll(obsoletePipelines)
         renderManagerNewRenderComponents.clear()
+    }
+
+    private fun removeQueuedRenderComponents() {
+        for (component in renderManagerRemoveRenderComponents) {
+            val mat = component.material as VulkanMaterial
+            val buffer = component.mesh.vertexBuffer as VulkanVertexBuffer
+
+            for (pipeline in pipelines) {
+                if (pipeline.matches(mat, buffer)) {
+                    for (component2 in pipeline.renderComponents) {
+                        if (component == component2) {
+                            pipeline.renderComponents.remove(component)
+                            break
+                        }
+                    }
+                    break
+                }
+            }
+        }
+        renderManagerRemoveRenderComponents.clear()
     }
 
     private fun drawRenderPass(nextImage: Int) {

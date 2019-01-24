@@ -1,17 +1,36 @@
 package rain.api.entity
 
 import rain.api.Input
+import rain.api.gfx.renderManagerGetRenderComponentByEntity
 import rain.api.scene.Scene
 
-open class Entity {
-    private var id: Long = -1L
-
-    internal fun setId(id: Long) {
-        this.id = id
+private var currentId: Long = 0
+private fun getNextUniqueId(): Long {
+    if (currentId + 1 >= Long.MAX_VALUE) {
+        throw AssertionError("Creating this entity would cause the ID to overflow!")
     }
+    currentId += 1
+
+    return currentId
+}
+
+open class Entity {
+    private val id = getNextUniqueId()
 
     fun getId(): Long {
         return id
+    }
+
+    fun getParticleEmitters(): List<ParticleEmitter>? {
+        return emitterManagerGetEmitterFromId(id)
+    }
+
+    fun getBurstParticleEmitters(): List<BurstParticleEmitter>? {
+        return emitterManagerGetBurstEmitterFromId(id)
+    }
+
+    fun getRenderComponents(): List<RenderComponent>? {
+        return renderManagerGetRenderComponentByEntity(id)
     }
 
     open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}

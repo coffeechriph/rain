@@ -66,14 +66,19 @@ fun endLog() {
 fun log(text: String) {
     if (ENABLE_LOGGING) {
         val stackWalker = StackWalker.getInstance()
-        val frame = stackWalker.walk { stream ->
+        val frames = stackWalker.walk { stream ->
             val stack = stream
                     //.filter { s -> !s.className.contains("rain") }
                     .collect(Collectors.toList())
-            stack[0]
+            stack.take(Math.min(5, stack.size))
         }
 
-        val finalString = frame.className + ".${frame.methodName}[@${frame.lineNumber}]: " + text + System.getProperty("line.separator")
+        var logHeader = ""
+        for (frame in frames) {
+            logHeader += "${frame.className}:${frame.methodName}[@${frame.lineNumber}]" + System.lineSeparator()
+        }
+
+        val finalString = text + System.lineSeparator() + logHeader
 
         if (logIndex + finalString.length >= logBuffer.size) {
             outputStream.write(logBuffer)

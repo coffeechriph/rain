@@ -12,6 +12,7 @@ import java.nio.ByteBuffer
 import java.util.*
 
 class ParticleEmitter internal constructor(
+        val entityId: Long,
         material: Material,
         resourceFactory: ResourceFactory,
         val parentTransform: Transform,
