@@ -9,6 +9,7 @@ import rain.api.entity.emitterManagerInit
 import rain.api.entity.emitterManagerSimulate
 import rain.api.entity.moveManagerSimulate
 import rain.api.gfx.ResourceFactory
+import rain.api.gfx.renderManagerInit
 import rain.api.gui.Gui
 import rain.api.scene.Scene
 import rain.util.ShaderCompiler

@@ -9,10 +9,10 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
+import rain.api.entity.RenderComponent
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
-import rain.api.gfx.renderManagerNewRenderComponents
-import rain.api.gfx.renderManagerRemoveRenderComponents
+import rain.api.gfx.renderManagerInit
 import rain.api.scene.Camera
 import rain.assertion
 import rain.log
@@ -66,6 +66,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
         setupQueue = Queue()
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
+        renderManagerInit(this::addRenderComponent, this::removeRenderComponent)
     }
 
     override fun setActiveCamera(camera: Camera) {
@@ -94,6 +95,64 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
     override fun getDepthRange(): Vector2f {
         return Vector2f(0.0f, 20.0f)
+    }
+
+    private fun addRenderComponent(renderComponent: RenderComponent) {
+        val mat = renderComponent.material as VulkanMaterial
+        val buffer = renderComponent.mesh.vertexBuffer as VulkanVertexBuffer
+
+        if (!mat.isValid || !buffer.isValid) {
+            throw IllegalStateException("RenderComponents has invalid state [Material: ${mat.isValid}, Buffer: ${buffer.isValid}]")
+        }
+
+        val projectionMatrixBuffer = memAlloc(16 * 4)
+        val pvMatrix = Matrix4f(camera.projection)
+        pvMatrix.mul(camera.view)
+        pvMatrix.get(projectionMatrixBuffer)
+
+        var found = false
+        for (pipeline in pipelines) {
+            if (!pipeline.isValid) {
+                continue
+            }
+
+            if (pipeline.matches(mat, buffer)) {
+                // If a materials texel buffer has changed we must recreate the descriptor sets
+                if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
+                    mat.texelBufferUniform.referencesHasChanged = false
+                    mat.descriptorPool.build(vk.logicalDevice)
+                }
+
+                pipeline.material.sceneData.update(projectionMatrixBuffer)
+                pipeline.renderComponents.add(renderComponent)
+                found = true
+            }
+        }
+
+        if (!found) {
+            val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
+            pipeline.create(logicalDevice, renderpass)
+            pipeline.material.sceneData.update(projectionMatrixBuffer)
+            pipeline.renderComponents.add(renderComponent)
+            pipelines.add(pipeline)
+        }
+    }
+
+    private fun removeRenderComponent(renderComponent: RenderComponent) {
+        val mat = renderComponent.material as VulkanMaterial
+        val buffer = renderComponent.mesh.vertexBuffer as VulkanVertexBuffer
+
+        for (pipeline in pipelines) {
+            if (pipeline.matches(mat, buffer)) {
+                for (component2 in pipeline.renderComponents) {
+                    if (renderComponent == component2) {
+                        pipeline.renderComponents.remove(renderComponent)
+                        break
+                    }
+                }
+                break
+            }
+        }
     }
 
     override fun create() {
@@ -169,8 +228,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     }
 
     fun clearPipelines() {
-        removeQueuedRenderComponents()
-
         vkDeviceWaitIdle(logicalDevice.device)
         for (pipeline in pipelines) {
             pipeline.destroy(logicalDevice)
@@ -248,83 +305,17 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         frameIndex = (frameIndex+1)%swapchain.framebuffers.size
     }
 
-    private fun handleRenderManager() {
-        removeQueuedRenderComponents()
-
-        val obsoletePipelines = ArrayList<Pipeline>()
-        // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
-        val projectionMatrixBuffer = memAlloc(16 * 4)
-        val pvMatrix = Matrix4f(camera.projection)
-        pvMatrix.mul(camera.view)
-        pvMatrix.get(projectionMatrixBuffer)
-
-        // Assign render components to a pipeline so we don't have to redo that every frame
-        for (component in renderManagerNewRenderComponents) {
-            val mat = component.material as VulkanMaterial
-            val buffer = component.mesh.vertexBuffer as VulkanVertexBuffer
-
-            if (!mat.isValid || !buffer.isValid) {
-                continue
-            }
-
-            var found = false
-            for (pipeline in pipelines) {
-                if (!pipeline.isValid) {
-                    obsoletePipelines.add(pipeline)
-                    continue
-                }
-
-                if (pipeline.matches(mat, buffer)) {
-                    // If a materials texel buffer has changed we must recreate the descriptor sets
-                    if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
-                        mat.texelBufferUniform.referencesHasChanged = false
-                        mat.descriptorPool.build(vk.logicalDevice)
-                    }
-
-                    pipeline.material.sceneData.update(projectionMatrixBuffer)
-                    pipeline.renderComponents.add(component)
-                    found = true
-                }
-            }
-
-            if (!found) {
-                val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
-                pipeline.create(logicalDevice, renderpass)
-                pipeline.material.sceneData.update(projectionMatrixBuffer)
-                pipeline.renderComponents.add(component)
-                pipelines.add(pipeline)
-            }
-        }
-        pipelines.removeAll(obsoletePipelines)
-        renderManagerNewRenderComponents.clear()
-    }
-
-    private fun removeQueuedRenderComponents() {
-        for (component in renderManagerRemoveRenderComponents) {
-            val mat = component.material as VulkanMaterial
-            val buffer = component.mesh.vertexBuffer as VulkanVertexBuffer
-
-            for (pipeline in pipelines) {
-                if (pipeline.matches(mat, buffer)) {
-                    for (component2 in pipeline.renderComponents) {
-                        if (component == component2) {
-                            pipeline.renderComponents.remove(component)
-                            break
-                        }
-                    }
-                    break
-                }
-            }
-        }
-        renderManagerRemoveRenderComponents.clear()
-    }
-
     private fun drawRenderPass(nextImage: Int) {
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
         issueDrawingCommands()
 
-        handleRenderManager()
+        val obsoletePipelines = ArrayList<Pipeline>()
         for (pipeline in pipelines) {
+            if (!pipeline.isValid) {
+                obsoletePipelines.add(pipeline)
+                continue
+            }
+
             val mat = pipeline.material
 
             // If a materials texel buffer has changed we must recreate the descriptor sets
@@ -336,7 +327,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             pipeline.renderComponents.sortBy { component -> component.transform.z }
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
-
+        pipelines.removeAll(obsoletePipelines)
         renderpass.end(renderCommandBuffers[frameIndex])
     }
 

@@ -157,6 +157,7 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
     }
 
     fun destroy(logicalDevice: LogicalDevice) {
+        renderComponents.clear()
         vkDestroyPipeline(logicalDevice.device, pipeline, null)
         vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, null)
         memFree(pBuffer)
