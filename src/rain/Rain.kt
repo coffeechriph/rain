@@ -9,7 +9,6 @@ import rain.api.entity.emitterManagerInit
 import rain.api.entity.emitterManagerSimulate
 import rain.api.entity.moveManagerSimulate
 import rain.api.gfx.ResourceFactory
-import rain.api.gfx.renderManagerInit
 import rain.api.gui.Gui
 import rain.api.scene.Scene
 import rain.util.ShaderCompiler
@@ -52,7 +51,7 @@ open class Rain {
         }
 
         scene = Scene(resourceFactory)
-        gui = Gui(resourceFactory, vulkanRenderer)
+        gui = Gui(resourceFactory)
         stateManager = StateManager(resourceFactory, scene, gui, input)
     }
 

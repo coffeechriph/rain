@@ -97,7 +97,7 @@ class Tilemap {
         this.tileHeight = tileHeight
 
         renderComponent = RenderComponent(transform, mesh, material)
-        renderManagerNewRenderComponents.add(renderComponent)
+        addNewRenderComponentToRenderer(renderComponent)
         renderComponent.createUniformData = {
             if (transform.updated) {
                 modelMatrix.identity()
@@ -173,6 +173,6 @@ class Tilemap {
     }
 
     fun destroy() {
-        renderManagerRemoveRenderComponents.add(renderComponent)
+        removeRenderComponentFromRenderer(renderComponent)
     }
 }

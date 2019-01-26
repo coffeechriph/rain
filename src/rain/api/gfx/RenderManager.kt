@@ -7,8 +7,8 @@ typealias RemoveRenderComponentFromRenderer = (renderComponent: RenderComponent)
 
 private val renderManagerRenderComponentsMap = HashMap<Long, ArrayList<RenderComponent>>()
 
-private lateinit var addNewRenderComponentToRenderer: AddRenderComponentToRenderer
-private lateinit var removeRenderComponentFromRenderer: RemoveRenderComponentFromRenderer
+internal lateinit var addNewRenderComponentToRenderer: AddRenderComponentToRenderer
+internal lateinit var removeRenderComponentFromRenderer: RemoveRenderComponentFromRenderer
 
 internal fun renderManagerInit(addNewRenderComponent: AddRenderComponentToRenderer, removeRenderComponent: RemoveRenderComponentFromRenderer) {
     addNewRenderComponentToRenderer = addNewRenderComponent

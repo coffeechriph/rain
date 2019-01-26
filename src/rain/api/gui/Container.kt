@@ -8,6 +8,7 @@ import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
+import rain.api.entity.RenderComponent
 import rain.api.entity.Transform
 import rain.api.gfx.*
 import rain.log
@@ -27,6 +28,13 @@ class Container(private val material: Material, private val textMaterial: Materi
                 isDirty = true
             }
             field = value
+
+            if (::componentRenderComponent.isInitialized) {
+                componentRenderComponent.visible = value
+            }
+            if (::textRenderComponent.isInitialized) {
+                textRenderComponent.visible = value
+            }
         }
 
     var background = false
@@ -42,6 +50,8 @@ class Container(private val material: Material, private val textMaterial: Materi
     private var lastTriggeredComponent: GuiC? = null
     private lateinit var componentBuffer: VertexBuffer
     private lateinit var textBuffer: VertexBuffer
+    private lateinit var componentRenderComponent: RenderComponent
+    private lateinit var textRenderComponent: RenderComponent
 
     private fun getUniformData(): ByteBuffer {
         val uniformData = memAlloc(18 * 4)
@@ -101,15 +111,20 @@ class Container(private val material: Material, private val textMaterial: Materi
         isDirty = true
     }
 
-    fun build(renderer: Renderer) {
-        isDirty = false
-
-        buildComponentVertices(renderer)
-        buildTextVertices(renderer)
+    fun destroy() {
+        removeRenderComponentFromRenderer(componentRenderComponent)
+        removeRenderComponentFromRenderer(textRenderComponent)
     }
 
-    private fun buildComponentVertices(renderer: Renderer) {
-        val depth = renderer.getDepthRange().y - 0.15f
+    fun build() {
+        isDirty = false
+
+        buildComponentVertices()
+        buildTextVertices()
+    }
+
+    private fun buildComponentVertices() {
+        val depth = transform.z
         val list = ArrayList<Float>()
 
         for (component in components) {
@@ -206,14 +221,20 @@ class Container(private val material: Material, private val textMaterial: Materi
                         .withAttribute(VertexAttribute(0, 3))
                         .withAttribute(VertexAttribute(1, 3))
                         .build()
+
+                val mesh = Mesh(componentBuffer, null)
+                componentRenderComponent = RenderComponent(transform, mesh, material)
+                componentRenderComponent.createUniformData = this::getUniformData
+                componentRenderComponent.visible = visible
+                addNewRenderComponentToRenderer(componentRenderComponent)
             }
 
             componentBuffer.update(byteBuffer)
         }
     }
 
-    private fun buildTextVertices(renderer: Renderer) {
-        val depth = renderer.getDepthRange().y - 0.1f
+    private fun buildTextVertices() {
+        val depth = transform.z + 0.1f
         val scale = stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
         val color = skin.foregroundColors["text"]!!
 
@@ -360,7 +381,7 @@ class Container(private val material: Material, private val textMaterial: Materi
             // TODO: Optimize this, we could put it directly
             val byteBuffer = memAlloc(textVertexDataIndex*4)
             val fbuffer = byteBuffer.asFloatBuffer()
-            fbuffer.put(textVertexData)
+            fbuffer.put(textVertexData, 0, textVertexDataIndex)
             fbuffer.flip()
             if (!::textBuffer.isInitialized) {
                 textBuffer = resourceFactory.buildVertexBuffer()
@@ -370,6 +391,13 @@ class Container(private val material: Material, private val textMaterial: Materi
                         .withAttribute(VertexAttribute(1, 3))
                         .withAttribute(VertexAttribute(2, 2))
                         .build()
+
+
+                val mesh = Mesh(textBuffer, null)
+                textRenderComponent = RenderComponent(transform, mesh, textMaterial)
+                textRenderComponent.createUniformData = this::getUniformData
+                textRenderComponent.visible = visible
+                addNewRenderComponentToRenderer(textRenderComponent)
             }
             else {
                 textBuffer.update(byteBuffer)
@@ -389,7 +417,6 @@ class Container(private val material: Material, private val textMaterial: Materi
     // Handles interaction with gui elements. If a element is being interacted with the
     // input events will be de-registered in order to keep them from being forwarded to game code.
     fun update(input: Input) {
-
         if (lastTriggeredComponent != null) {
             if (lastTriggeredComponent is Button) {
                 updateButton(input)
@@ -426,17 +453,5 @@ class Container(private val material: Material, private val textMaterial: Materi
 
     private fun updateToggleButton(input: Input) {
 
-    }
-
-    fun render(renderer: Renderer) {
-        if (visible) {
-            if (::componentBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(material, getUniformData(), componentBuffer, transform.z))
-            }
-
-            if (::textBuffer.isInitialized) {
-                renderer.submitDraw(Drawable(textMaterial, getUniformData(), textBuffer, transform.z))
-            }
-        }
     }
 }

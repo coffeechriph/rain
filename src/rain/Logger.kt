@@ -3,6 +3,7 @@ package rain
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.time.LocalDateTime
 import java.util.*
 import java.util.stream.Collectors
 
@@ -78,7 +79,8 @@ fun log(text: String) {
             logHeader += "${frame.className}:${frame.methodName}[@${frame.lineNumber}]" + System.lineSeparator()
         }
 
-        val finalString = text + System.lineSeparator() + logHeader
+        val timestamp = LocalDateTime.now().toString()
+        val finalString = '<' + timestamp + ">\n" + text + System.lineSeparator() + logHeader
 
         if (logIndex + finalString.length >= logBuffer.size) {
             outputStream.write(logBuffer)

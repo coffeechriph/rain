@@ -2,10 +2,9 @@ package rain.api.gui
 
 import rain.api.Input
 import rain.api.gfx.Material
-import rain.api.gfx.Renderer
 import rain.api.gfx.ResourceFactory
 
-class Gui(private val resourceFactory: ResourceFactory, private val renderer: Renderer) {
+class Gui(private val resourceFactory: ResourceFactory) {
     private val containers = ArrayList<Container>()
     private lateinit var componentMaterial: Material
     private lateinit var textMaterial: Material
@@ -32,6 +31,7 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
         val c = Container(componentMaterial, textMaterial, resourceFactory, font)
         c.transform.x = x
         c.transform.y = y
+        c.transform.z = 19.5f
         c.transform.sx = w
         c.transform.sy = h
         containers.add(c)
@@ -48,17 +48,17 @@ class Gui(private val resourceFactory: ResourceFactory, private val renderer: Re
                 continue
             }
 
-            container.build(renderer)
+            container.build()
         }
     }
 
     fun render() {
-        for (container in containers) {
-            container.render(renderer)
-        }
     }
 
     fun clear() {
+        for (container in containers) {
+            container.destroy()
+        }
         containers.clear()
 
         if (::font.isInitialized) {

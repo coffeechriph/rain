@@ -89,7 +89,7 @@ class ParticleEmitter internal constructor(
         val indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
         val mesh = Mesh(vertexBuffer, indexBuffer)
         renderComponent = RenderComponent(transform, mesh, material)
-        renderManagerNewRenderComponents.add(renderComponent)
+        addNewRenderComponentToRenderer(renderComponent)
 
         renderComponent.createUniformData = {
             modelMatrix.identity()
@@ -111,7 +111,7 @@ class ParticleEmitter internal constructor(
     }
 
     fun destroy() {
-        renderManagerRemoveRenderComponents.add(renderComponent)
+        removeRenderComponentFromRenderer(renderComponent)
     }
 
     fun update() {

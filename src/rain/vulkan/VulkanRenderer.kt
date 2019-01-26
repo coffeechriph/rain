@@ -45,6 +45,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     private val pImageIndex = MemoryUtil.memAllocInt(1)
 
     private val drawOpsQueue = ArrayDeque<Drawable>()
+    private val activeRenderComponents = ArrayList<RenderComponent>()
 
     var swapchainIsDirty = true
     private var frameIndex = 0
@@ -98,17 +99,17 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     }
 
     private fun addRenderComponent(renderComponent: RenderComponent) {
+        addRenderComponentInternal(renderComponent)
+        activeRenderComponents.add(renderComponent)
+    }
+
+    private fun addRenderComponentInternal(renderComponent: RenderComponent) {
         val mat = renderComponent.material as VulkanMaterial
         val buffer = renderComponent.mesh.vertexBuffer as VulkanVertexBuffer
 
         if (!mat.isValid || !buffer.isValid) {
             throw IllegalStateException("RenderComponents has invalid state [Material: ${mat.isValid}, Buffer: ${buffer.isValid}]")
         }
-
-        val projectionMatrixBuffer = memAlloc(16 * 4)
-        val pvMatrix = Matrix4f(camera.projection)
-        pvMatrix.mul(camera.view)
-        pvMatrix.get(projectionMatrixBuffer)
 
         var found = false
         for (pipeline in pipelines) {
@@ -123,16 +124,15 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                     mat.descriptorPool.build(vk.logicalDevice)
                 }
 
-                pipeline.material.sceneData.update(projectionMatrixBuffer)
                 pipeline.renderComponents.add(renderComponent)
                 found = true
+                break
             }
         }
 
         if (!found) {
             val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
             pipeline.create(logicalDevice, renderpass)
-            pipeline.material.sceneData.update(projectionMatrixBuffer)
             pipeline.renderComponents.add(renderComponent)
             pipelines.add(pipeline)
         }
@@ -147,6 +147,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 for (component2 in pipeline.renderComponents) {
                     if (renderComponent == component2) {
                         pipeline.renderComponents.remove(renderComponent)
+                        activeRenderComponents.remove(renderComponent)
                         break
                     }
                 }
@@ -218,6 +219,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 if (err != VK_SUCCESS) {
                     assertion("Error creating fence " + VulkanResult(err))
                 }
+            }
+
+            // Must re-add every active renderComponent as we've invalidated the pipelines
+            for (component in activeRenderComponents) {
+                addRenderComponentInternal(component)
             }
 
             log("Successfully recreated swapchain.")
@@ -309,6 +315,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
         issueDrawingCommands()
 
+        val projectionMatrixBuffer = memAlloc(16 * 4)
+        val pvMatrix = Matrix4f(camera.projection)
+        pvMatrix.mul(camera.view)
+        pvMatrix.get(projectionMatrixBuffer)
+
         val obsoletePipelines = ArrayList<Pipeline>()
         for (pipeline in pipelines) {
             if (!pipeline.isValid) {
@@ -324,6 +335,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 mat.descriptorPool.build(vk.logicalDevice)
             }
 
+            mat.sceneData.update(projectionMatrixBuffer)
             pipeline.renderComponents.sortBy { component -> component.transform.z }
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }

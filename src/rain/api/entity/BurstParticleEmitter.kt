@@ -103,11 +103,11 @@ class BurstParticleEmitter internal constructor(
         val indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
         val mesh = Mesh(vertexBuffer, indexBuffer)
         renderComponent = RenderComponent(transform, mesh, material)
-        renderManagerNewRenderComponents.add(renderComponent)
+        addNewRenderComponentToRenderer(renderComponent)
     }
 
     fun destroy() {
-        renderManagerRemoveRenderComponents.add(renderComponent)
+        removeRenderComponentFromRenderer(renderComponent)
     }
 
     fun getUniformData(): ByteBuffer {
