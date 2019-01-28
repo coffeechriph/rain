@@ -7,7 +7,7 @@ import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.system.MemoryUtil.memFree
 import java.nio.ByteBuffer
 
-data class Sprite internal constructor(val entity: Long, val transform: Transform, val textureTileOffset: Vector2i) {
+data class Sprite internal constructor(val entity: Long, val transform: Transform, var textureTileOffset: Vector2i) {
     var visible = true
 
     // TODO: Color will be added to the source atm

@@ -104,34 +104,6 @@ class Scene(val resourceFactory: ResourceFactory) {
                 entity!!.update(this, input, system, deltaTime)
             }
 
-            for (animator in system.getAnimatorList()) {
-                if (!animator!!.animating) {
-                    continue
-                }
-
-                animator.textureTileOffset.y = animator.animation.yPos
-                if (animator.animationTime >= 1.0f) {
-                    animator.animationTime = 0.0f
-                    animator.animationIndex += 1
-
-                    if (animator.animationIndex >= animator.animation.endFrame - animator.animation.startFrame) {
-                        animator.animationIndex = 0
-                    }
-
-                    animator.textureTileOffset.x = animator.animation.startFrame + animator.animationIndex
-                }
-
-                animator.animationTime += animator.animation.speed * (1.0f/60.0f)
-            }
-
-            /*for (emitter in system.getBurstParticleEmitterList()) {
-                if (!emitter!!.enabled || !emitter.simulating) {
-                    continue
-                }
-
-                emitter.update()
-            }*/
-
             for (collider in system.getColliderList()) {
                 val b = collider!!.getBody()
                 collider.transform.x = b.position.x * metersToPixels
@@ -174,16 +146,6 @@ class Scene(val resourceFactory: ResourceFactory) {
                     submitListSorted.add(Drawable(system.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
                 }
             }
-
-            /*for (emitter in system.getBurstParticleEmitterList()) {
-                if (!emitter!!.enabled || !emitter.simulating) {
-                    continue
-                }
-
-                if (!emitter.burstFinished) {
-                    submitListParticles.add(Drawable(emitterMaterial, emitter.getUniformData(), emitter.vertexBuffer, emitter.parentTransform.z + emitter.transform.z, emitter.indexBuffer))
-                }
-            }*/
         }
 
         // TODO: Right now we must draw stuff in correct order as we're using alpha blending per default..

@@ -5,6 +5,7 @@ import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
 import rain.api.Window
+import rain.api.entity.animatorManagerSimulate
 import rain.api.entity.emitterManagerInit
 import rain.api.entity.emitterManagerSimulate
 import rain.api.entity.moveManagerSimulate
@@ -91,7 +92,6 @@ open class Rain {
                 }
 
                 scene.render(vulkanRenderer, resourceFactory)
-                gui.render()
                 vulkanRenderer.render()
             }
             else {
@@ -130,6 +130,7 @@ open class Rain {
         gui.update(input)
         moveManagerSimulate()
         emitterManagerSimulate()
+        animatorManagerSimulate()
         scene.update(input, deltaTime)
         stateManager.update(deltaTime)
         input.updateKeyState()

@@ -52,9 +52,6 @@ class Gui(private val resourceFactory: ResourceFactory) {
         }
     }
 
-    fun render() {
-    }
-
     fun clear() {
         for (container in containers) {
             container.destroy()

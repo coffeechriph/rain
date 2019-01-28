@@ -3,7 +3,8 @@ package rain.api.entity
 import org.joml.Vector2i
 import rain.assertion
 
-class Animator internal constructor(val entityId: Long, val textureTileOffset: Vector2i) {
+class Animator {
+    val textureTileOffset = Vector2i()
     internal var animationTime = 0.0f
     internal var animationIndex = 0
     internal var animation = Animation("none", 0, 0, 0, 0.0f)

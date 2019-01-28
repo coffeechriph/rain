@@ -22,7 +22,7 @@ class RenderComponent internal constructor(
 
     // TODO: Material could include a textureOffset in order to move the whole UV mapping in chunks relative to
     // the texture settings
-    val textureTileOffset = Vector2i(0, 0)
+    var textureTileOffset = Vector2i(0, 0)
     private val modelMatrix = Matrix4f()
     var createUniformData: () -> ByteBuffer = {
         val uniformData = MemoryUtil.memAlloc(32 * 4)

@@ -18,13 +18,11 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     private var entityWrappers = ArrayList<T?>()
     private var transformComponents = ArrayList<Transform?>()
     private var spriteComponents = ArrayList<Sprite?>()
-    private var animatorComponents = ArrayList<Animator?>()
     private var colliderComponents = ArrayList<Collider?>()
 
     private var spriteComponentsMap = HashMap<Long, Sprite?>()
     private var transformComponentsMap = HashMap<Long, Transform?>()
     private var colliderComponentsMap = HashMap<Long, Collider?>()
-    private var animatorComponentsMap = HashMap<Long, Animator?>()
     private var entityWrappersMap = HashMap<Long, T?>()
 
     fun newEntity(entity: T): Builder<T> {
@@ -53,12 +51,7 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             colliderComponentsMap.remove(entity.getId())
         }
 
-        val animator = animatorComponentsMap[entity.getId()]
-        if (animator != null) {
-            animatorComponents.remove(animator)
-            animatorComponentsMap.remove(entity.getId())
-        }
-
+        animatorManagerRemoveAnimatorByEntity(entity.getId())
         emitterManagerRemoveEmitterByEntity(entity.getId())
         emitterManagerRemoveBurstEmitterByEntity(entity.getId())
         renderManagerRemoveRenderComponentByEntity(entity.getId())
@@ -81,8 +74,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         spriteComponentsMap.clear()
         transformComponentsMap.clear()
         entityWrappersMap.clear()
-        animatorComponents.clear()
-        animatorComponentsMap.clear()
 
         for (collider in colliderComponents) {
             scene.physicWorld.destroyBody(collider!!.getBody())
@@ -123,31 +114,25 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             return this
         }
 
-        fun attachAnimatorComponent(): Builder<T> {
-            if (system.animatorComponentsMap.containsKey(entityId)) {
-                assertion("A animator component already exists for entity $entityId!")
-            }
+        fun attachAnimatorComponent(animator: Animator): Builder<T> {
+            animatorManagerAddAnimatorComponent(entityId, animator)
 
-            var textureTileOffset: Vector2i? = null
             val spr = system.findSpriteComponent(entityId)
             if (spr != null) {
-                textureTileOffset = spr.textureTileOffset
+                spr.textureTileOffset = animator.textureTileOffset
             }
             else {
                 val rc = renderManagerGetRenderComponentByEntity(entityId)
                 if (rc != null) {
-                    // TODO: If multiple renderComponents are added then there's not way to
-                    // specify which one is in charge of the textureTileOffsets...
-                    textureTileOffset = rc[0].textureTileOffset
+                    for (r in rc) {
+                        r.textureTileOffset = animator.textureTileOffset
+                    }
                 }
                 else {
                     throw IllegalStateException("Must have either Sprite or RenderComponent attached in order to use a Animator!")
                 }
             }
 
-            val animator = Animator(entityId, textureTileOffset)
-            system.animatorComponents.add(animator)
-            system.animatorComponentsMap[entityId] = animator
             return this
         }
 
@@ -280,10 +265,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         return spriteComponentsMap[entityId]
     }
 
-    fun findAnimatorComponent(entityId: Long): Animator? {
-        return animatorComponentsMap[entityId]
-    }
-
     fun findColliderComponent(entityId: Long): Collider? {
         return colliderComponentsMap[entityId]
     }
@@ -310,9 +291,5 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
 
     internal fun getColliderList(): List<Collider?> {
         return colliderComponents
-    }
-
-    internal fun getAnimatorList(): List<Animator?> {
-        return animatorComponents
     }
 }

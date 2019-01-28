@@ -33,6 +33,10 @@ open class Entity {
         return renderManagerGetRenderComponentByEntity(id)
     }
 
+    fun getAnimatorComponent(): List<Animator>? {
+        return animatorManagerGetAnimatorByEntity(id)
+    }
+
     open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}
     open fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>, deltaTime: Float){}
     open fun onCollision(entity: Entity) {}
