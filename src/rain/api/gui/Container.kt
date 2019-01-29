@@ -382,7 +382,7 @@ class Container(private val material: Material, private val textMaterial: Materi
             val byteBuffer = memAlloc(textVertexDataIndex*4)
             val fbuffer = byteBuffer.asFloatBuffer()
             fbuffer.put(textVertexData, 0, textVertexDataIndex)
-            fbuffer.flip()
+            //fbuffer.flip()
             if (!::textBuffer.isInitialized) {
                 textBuffer = resourceFactory.buildVertexBuffer()
                         .withVertices(byteBuffer)

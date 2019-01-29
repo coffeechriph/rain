@@ -103,6 +103,7 @@ class BurstParticleEmitter internal constructor(
         val indexBuffer = resourceFactory.createIndexBuffer(indices, VertexBufferState.DYNAMIC)
         val mesh = Mesh(vertexBuffer, indexBuffer)
         renderComponent = RenderComponent(transform, mesh, material)
+        renderComponent.createUniformData =  this::getUniformData
         addNewRenderComponentToRenderer(renderComponent)
     }
 
@@ -110,7 +111,7 @@ class BurstParticleEmitter internal constructor(
         removeRenderComponentFromRenderer(renderComponent)
     }
 
-    fun getUniformData(): ByteBuffer {
+    private fun getUniformData(): ByteBuffer {
         modelMatrix.identity()
         modelMatrix.rotateZ(parentTransform.rot)
         modelMatrix.translate(parentTransform.x + transform.x, parentTransform.y + transform.y, parentTransform.z + transform.z)
