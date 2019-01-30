@@ -17,13 +17,15 @@ class RenderComponent internal constructor(
     // Now this is applied in the shader by ADDING with the texture color...
     // This is not really the behaviour one would expect...
     val color = Vector4f(0.0f, 0.0f, 0.0f, 0.0f)
-
     var visible = true
 
     // TODO: Material could include a textureOffset in order to move the whole UV mapping in chunks relative to
     // the texture settings
     var textureTileOffset = Vector2i(0, 0)
     private val modelMatrix = Matrix4f()
+    private var customUniformDataIndex = 0
+    private val customUniformData = FloatArray(10)
+
     var createUniformData: () -> ByteBuffer = {
         val uniformData = MemoryUtil.memAlloc(32 * 4)
         if (transform.updated) {
@@ -41,6 +43,22 @@ class RenderComponent internal constructor(
         ibuf.put(19, color.w)
         ibuf.put(20, textureTileOffset.x.toFloat())
         ibuf.put(21, textureTileOffset.y.toFloat())
+
+        var index = 0
+        for (custom in customUniformData) {
+            ibuf.put(22+index, custom)
+            index += 1
+        }
         uniformData
+    }
+
+    fun addCustomUniformData(vararg data: Float) {
+        if (customUniformDataIndex + data.size > customUniformData.size) {
+            throw AssertionError("A maximum of 10 floats are supported for custom uniform data!")
+        }
+
+        for (d in data) {
+            customUniformData[customUniformDataIndex++] = d
+        }
     }
 }
