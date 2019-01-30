@@ -75,7 +75,7 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
 
         val depthStencilState = VkPipelineDepthStencilStateCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO)
-                .depthTestEnable(true)
+                .depthTestEnable(material.depthTestEnabled)
                 .depthWriteEnable(material.depthWriteEnabled)
                 .depthCompareOp(VK_COMPARE_OP_LESS)
                 .depthBoundsTestEnable(false)

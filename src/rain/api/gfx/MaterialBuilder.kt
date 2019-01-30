@@ -1,11 +1,12 @@
 package rain.api.gfx
 
-typealias createMaterialHandler = (name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, useBatching: Boolean, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode) -> Material
+typealias createMaterialHandler = (name: String, vertexShaderFile: String, fragmentShaderFile: String, texture2d: Texture2d?, useBatching: Boolean, depthTestEnabled: Boolean, depthWriteEnabled: Boolean, enableBlend: Boolean, srcColor: BlendMode, dstColor: BlendMode, srcAlpha: BlendMode, dstAlpha: BlendMode) -> Material
 class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
     private var texture2d: Texture2d? = null
     private var vertexShaderFile: String = "./data/shaders/basic.vert.spv"
     private var fragmentShaderFile: String = "./data/shaders/basic.frag.spv"
     private var useBatching = false
+    private var depthTest = true
     private var depthWrite = true
     private var blendEnabled = true
     private var name = "material"
@@ -36,6 +37,11 @@ class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
 
     fun withBatching(value: Boolean): MaterialBuilder {
         this.useBatching = value
+        return this
+    }
+
+    fun withDepthTest(value: Boolean): MaterialBuilder {
+        this.depthTest = value
         return this
     }
 
@@ -70,7 +76,7 @@ class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
     }
 
     fun build(): Material {
-        val material = handler(name, vertexShaderFile, fragmentShaderFile, texture2d, useBatching, depthWrite, blendEnabled, srcColor, dstColor, srcAlpha, dstAlpha)
+        val material = handler(name, vertexShaderFile, fragmentShaderFile, texture2d, useBatching, depthTest, depthWrite, blendEnabled, srcColor, dstColor, srcAlpha, dstAlpha)
         reset()
         return material
     }
@@ -82,6 +88,7 @@ class MaterialBuilder internal constructor(val handler: createMaterialHandler) {
         useBatching = false
         name = "material"
         depthWrite = true
+        depthTest = true
         blendEnabled = true
         srcColor = BlendMode.BLEND_FACTOR_SRC_ALPHA
         dstColor = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
