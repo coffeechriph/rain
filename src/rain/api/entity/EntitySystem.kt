@@ -5,7 +5,6 @@ import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2f
-import org.joml.Vector2i
 import rain.api.gfx.*
 import rain.api.scene.Scene
 import rain.assertion
@@ -17,10 +16,8 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     private var entities = ArrayList<Long>()
     private var entityWrappers = ArrayList<T?>()
     private var transformComponents = ArrayList<Transform?>()
-    private var spriteComponents = ArrayList<Sprite?>()
     private var colliderComponents = ArrayList<Collider?>()
 
-    private var spriteComponentsMap = HashMap<Long, Sprite?>()
     private var transformComponentsMap = HashMap<Long, Transform?>()
     private var colliderComponentsMap = HashMap<Long, Collider?>()
     private var entityWrappersMap = HashMap<Long, T?>()
@@ -33,12 +30,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     }
 
     fun removeEntity(entity: T) {
-        val sprite = spriteComponentsMap[entity.getId()]
-        if (sprite != null) {
-            spriteComponents.remove(sprite)
-            spriteComponentsMap.remove(entity.getId())
-        }
-
         val transform = transformComponentsMap[entity.getId()]
         if (transform != null) {
             transformComponents.remove(transform)
@@ -70,8 +61,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         entities.clear()
         entityWrappers.clear()
         transformComponents.clear()
-        spriteComponents.clear()
-        spriteComponentsMap.clear()
         transformComponentsMap.clear()
         entityWrappersMap.clear()
 
@@ -98,39 +87,17 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             return this
         }
 
-        fun attachSpriteComponent(): Builder<T> {
-            if (system.spriteComponentsMap.containsKey(entityId)) {
-                assertion("A sprite component already exists for entity $entityId!")
-            }
-            if (system.material == null) {
-                assertion("Sprite components may not be attached to a system without a material!")
-            }
-
-            val tr = system.findTransformComponent(entityId)
-                    ?: throw IllegalStateException("A transform component must be attached if a sprite component is used!")
-            val c = Sprite(entityId, tr, Vector2i())
-            system.spriteComponents.add(c)
-            system.spriteComponentsMap[entityId] = c
-            return this
-        }
-
         fun attachAnimatorComponent(animator: Animator): Builder<T> {
             animatorManagerAddAnimatorComponent(entityId, animator)
 
-            val spr = system.findSpriteComponent(entityId)
-            if (spr != null) {
-                spr.textureTileOffset = animator.textureTileOffset
+            val rc = renderManagerGetRenderComponentByEntity(entityId)
+            if (rc != null) {
+                for (r in rc) {
+                    r.textureTileOffset = animator.textureTileOffset
+                }
             }
             else {
-                val rc = renderManagerGetRenderComponentByEntity(entityId)
-                if (rc != null) {
-                    for (r in rc) {
-                        r.textureTileOffset = animator.textureTileOffset
-                    }
-                }
-                else {
-                    throw IllegalStateException("Must have either Sprite or RenderComponent attached in order to use a Animator!")
-                }
+                throw IllegalStateException("Must have either Sprite or RenderComponent attached in order to use a Animator!")
             }
 
             return this
@@ -261,10 +228,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         return null
     }
 
-    fun findSpriteComponent(entityId: Long): Sprite? {
-        return spriteComponentsMap[entityId]
-    }
-
     fun findColliderComponent(entityId: Long): Collider? {
         return colliderComponentsMap[entityId]
     }
@@ -281,9 +244,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             2. PathfindComponent (Access to a entities target, transform and path)
             3. ReactComponent<List<T: Entity>> (Access to a entities Transform, Input and a list of other entities)
      */
-    internal fun getSpriteList(): List<Sprite?> {
-        return spriteComponents
-    }
 
     fun getEntityList(): List<T?> {
         return entityWrappers

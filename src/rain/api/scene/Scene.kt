@@ -95,8 +95,8 @@ class Scene(val resourceFactory: ResourceFactory) {
         physicWorld.clearForces()
 
         for (batcher in spriteBatchers) {
-            batcher.batch()
-            batcher.update()
+            //batcher.batch()
+            //batcher.update()
         }
 
         for (system in entitySystems) {
@@ -130,23 +130,11 @@ class Scene(val resourceFactory: ResourceFactory) {
             submitListSorted.add(Drawable(simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, simpleDraw.transform.z))
         }
 
-        for (batcher in spriteBatchers) {
+        /*for (batcher in spriteBatchers) {
             if (batcher.hasSprites()) {
                 submitListSorted.add(Drawable(batcher.material, memAlloc(4), batcher.vertexBuffer, 0.0f))
             }
-        }
-
-        for (system in entitySystems) {
-            if (system.material != null && !system.material.useBatching()) {
-                for (sprite in system.getSpriteList()) {
-                    if (!sprite!!.visible) {
-                        continue
-                    }
-
-                    submitListSorted.add(Drawable(system.material, sprite.getUniformData(), quadVertexBuffer, sprite.transform.z))
-                }
-            }
-        }
+        }*/
 
         // TODO: Right now we must draw stuff in correct order as we're using alpha blending per default..
         submitListSorted.sortBy { drawable -> drawable.z }

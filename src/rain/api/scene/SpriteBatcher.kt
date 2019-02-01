@@ -1,30 +1,24 @@
 package rain.api.scene
 
-import org.lwjgl.system.MemoryUtil.memAlloc
-import org.lwjgl.system.MemoryUtil.memFree
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
-import rain.api.entity.Sprite
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.VertexBuffer
-import rain.api.gfx.VertexBufferState
-import rain.log
-import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 
 internal class SpriteBatcher(private val system: EntitySystem<Entity>, val material: Material, private val resourceFactory: ResourceFactory) {
     lateinit var vertexBuffer: VertexBuffer
-    private val sprites = ArrayList<Sprite>()
+    //private val sprites = ArrayList<Sprite>()
 
     private lateinit var vertexData: FloatArray
     private lateinit var instanceData: ByteBuffer
 
-    internal fun hasSprites(): Boolean{
+    /*internal fun hasSprites(): Boolean{
         return sprites.isNotEmpty()
-    }
+    }*/
 
-    internal fun batch() {
+    /*internal fun batch() {
         if (system.getSpriteList().isEmpty()) {
             return
         }
@@ -119,5 +113,5 @@ internal class SpriteBatcher(private val system: EntitySystem<Entity>, val mater
         }
         instanceData.flip()
         material.getTexelBuffer().update(instanceData)
-    }
+    }*/
 }
