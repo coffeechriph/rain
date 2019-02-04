@@ -25,7 +25,7 @@ class Tilemap {
     private lateinit var renderComponent: RenderComponent
 
     fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32, tileNumY: Int = 32,
-               tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileIndex>) {
+               tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileGfx>) {
         assert(map.size == tileNumX * tileNumY)
 
         var x = 0.0f
@@ -35,9 +35,13 @@ class Tilemap {
         // TODO: We can optimize this by specifying x,y as 1 int32 and scale them in the shader by size
         // This would allow us to have a tilemap with 65535 tiles on every axis
         for (i in 0 until tileNumX*tileNumY) {
-            if (map[i] != TileIndexNone) {
+            if (map[i] != TileGfxNone) {
                 val tileX = map[i].x
                 val tileY = map[i].y
+                val red = map[i].red
+                val green = map[i].green
+                val blue = map[i].blue
+                val alpha = map[i].alpha
                 val uvx = material.getTexture2d()[0].getTexCoordWidth()
                 val uvy = material.getTexture2d()[0].getTexCoordHeight()
 
@@ -45,31 +49,55 @@ class Tilemap {
                 vertices.add(y)
                 vertices.add(tileX * uvx)
                 vertices.add(tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x)
                 vertices.add(y + tileHeight)
                 vertices.add(tileX * uvx)
                 vertices.add(uvy + tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x + tileWidth)
                 vertices.add(y + tileHeight)
                 vertices.add(uvx + tileX * uvx)
                 vertices.add(uvy + tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x + tileWidth)
                 vertices.add(y + tileHeight)
                 vertices.add(uvx + tileX * uvx)
                 vertices.add(uvy + tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x + tileWidth)
                 vertices.add(y)
                 vertices.add(uvx + tileX * uvx)
                 vertices.add(tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x)
                 vertices.add(y)
                 vertices.add(tileX * uvx)
                 vertices.add(tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
             }
 
             x += tileWidth
@@ -79,7 +107,7 @@ class Tilemap {
             }
         }
 
-        log("Created tilemap mesh with ${vertices.size}/${map.size * 4 * 6} vertices actually allocated.")
+        log("Created tilemap mesh with ${vertices.size}/${map.size * 8 * 6} vertices actually allocated.")
         // TODO: Optimize this!
         val byteBuffer = memAlloc(vertices.size*4)
         byteBuffer.asFloatBuffer().put(vertices.toFloatArray()).flip()
@@ -88,6 +116,7 @@ class Tilemap {
                 .withState(VertexBufferState.STATIC)
                 .withAttribute(VertexAttribute(0, 2))
                 .withAttribute(VertexAttribute(1, 2))
+                .withAttribute(VertexAttribute(2, 4))
                 .build()
         val mesh = Mesh(vertexBuffer, null)
 
@@ -112,17 +141,21 @@ class Tilemap {
         }
     }
 
-    fun update(tileIndices: Array<TileIndex>) {
-        assert(tileIndices.size == tileNumX * tileNumY)
+    fun update(tileGfx: Array<TileGfx>) {
+        assert(tileGfx.size == tileNumX * tileNumY)
 
         var x = 0.0f
         var y = 0.0f
 
-        val vertices = ArrayList<Float>() // pos(vec2), uv(vec2). 6 vertices per tile
+        val vertices = ArrayList<Float>()
         for (i in 0 until tileNumX*tileNumY) {
-            if (tileIndices[i] != TileIndexNone) {
-                val tileX = tileIndices[i].x
-                val tileY = tileIndices[i].y
+            if (tileGfx[i] != TileGfxNone) {
+                val tileX = tileGfx[i].x
+                val tileY = tileGfx[i].y
+                val red = tileGfx[i].red
+                val green = tileGfx[i].green
+                val blue = tileGfx[i].blue
+                val alpha = tileGfx[i].alpha
                 val uvx = renderComponent.material.getTexture2d()[0].getTexCoordWidth()
                 val uvy = renderComponent.material.getTexture2d()[0].getTexCoordHeight()
 
@@ -130,31 +163,55 @@ class Tilemap {
                 vertices.add(y)
                 vertices.add(tileX * uvx)
                 vertices.add(tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x)
                 vertices.add(y + tileHeight)
                 vertices.add(tileX * uvx)
                 vertices.add(uvy + tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x + tileWidth)
                 vertices.add(y + tileHeight)
                 vertices.add(uvx + tileX * uvx)
                 vertices.add(uvy + tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x + tileWidth)
                 vertices.add(y + tileHeight)
                 vertices.add(uvx + tileX * uvx)
                 vertices.add(uvy + tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x + tileWidth)
                 vertices.add(y)
                 vertices.add(uvx + tileX * uvx)
                 vertices.add(tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
 
                 vertices.add(x)
                 vertices.add(y)
                 vertices.add(tileX * uvx)
                 vertices.add(tileY * uvy)
+                vertices.add(red)
+                vertices.add(green)
+                vertices.add(blue)
+                vertices.add(alpha)
             }
 
             x += tileWidth
