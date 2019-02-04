@@ -21,20 +21,20 @@ open class Entity {
         return id
     }
 
-    fun getParticleEmitters(): List<ParticleEmitter>? {
-        return emitterManagerGetEmitterFromId(id)
+    fun getParticleEmitters(): List<ParticleEmitter> {
+        return emitterManagerGetEmitterFromId(id) ?: emptyList()
     }
 
-    fun getBurstParticleEmitters(): List<BurstParticleEmitter>? {
-        return emitterManagerGetBurstEmitterFromId(id)
+    fun getBurstParticleEmitters(): List<BurstParticleEmitter> {
+        return emitterManagerGetBurstEmitterFromId(id) ?: emptyList()
     }
 
-    fun getRenderComponents(): List<RenderComponent>? {
-        return renderManagerGetRenderComponentByEntity(id)
+    fun getRenderComponents(): List<RenderComponent> {
+        return renderManagerGetRenderComponentByEntity(id) ?: emptyList()
     }
 
-    fun getAnimatorComponent(): List<Animator>? {
-        return animatorManagerGetAnimatorByEntity(id)
+    fun getAnimatorComponent(): List<Animator> {
+        return animatorManagerGetAnimatorByEntity(id) ?: emptyList()
     }
 
     open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}

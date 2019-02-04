@@ -321,6 +321,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         pvMatrix.get(projectionMatrixBuffer)
 
         val obsoletePipelines = ArrayList<Pipeline>()
+        pipelines.sortBy { pipeline -> pipeline.material.blendEnabled }
         for (pipeline in pipelines) {
             if (!pipeline.isValid) {
                 obsoletePipelines.add(pipeline)
