@@ -33,7 +33,7 @@ class Scene(val resourceFactory: ResourceFactory) {
         if (material != null) {
             // TODO: We only have to copy the material if we use batching
             val materialCopy = material.copy()
-            system = EntitySystem<T>(this, materialCopy)
+            system = EntitySystem(this, materialCopy)
             entitySystems.add(system as EntitySystem<Entity>)
 
             if (material.useBatching()) {

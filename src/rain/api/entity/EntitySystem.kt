@@ -5,10 +5,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2f
-import rain.api.components.Animator
-import rain.api.components.Collider
-import rain.api.components.RenderComponent
-import rain.api.components.Transform
+import rain.api.components.*
 import rain.api.gfx.Material
 import rain.api.gfx.Mesh
 import rain.api.manager.*
@@ -81,45 +78,38 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
     // ánd should be "self-contained" meaning that if transform is missing then the
     // renderer would just use a default transform.
     class Builder<T: Entity> internal constructor(private var entityId: Long, private val entity: T, private var system: EntitySystem<T>) {
+        private var transform: Transform? = null
+        private var animator: Animator? = null
+        private var renderComponent = ArrayList<RenderComponent>()
+        private var moveComponent: MoveComponent? = null
+
+        private fun reset() {
+            transform = null
+            animator = null
+            renderComponent.clear()
+            moveComponent = null
+        }
+
         // TODO: Take in a parent transform that this transform will follow
         fun attachTransformComponent(): Builder<T> {
-            if (system.transformComponentsMap.containsKey(entityId)) {
-                assertion("A transform component already exists for entity $entityId!")
-            }
-
-            val c = Transform()
-            system.transformComponents.add(c)
-            system.transformComponentsMap[entityId] = c
+            this.transform = Transform()
             return this
         }
 
         fun attachAnimatorComponent(animator: Animator): Builder<T> {
-            animatorManagerAddAnimatorComponent(entityId, animator)
-
-            val rc = renderManagerGetRenderComponentByEntity(entityId)
-            if (rc != null) {
-                for (r in rc) {
-                    r.textureTileOffset = animator.textureTileOffset
-                }
-            }
-            else {
-                throw IllegalStateException("Must have either Sprite or RenderComponent attached in order to use a Animator!")
-            }
-
+            this.animator = animator
             return this
         }
 
         fun attachMoveComponent(vx: Float, vy: Float): Builder<T> {
-            val transform = system.findTransformComponent(entityId)
-                            ?: throw IllegalStateException("A transform component must be attached if a move component is used!")
-
-            moveManagerAddMoveComponent(entityId, transform, vx, vy)
+            moveComponent = MoveComponent(0.0f, 0.0f, vx, vy, entityId)
             return this
         }
 
         fun attachBoxColliderComponent(width: Float, height: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody, aliveOnStart: Boolean = true): Builder<T> {
-            val transform = system.findTransformComponent(entityId)
-                    ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
+            if (transform == null) {
+                throw IllegalStateException("A transform component must be attached if a collider component is used!")
+            }
 
             if (system.colliderComponentsMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 collider component attached at once!")
@@ -141,15 +131,16 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             body.isActive = aliveOnStart
 
             body.userData = entity
-            val collider = Collider(body, transform)
+            val collider = Collider(body, transform!!)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
             return this
         }
 
         fun attachCircleColliderComponent(radius: Float, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody, aliveOnStart: Boolean = true): Builder<T> {
-            val transform = system.findTransformComponent(entityId)
-                    ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
+            if (transform == null) {
+                throw IllegalStateException("A transform component must be attached if a collider component is used!")
+            }
 
             if (system.colliderComponentsMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 collider component attached at once!")
@@ -171,15 +162,16 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             body.isActive = aliveOnStart
 
             body.userData = entity
-            val collider = Collider(body, transform)
+            val collider = Collider(body, transform!!)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
             return this
         }
 
         fun attachPolygonColliderComponent(vertices: FloatArray, type: BodyDef.BodyType = BodyDef.BodyType.DynamicBody, aliveOnStart: Boolean = true): Builder<T> {
-            val transform = system.findTransformComponent(entityId)
-                    ?: throw IllegalStateException("A transform component must be attached if a collider component is used!")
+            if (transform == null) {
+                throw IllegalStateException("A transform component must be attached if a collider component is used!")
+            }
 
             if (system.colliderComponentsMap.containsKey(entityId)) {
                 assertion("A entity may only have 1 collider component attached at once!")
@@ -202,32 +194,60 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             body.isActive = aliveOnStart
 
             body.userData = entity
-            val collider = Collider(body, transform)
+            val collider = Collider(body, transform!!)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
             return this
         }
 
+        // TODO: Emitters should not be components but entities instead.
+        // TODO: We should be able to "attach" or "connect" entities with eachother
         fun attachParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
-            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
-            emitterManagerCreateEmitter(entityId, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
+            if (transform == null) {
+                throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
+            }
+
+            emitterManagerCreateEmitter(entityId, transform!!, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             return this
         }
 
         fun attachBurstParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
-            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
-            emitterManagerCreateBurstEmitter(entityId, transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
+            if (transform == null) {
+                throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
+            }
+
+            emitterManagerCreateBurstEmitter(entityId, transform!!, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             return this
         }
 
         fun attachRenderComponent(material: Material, mesh: Mesh): Builder<T> {
-            val transform = system.findTransformComponent(entityId) ?: throw IllegalStateException("A transform component must be attached if a particleEmitter component is used!")
-            val component = RenderComponent(transform, mesh, material)
-            renderManagerAddRenderComponent(entityId, component)
+            renderComponent.add(RenderComponent(Transform(), mesh, material))
             return this
         }
 
         fun build(): Long {
+            if (transform != null) {
+                system.transformComponents.add(transform)
+                system.transformComponentsMap[entityId] = transform
+            }
+
+            for (c in renderComponent) {
+                c.transform = transform ?: Transform()
+                renderManagerAddRenderComponent(entityId, c)
+            }
+
+            if (moveComponent != null) {
+                moveManagerAddMoveComponent(entityId, transform ?: Transform(), moveComponent!!.vx, moveComponent!!.vy)
+            }
+
+            if (animator != null) {
+                animatorManagerAddAnimatorComponent(entityId, animator!!)
+                for (c in renderComponent) {
+                    c.textureTileOffset = animator!!.textureTileOffset
+                }
+            }
+
+            reset()
             entity.init(system.scene, system)
             return system.entities[system.entities.size-1]
         }

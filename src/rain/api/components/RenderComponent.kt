@@ -9,7 +9,7 @@ import rain.api.gfx.Mesh
 import java.nio.ByteBuffer
 
 class RenderComponent internal constructor(
-        internal val transform: Transform,
+        internal var transform: Transform,
         internal val mesh: Mesh,
         internal val material: Material){
 
