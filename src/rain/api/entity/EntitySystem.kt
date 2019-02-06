@@ -5,7 +5,13 @@ import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import org.joml.Vector2f
-import rain.api.gfx.*
+import rain.api.components.Animator
+import rain.api.components.Collider
+import rain.api.components.RenderComponent
+import rain.api.components.Transform
+import rain.api.gfx.Material
+import rain.api.gfx.Mesh
+import rain.api.manager.*
 import rain.api.scene.Scene
 import rain.assertion
 
@@ -100,6 +106,14 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
                 throw IllegalStateException("Must have either Sprite or RenderComponent attached in order to use a Animator!")
             }
 
+            return this
+        }
+
+        fun attachMoveComponent(vx: Float, vy: Float): Builder<T> {
+            val transform = system.findTransformComponent(entityId)
+                            ?: throw IllegalStateException("A transform component must be attached if a move component is used!")
+
+            moveManagerAddMoveComponent(entityId, transform, vx, vy)
             return this
         }
 

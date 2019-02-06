@@ -1,6 +1,6 @@
 package rain.api.scene
 
-import rain.api.entity.Transform
+import rain.api.components.Transform
 import rain.api.gfx.Material
 import rain.api.gfx.VertexBuffer
 

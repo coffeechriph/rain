@@ -1,7 +1,9 @@
-package rain.api.entity
+package rain.api.components
 
 import com.badlogic.gdx.physics.box2d.Body
 import org.joml.Vector2f
+import rain.api.entity.metersToPixels
+import rain.api.entity.pixelsToMeters
 import rain.assertion
 
 class Collider internal constructor(private val body: Body, internal val transform: Transform) {
@@ -53,7 +55,7 @@ class Collider internal constructor(private val body: Body, internal val transfo
     }
 
     fun setVelocity(x: Float, y: Float) {
-        body.setLinearVelocity(x * pixelsToMeters,y * pixelsToMeters)
+        body.setLinearVelocity(x * pixelsToMeters, y * pixelsToMeters)
     }
 
     fun getVelocity(): Vector2f {

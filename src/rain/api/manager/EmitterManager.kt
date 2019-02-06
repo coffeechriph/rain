@@ -1,6 +1,10 @@
-package rain.api.entity
+package rain.api.manager
 
 import org.joml.Vector2f
+import rain.api.components.BurstParticleEmitter
+import rain.api.components.ParticleEmitter
+import rain.api.components.Transform
+import rain.api.entity.DirectionType
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.TextureFilter

@@ -1,4 +1,4 @@
-package rain.api.entity
+package rain.api.components
 
 import org.joml.Matrix4f
 import org.joml.Vector2i

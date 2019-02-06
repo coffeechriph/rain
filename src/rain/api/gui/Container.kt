@@ -8,9 +8,11 @@ import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
-import rain.api.entity.RenderComponent
-import rain.api.entity.Transform
+import rain.api.components.RenderComponent
+import rain.api.components.Transform
 import rain.api.gfx.*
+import rain.api.manager.addNewRenderComponentToRenderer
+import rain.api.manager.removeRenderComponentFromRenderer
 import rain.log
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer

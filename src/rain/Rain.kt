@@ -5,10 +5,10 @@ import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
 import rain.api.Window
-import rain.api.entity.animatorManagerSimulate
-import rain.api.entity.emitterManagerInit
-import rain.api.entity.emitterManagerSimulate
-import rain.api.entity.moveManagerSimulate
+import rain.api.manager.animatorManagerSimulate
+import rain.api.manager.emitterManagerInit
+import rain.api.manager.emitterManagerSimulate
+import rain.api.manager.moveManagerSimulate
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
 import rain.api.scene.Scene

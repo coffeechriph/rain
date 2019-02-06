@@ -9,10 +9,10 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
-import rain.api.entity.RenderComponent
+import rain.api.components.RenderComponent
 import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
-import rain.api.gfx.renderManagerInit
+import rain.api.manager.renderManagerInit
 import rain.api.scene.Camera
 import rain.assertion
 import rain.log

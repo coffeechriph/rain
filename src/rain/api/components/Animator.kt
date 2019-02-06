@@ -1,4 +1,4 @@
-package rain.api.entity
+package rain.api.components
 
 import org.joml.Vector2i
 import rain.assertion

@@ -1,7 +1,8 @@
 package rain.api.entity
 
 import rain.api.Input
-import rain.api.gfx.renderManagerGetRenderComponentByEntity
+import rain.api.components.*
+import rain.api.manager.*
 import rain.api.scene.Scene
 
 private var currentId: Long = 0
@@ -35,6 +36,10 @@ open class Entity {
 
     fun getAnimatorComponent(): List<Animator> {
         return animatorManagerGetAnimatorByEntity(id) ?: emptyList()
+    }
+
+    fun getMoveComponent(): MoveComponent? {
+        return moveManagerGetMoveComponent(id)
     }
 
     open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}

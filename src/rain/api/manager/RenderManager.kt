@@ -1,6 +1,6 @@
-package rain.api.gfx
+package rain.api.manager
 
-import rain.api.entity.RenderComponent
+import rain.api.components.RenderComponent
 
 typealias AddRenderComponentToRenderer = (renderComponent: RenderComponent) -> Unit
 typealias RemoveRenderComponentFromRenderer = (renderComponent: RenderComponent) -> Unit

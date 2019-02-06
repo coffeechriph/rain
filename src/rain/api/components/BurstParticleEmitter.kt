@@ -1,11 +1,14 @@
-package rain.api.entity
+package rain.api.components
 
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
+import rain.api.entity.DirectionType
 import rain.api.gfx.*
+import rain.api.manager.addNewRenderComponentToRenderer
+import rain.api.manager.removeRenderComponentFromRenderer
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer

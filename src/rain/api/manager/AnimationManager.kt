@@ -1,4 +1,6 @@
-package rain.api.entity
+package rain.api.manager
+
+import rain.api.components.Animator
 
 private val animators = ArrayList<Animator>()
 private val animatorsMap = HashMap<Long, ArrayList<Animator>>()

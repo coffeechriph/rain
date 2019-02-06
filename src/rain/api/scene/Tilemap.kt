@@ -3,9 +3,11 @@ package rain.api.scene
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
-import rain.api.entity.RenderComponent
-import rain.api.entity.Transform
+import rain.api.components.RenderComponent
+import rain.api.components.Transform
 import rain.api.gfx.*
+import rain.api.manager.addNewRenderComponentToRenderer
+import rain.api.manager.removeRenderComponentFromRenderer
 import rain.log
 import rain.vulkan.VertexAttribute
 

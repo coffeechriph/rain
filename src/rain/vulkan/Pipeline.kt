@@ -3,7 +3,7 @@ package rain.vulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.entity.RenderComponent
+import rain.api.components.RenderComponent
 import rain.api.gfx.Drawable
 import rain.assertion
 import rain.log
