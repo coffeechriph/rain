@@ -17,9 +17,14 @@ private fun getNextUniqueId(): Long {
 
 open class Entity {
     private val id = getNextUniqueId()
+    internal var transform: Transform = Transform()
 
     fun getId(): Long {
         return id
+    }
+
+    fun getTransform(): Transform {
+        return transform
     }
 
     fun getParticleEmitters(): List<ParticleEmitter> {
