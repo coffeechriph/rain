@@ -52,13 +52,15 @@ class RenderComponent internal constructor(
         uniformData
     }
 
-    fun addCustomUniformData(vararg data: Float) {
-        if (customUniformDataIndex + data.size > customUniformData.size) {
-            throw AssertionError("A maximum of 10 floats are supported for custom uniform data!")
+    fun addCustomUniformData(offset: Int, vararg data: Float) {
+        if (offset+data.size >= customUniformData.size) {
+            throw IndexOutOfBoundsException("There can only be a maximum of 10 floats for custom uniform data.")
         }
 
+        var i = 0
         for (d in data) {
-            customUniformData[customUniformDataIndex++] = d
+            customUniformData[offset+i] = d
+            i += 1
         }
     }
 }
