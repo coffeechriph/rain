@@ -37,8 +37,13 @@ internal fun animatorManagerGetAnimatorByEntity(entityId: Long): ArrayList<Anima
 
 internal fun animatorManagerSimulate() {
     for (animator in animators) {
-        if (!animator.animating) {
-            continue
+        if (animator.animationComplete) {
+            if (animator.singlePlay) {
+                continue
+            }
+            else {
+                animator.animationComplete = false
+            }
         }
 
         animator.textureTileOffset.y = animator.animation.yPos
@@ -48,6 +53,9 @@ internal fun animatorManagerSimulate() {
 
             if (animator.animationIndex >= animator.animation.endFrame - animator.animation.startFrame) {
                 animator.animationIndex = 0
+                if (animator.singlePlay) {
+                    animator.animationComplete = true
+                }
             }
 
             animator.textureTileOffset.x = animator.animation.startFrame + animator.animationIndex

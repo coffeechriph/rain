@@ -10,13 +10,20 @@ class Animator {
     internal var animation = Animation("none", 0, 0, 0, 0.0f)
         private set
     private var animations = HashMap<String, Animation>()
-    var animating = true
+    internal var singlePlay = false
+    var animationComplete: Boolean = true
+        internal set(value) {
+            field = value
+        }
 
     fun addAnimation(name: String, startFrame: Int, endFrame: Int, yPos: Int, speed: Float) {
         animations[name] = Animation(name, startFrame, endFrame, yPos, speed)
     }
 
-    fun setAnimation(name: String) {
+    fun setAnimation(name: String, playSingle: Boolean = false) {
+        singlePlay = playSingle
+        animationComplete = false
+
         val anim = animations[name] ?: assertion("No animation with name $name could be found!")
 
         if (anim != animation) {

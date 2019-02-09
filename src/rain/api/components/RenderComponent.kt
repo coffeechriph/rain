@@ -30,8 +30,8 @@ class RenderComponent internal constructor(
         val uniformData = MemoryUtil.memAlloc(32 * 4)
         if (transform.updated) {
             modelMatrix.identity()
-            modelMatrix.rotateZ(transform.rot)
             modelMatrix.translate(transform.x, transform.y, transform.z)
+            modelMatrix.rotateZ(transform.rot)
             modelMatrix.scale(transform.sx, transform.sy, 0.0f)
         }
 

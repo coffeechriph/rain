@@ -114,8 +114,13 @@ class Container(private val material: Material, private val textMaterial: Materi
     }
 
     fun destroy() {
-        removeRenderComponentFromRenderer(componentRenderComponent)
-        removeRenderComponentFromRenderer(textRenderComponent)
+        if (::componentRenderComponent.isInitialized) {
+            removeRenderComponentFromRenderer(componentRenderComponent)
+        }
+
+        if (::textRenderComponent.isInitialized) {
+            removeRenderComponentFromRenderer(textRenderComponent)
+        }
     }
 
     fun build() {
