@@ -15,6 +15,16 @@ internal fun renderManagerInit(addNewRenderComponent: AddRenderComponentToRender
     removeRenderComponentFromRenderer = removeRenderComponent
 }
 
+internal fun renderManagerClear() {
+    for (list in renderManagerRenderComponentsMap.values) {
+        for (component in list) {
+            removeRenderComponentFromRenderer(component)
+        }
+    }
+
+    renderManagerRenderComponentsMap.clear()
+}
+
 internal fun renderManagerAddRenderComponent(entityId: Long, renderComponent: RenderComponent) {
     addNewRenderComponentToRenderer(renderComponent)
     if (renderManagerRenderComponentsMap.containsKey(entityId)) {

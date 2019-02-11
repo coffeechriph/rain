@@ -5,12 +5,9 @@ import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
 import rain.api.Window
-import rain.api.manager.animatorManagerSimulate
-import rain.api.manager.emitterManagerInit
-import rain.api.manager.emitterManagerSimulate
-import rain.api.manager.moveManagerSimulate
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
+import rain.api.manager.*
 import rain.api.scene.Scene
 import rain.util.ShaderCompiler
 import rain.vulkan.Vk
@@ -98,6 +95,8 @@ open class Rain {
                 stateManager.switchState = false
                 scene.clear()
                 gui.clear()
+                emitterManagerClear()
+                renderManagerClear()
                 vulkanRenderer.clearPipelines()
                 resourceFactory.clear()
 

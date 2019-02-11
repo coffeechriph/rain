@@ -34,6 +34,20 @@ internal fun emitterManagerInit(factory: ResourceFactory) {
             .build()
 }
 
+internal fun emitterManagerClear() {
+    for (emitter in particleEmitters) {
+        emitter.destroy()
+    }
+    particleEmitters.clear()
+    particleEmittersMap.clear()
+
+    for (emitter in burstParticleEmitters) {
+        emitter.destroy()
+    }
+    burstParticleEmitters.clear()
+    burstParticleEmittersMap.clear()
+}
+
 internal fun emitterManagerGetEmitterFromId(entityId: Long): List<ParticleEmitter>? {
     return particleEmittersMap[entityId]
 }
