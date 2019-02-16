@@ -28,7 +28,7 @@ class Scene(val resourceFactory: ResourceFactory) {
         private set
     private var physicsContactListener = PhysicsContactListener()
 
-    var activeCamera = Camera(Vector2f(0.0f, 20.0f))
+    var activeCamera = Camera(Vector2f(0.0f, 40.0f))
 
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
@@ -60,15 +60,13 @@ class Scene(val resourceFactory: ResourceFactory) {
     }
 
     fun createParticleEmitter(particleLifetime: Float,
-                           particleMaxSize: Float,
-                           particleDensity: Int,
+                           particleCount: Int,
                            particleSpread: Float): ParticleEmitterEntity {
         val emitter = ParticleEmitterEntity(
                 resourceFactory,
                 Random(System.currentTimeMillis()),
                 particleLifetime,
-                particleMaxSize,
-                particleDensity,
+                particleCount,
                 particleSpread)
         emitterManagerAddParticleEmitterEntity(emitter)
         return emitter

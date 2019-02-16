@@ -109,7 +109,7 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             body.isActive = aliveOnStart
 
             body.userData = entity
-            val collider = Collider(body, entity.getTransform())
+            val collider = Collider(body, entity.transform)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
             return this
@@ -136,7 +136,7 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             body.isActive = aliveOnStart
 
             body.userData = entity
-            val collider = Collider(body, entity.getTransform())
+            val collider = Collider(body, entity.transform)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
             return this
@@ -164,7 +164,7 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             body.isActive = aliveOnStart
 
             body.userData = entity
-            val collider = Collider(body, entity.getTransform())
+            val collider = Collider(body, entity.transform)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
             return this
@@ -173,12 +173,12 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         // TODO: Emitters should not be components but entities instead.
         // TODO: We should be able to "attach" or "connect" entities with eachother
         fun attachParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
-            emitterManagerCreateEmitter(entityId, entity.getTransform(), numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
+            emitterManagerCreateEmitter(entityId, entity.transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             return this
         }
 
         fun attachBurstParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
-            emitterManagerCreateBurstEmitter(entityId, entity.getTransform(), numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
+            emitterManagerCreateBurstEmitter(entityId, entity.transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             return this
         }
 
@@ -189,12 +189,12 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
 
         fun build(): Long {
             for (c in renderComponent) {
-                c.transform = entity.getTransform()
+                c.transform = entity.transform
                 renderManagerAddRenderComponent(entityId, c)
             }
 
             if (moveComponent != null) {
-                moveManagerAddMoveComponent(entityId, entity.getTransform(), moveComponent!!.vx, moveComponent!!.vy)
+                moveManagerAddMoveComponent(entityId, entity.transform, moveComponent!!.vx, moveComponent!!.vy)
             }
 
             if (animator != null) {

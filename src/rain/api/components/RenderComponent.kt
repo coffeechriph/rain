@@ -22,17 +22,14 @@ class RenderComponent internal constructor(
     // TODO: Material could include a textureOffset in order to move the whole UV mapping in chunks relative to
     // the texture settings
     var textureTileOffset = Vector2i(0, 0)
-    private val modelMatrix = Matrix4f()
+    private var modelMatrix = Matrix4f()
     private var customUniformDataIndex = 0
     private val customUniformData = FloatArray(10)
 
     var createUniformData: () -> ByteBuffer = {
         val uniformData = MemoryUtil.memAlloc(32 * 4)
         if (transform.updated) {
-            modelMatrix.identity()
-            modelMatrix.translate(transform.x, transform.y, transform.z)
-            modelMatrix.rotateZ(transform.rot)
-            modelMatrix.scale(transform.sx, transform.sy, 0.0f)
+            modelMatrix = transform.matrix()
         }
 
         val buffer = modelMatrix.get(uniformData) ?: throw IllegalStateException("Unable to get matrix content!")

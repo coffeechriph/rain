@@ -11,6 +11,6 @@ class Camera(depthRange: Vector2f) {
     var view = Matrix4f()
 
     init {
-        projection.setOrtho(0.0f, 1280.0f, 0.0f, 768.0f, -depthRange.y, depthRange.x, true)
+        projection.setOrtho(0.0f, 1280.0f, 0.0f, 768.0f, -1000.0f, 1000.0f, true)
     }
 }

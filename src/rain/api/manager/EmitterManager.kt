@@ -58,7 +58,7 @@ internal fun emitterManagerClear() {
 }
 
 internal fun emitterManagerAddParticleEmitterEntity(emitter: ParticleEmitterEntity) {
-    val renderComponent = RenderComponent(emitter.getTransform(), emitter.mesh, particleMaterial)
+    val renderComponent = RenderComponent(emitter.transform, emitter.mesh, particleMaterial)
     renderComponent.createUniformData = emitter::getUniformData
     renderManagerAddRenderComponent(emitter.getId(), renderComponent)
     particleEmitterEntities.add(emitter)
