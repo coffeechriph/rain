@@ -3,8 +3,10 @@ package rain.api.manager
 import org.joml.Vector2f
 import rain.api.components.BurstParticleEmitter
 import rain.api.components.ParticleEmitter
+import rain.api.components.RenderComponent
 import rain.api.components.Transform
 import rain.api.entity.DirectionType
+import rain.api.entity.ParticleEmitterEntity
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.TextureFilter
@@ -16,6 +18,8 @@ private val burstParticleEmitters = ArrayList<BurstParticleEmitter>()
 
 private val particleEmittersMap = HashMap<Long, ArrayList<ParticleEmitter>>()
 private val burstParticleEmittersMap = HashMap<Long, ArrayList<BurstParticleEmitter>>()
+
+private val particleEmitterEntities = ArrayList<ParticleEmitterEntity>()
 
 internal fun emitterManagerInit(factory: ResourceFactory) {
     resourceFactory = factory
@@ -46,6 +50,23 @@ internal fun emitterManagerClear() {
     }
     burstParticleEmitters.clear()
     burstParticleEmittersMap.clear()
+
+    for (emitter in particleEmitterEntities) {
+        renderManagerRemoveRenderComponentByEntity(emitter.getId())
+    }
+    particleEmitterEntities.clear()
+}
+
+internal fun emitterManagerAddParticleEmitterEntity(emitter: ParticleEmitterEntity) {
+    val renderComponent = RenderComponent(emitter.getTransform(), emitter.mesh, particleMaterial)
+    renderComponent.createUniformData = emitter::getUniformData
+    renderManagerAddRenderComponent(emitter.getId(), renderComponent)
+    particleEmitterEntities.add(emitter)
+}
+
+internal fun emitterManagerRemoveParticleEmitterEntity(emitter: ParticleEmitterEntity) {
+    renderManagerRemoveRenderComponentByEntity(emitter.getId())
+    particleEmitterEntities.remove(emitter)
 }
 
 internal fun emitterManagerGetEmitterFromId(entityId: Long): List<ParticleEmitter>? {
@@ -117,6 +138,10 @@ internal fun emitterManagerCreateEmitter(entityId: Long, transform: Transform, n
 }
 
 internal fun emitterManagerSimulate() {
+    for (emitter in particleEmitterEntities) {
+        emitter.simulate()
+    }
+
     for (emitter in particleEmitters) {
         if (!emitter.enabled) {
             continue

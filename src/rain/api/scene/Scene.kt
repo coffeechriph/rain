@@ -4,14 +4,17 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
 import org.joml.Matrix4f
+import org.joml.Random
 import org.joml.Vector2f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
+import rain.api.entity.ParticleEmitterEntity
 import rain.api.entity.metersToPixels
 import rain.api.gfx.*
+import rain.api.manager.emitterManagerAddParticleEmitterEntity
 import rain.vulkan.VertexAttribute
 
 class Scene(val resourceFactory: ResourceFactory) {
@@ -54,6 +57,21 @@ class Scene(val resourceFactory: ResourceFactory) {
 
     fun addCamera(camera: Camera) {
         cameras.add(camera)
+    }
+
+    fun createParticleEmitter(particleLifetime: Float,
+                           particleMaxSize: Float,
+                           particleDensity: Int,
+                           particleSpread: Float): ParticleEmitterEntity {
+        val emitter = ParticleEmitterEntity(
+                resourceFactory,
+                Random(System.currentTimeMillis()),
+                particleLifetime,
+                particleMaxSize,
+                particleDensity,
+                particleSpread)
+        emitterManagerAddParticleEmitterEntity(emitter)
+        return emitter
     }
 
     fun addSimpleDraw(simpleDraw: SimpleDraw) {

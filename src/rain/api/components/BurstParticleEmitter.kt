@@ -35,7 +35,6 @@ class BurstParticleEmitter internal constructor(
     var enabled = true
         set(value) {
             field = value
-            renderComponent.visible = value
         }
     var singleBurst = false
         set(value) {
