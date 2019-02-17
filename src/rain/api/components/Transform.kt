@@ -63,6 +63,20 @@ class Transform {
         this.sy = y
     }
 
+    fun worldTransform(): Transform {
+        if (parentTransform != null) {
+            val t = Transform()
+            t.x = this.x + parentTransform!!.x
+            t.y = this.y + parentTransform!!.y
+            t.rot = this.rot + parentTransform!!.rot
+            t.sx = this.sx * parentTransform!!.sx
+            t.sy = this.sy * parentTransform!!.sy
+            return t
+        }
+
+        return this;
+    }
+
     fun matrix(): Matrix4f {
         val modelMatrix = Matrix4f()
         modelMatrix.rotateZ(rot)
