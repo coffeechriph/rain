@@ -1,6 +1,7 @@
 package rain.api.gui
 
 import org.joml.Vector2i
+import org.joml.Vector4f
 import org.joml.Vector4i
 import org.lwjgl.stb.STBTTAlignedQuad
 import org.lwjgl.stb.STBTruetype.stbtt_GetCodepointKernAdvance
@@ -11,6 +12,8 @@ import rain.api.Input
 import rain.api.components.RenderComponent
 import rain.api.components.Transform
 import rain.api.gfx.*
+import rain.api.gui.v2.gfxCreateRect
+import rain.api.gui.v2.gfxCreateRoundedRect
 import rain.api.manager.addNewRenderComponentToRenderer
 import rain.api.manager.removeRenderComponentFromRenderer
 import rain.log
@@ -69,6 +72,7 @@ class Container(private val material: Material, private val textMaterial: Materi
 
     fun addComponent(component: GuiC) {
         component.container = this
+        component.z = transform.z
         components.add(component)
 
         val text = Text(component.text, component, this)
@@ -148,32 +152,16 @@ class Container(private val material: Material, private val textMaterial: Materi
                 }!!
 
                 if (!component.outline) {
-                    list.addAll(listOf(
-                            x, y, depth, color.x, color.y, color.z,
-                            x, y + h, depth, color.x, color.y, color.z,
-                            x + w, y + h, depth, color.x, color.y, color.z,
-                            x + w, y + h, depth, color.x, color.y, color.z,
-                            x + w, y, depth, color.x, color.y, color.z,
-                            x, y, depth, color.x, color.y, color.z))
+                    list.addAll(gfxCreateRoundedRect(x, y, depth, w, h, 10.0f, Vector4f(color.x, color.y, color.z, 1.0f)).toTypedArray())
                 }
                 else {
                     val ow = component.outlineWidth / 2.0f
-                    list.addAll(listOf(
-                            x + ow, y + ow, depth, color.x, color.y, color.z,
-                            x + ow, y + h - ow, depth, color.x, color.y, color.z,
-                            x + w - ow, y + h - ow, depth, color.x, color.y, color.z,
-                            x + w - ow, y + h - ow, depth, color.x, color.y, color.z,
-                            x + w - ow, y + ow, depth, color.x, color.y, color.z,
-                            x + ow, y + ow, depth, color.x, color.y, color.z))
+                    //list.addAll(gfxCreateRoundedRect(x, y, w - ow*2, h - ow*2, 10.0f, Vector4f(color.x, color.y, color.z, 1.0f)).toTypedArray())
+                    list.addAll(gfxCreateRect(x, y, depth, w - ow*2, h - ow*2, Vector4f(color.x, color.y, color.z, 1.0f)).toTypedArray())
 
                     val c = skin.borderColors["button"]!!
-                    list.addAll(listOf(
-                            x, y, depth-0.1f, c.x, c.y, c.z,
-                            x, y + h, depth-0.1f, c.x, c.y, c.z,
-                            x + w, y + h, depth-0.1f, c.x, c.y, c.z,
-                            x + w, y + h, depth-0.1f, c.x, c.y, c.z,
-                            x + w, y, depth-0.1f, c.x, c.y, c.z,
-                            x, y, depth-0.1f, c.x, c.y, c.z))
+                    //list.addAll(gfxCreateRoundedRect(x, y, w, h, 10.0f, Vector4f(c.x, c.y, c.z, 1.0f)).toTypedArray())
+                    list.addAll(gfxCreateRect(x, y, depth - 0.1f, w, h, Vector4f(c.x, c.y, c.z, 1.0f)).toTypedArray())
                 }
             }
         }
@@ -308,8 +296,8 @@ class Container(private val material: Material, private val textMaterial: Materi
                 text.h = font.fontHeight
 
                 if (text.parent != null) {
-                    text.x = text.parent.x + text.parent.w / 2 - text.w / 2
-                    text.y = text.parent.y + text.parent.h / 2 + text.h / 4
+                    text.x = text.parent.x - text.w / 2
+                    text.y = text.parent.y + text.h / 4
                 }
 
                 for (i in 0 until vertListIndex/8) {
@@ -426,10 +414,8 @@ class Container(private val material: Material, private val textMaterial: Materi
     fun update(input: Input) {
         if (lastTriggeredComponent != null) {
             if (lastTriggeredComponent is Button) {
-                updateButton(input)
-            }
-            else if (lastTriggeredComponent is ToggleButton) {
-                updateToggleButton(input)
+                isDirty = lastTriggeredComponent!!.trigger()
+                lastTriggeredComponent = null
             }
         }
 
@@ -440,25 +426,20 @@ class Container(private val material: Material, private val textMaterial: Materi
             if (isInside(mp, Vector4i(transform.x.toInt(), transform.y.toInt(), transform.sx.toInt(), transform.sy.toInt()))) {
                 mp.x -= transform.x.toInt()
                 mp.y -= transform.y.toInt()
+                val clickedOn = ArrayList<GuiC>()
                 for (component in components) {
                     if (isInside(mp, Vector4i(component.x.toInt(), component.y.toInt(), component.w.toInt(), component.h.toInt()))) {
-                        isDirty = component.trigger()
-                        lastTriggeredComponent = component
+                        clickedOn.add(component)
                         break
                     }
                 }
+
+                if (clickedOn.size > 0) {
+                    clickedOn.sortByDescending { c -> c.z }
+                    isDirty = clickedOn[0].trigger()
+                    lastTriggeredComponent = clickedOn[0]
+                }
             }
         }
-    }
-
-    private fun updateButton(input: Input) {
-        if (lastTriggeredComponent != null) {
-            isDirty = lastTriggeredComponent!!.trigger()
-            lastTriggeredComponent = null
-        }
-    }
-
-    private fun updateToggleButton(input: Input) {
-
     }
 }

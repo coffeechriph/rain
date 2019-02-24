@@ -141,11 +141,13 @@ class Input {
         KEY_MENU (348);
     }
 
-    enum class InputState {
-        PRESSED,
-        DOWN,
-        UP,
-        RELEASED,
+    enum class InputState(value: Int) {
+        PRESSED(2),
+        DOWN(4),
+        UP(8),
+        RELEASED(16);
+
+        val value: Int = value
     }
 
     var mousePosition = Vector2i()

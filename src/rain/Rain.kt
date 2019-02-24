@@ -7,6 +7,9 @@ import rain.api.Timer
 import rain.api.Window
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
+import rain.api.gui.v2.guiManagerHandleGfx
+import rain.api.gui.v2.guiManagerHandleInput
+import rain.api.gui.v2.guiManagerInit
 import rain.api.manager.*
 import rain.api.scene.Scene
 import rain.util.ShaderCompiler
@@ -67,6 +70,7 @@ open class Rain {
         startLog()
         emitterManagerInit(resourceFactory)
         gui.init()
+        guiManagerInit(resourceFactory)
         scene.init(resourceFactory)
         init()
 
@@ -75,6 +79,7 @@ open class Rain {
 
         while (window.pollEvents()) {
             timer.update()
+
             if (!stateManager.switchState) {
                 // Ensure we update the physics enough times even under low fps
                 val newTime = System.nanoTime() / 1000_000_000.0f
@@ -89,6 +94,7 @@ open class Rain {
                 }
 
                 scene.render(vulkanRenderer, resourceFactory)
+                guiManagerHandleGfx()
                 vulkanRenderer.render()
             }
             else {
@@ -102,6 +108,7 @@ open class Rain {
 
                 emitterManagerInit(resourceFactory)
                 gui.init()
+                guiManagerInit(resourceFactory)
                 scene.init(resourceFactory)
 
                 // TODO: Having initNextState returning true = game exit is kinda ugly
@@ -126,6 +133,7 @@ open class Rain {
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
 
+        guiManagerHandleInput(input)
         gui.update(input)
         moveManagerSimulate()
         emitterManagerSimulate()
