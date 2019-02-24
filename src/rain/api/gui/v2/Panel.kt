@@ -56,8 +56,13 @@ class Panel internal constructor(var layout: Layout): Entity() {
         layout.manage(this, components)
         val vertices = ArrayList<Float>()
 
-        if (background) {
-            vertices.addAll(gfxCreateRect(x, y, 0.0f, w, h, skin.background.panel).toTypedArray())
+        if (skin.panelStyle.background) {
+            val ow = skin.panelStyle.outlineWidth
+            vertices.addAll(gfxCreateRect(x + ow, y + ow, 0.0f, w - ow*2, h - ow*2, skin.panelStyle.backgroundColor).toTypedArray())
+
+            if (ow > 0) {
+                vertices.addAll(gfxCreateRect(x, y, 0.0f, w, h, skin.panelStyle.outlineColor).toTypedArray())
+            }
         }
 
         for (c in components) {

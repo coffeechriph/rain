@@ -15,15 +15,33 @@ class Slider: Component(Input.InputState.PRESSED.value or Input.InputState.DOWN.
     override fun createGraphic(skin: Skin): FloatArray {
         val factor = value.toFloat() / (maxValue-minValue).toFloat()
         val cx = x + w * factor
+        var backColor = skin.sliderStyle.backgroundColor
+        val cursorColor = skin.sliderStyle.cursorColor
 
         if (hovered) {
-            val back = gfxCreateRect(x, y, 1.0f, w, h, skin.background.slider)
-            val cursor = gfxCreateRect(cx, y, 2.0f, 2.0f, h, skin.foreground.slider)
-            return back + cursor
+            backColor = skin.sliderStyle.hoverColor
         }
 
-        val back = gfxCreateRect(x, y, 1.0f, w, h, skin.background.slider)
-        val cursor = gfxCreateRect(cx, y, 2.0f, 2.0f, h, skin.foreground.slider)
+        val ow = skin.sliderStyle.outlineWidth
+        val back = when(skin.sliderStyle.shape) {
+            Shape.RECT -> gfxCreateRect(x + ow, y + ow, 1.0f, w - ow*2, h - ow*2, backColor)
+            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, 1.0f, w - ow*2, h - ow*2, 10.0f, backColor)
+        }
+
+        val cursor = when(skin.sliderStyle.cursorShape) {
+            Shape.RECT -> gfxCreateRect(cx, y, 2.0f, 2.0f, h, cursorColor)
+            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(cx, y, 2.0f, 2.0f, h, 1.0f, cursorColor)
+        }
+
+        if (ow > 0) {
+            val outline = when(skin.sliderStyle.shape) {
+                Shape.RECT -> gfxCreateRect(x, y, 1.0f, w, h, skin.sliderStyle.outlineColor)
+                Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, 1.0f, w, h, 10.0f, skin.sliderStyle.outlineColor)
+            }
+
+            return back + outline + cursor
+        }
+
         return back + cursor
     }
 

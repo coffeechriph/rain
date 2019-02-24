@@ -4,8 +4,8 @@ class GridLayout : Layout() {
     var gridW = 50.0f
     var gridH = 50.0f
     override fun manage(panel: Panel, components: List<Component>) {
-        var stepX = panel.x
-        var stepY = panel.y + 5
+        var stepX = panel.x + panel.skin.panelStyle.outlineWidth
+        var stepY = panel.y + 5 + panel.skin.panelStyle.outlineWidth
         for (c in components) {
             c.x = stepX
             c.y = stepY
@@ -14,7 +14,7 @@ class GridLayout : Layout() {
 
             stepX += gridW
             if (stepX + gridW > panel.x + panel.w) {
-                stepX = panel.x
+                stepX = panel.x + panel.skin.panelStyle.outlineWidth
                 stepY += gridH
             }
         }
