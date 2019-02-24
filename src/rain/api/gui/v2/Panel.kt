@@ -1,9 +1,12 @@
 package rain.api.gui.v2
 
+import org.joml.Vector4f
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.components.RenderComponent
 import rain.api.entity.Entity
 import rain.api.gfx.*
+import rain.api.gui.Font
+import rain.api.gui.TextAlign
 import rain.api.manager.renderManagerAddRenderComponent
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
@@ -14,18 +17,47 @@ class Panel internal constructor(var layout: Layout): Entity() {
     var w = 0.0f
     var h = 0.0f
     var skin = DEFAULT_SKIN
-    var background = true
     var resizable = true
     var moveable = true
     internal var compose = true
     private val components = ArrayList<Component>()
+    private val texts = ArrayList<Text>()
     private lateinit var renderComponent: RenderComponent
     private lateinit var vertexBuffer: VertexBuffer
     private lateinit var mesh: Mesh
 
-    fun addComponent(component: Component): Panel {
-        component.parentPanel = this
-        components.add(component)
+    private lateinit var textRenderComponent: RenderComponent
+    private lateinit var textVertexBuffer: VertexBuffer
+    private lateinit var textMesh: Mesh
+
+    fun createButton(string: String): Button {
+        val button = Button(this)
+        button.text.parentComponent = button
+        button.text.parentPanel = this
+        button.string = string
+        components.add(button)
+        texts.add(button.text)
+        compose = true
+        return button
+    }
+
+    fun createSlider(value: Int, minValue: Int, maxValue: Int): Slider {
+        val slider = Slider(this)
+        slider.text.parentComponent = slider
+        slider.text.parentPanel = this
+        slider.value = value
+        slider.minValue = minValue
+        slider.maxValue = maxValue
+        components.add(slider)
+        texts.add(slider.text)
+        compose = true
+        return slider
+    }
+
+    fun addText(text: Text): Panel {
+        text.parentPanel = this
+        texts.add(text)
+        compose = true
         return this
     }
 
@@ -65,6 +97,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
             }
         }
 
+        // TODO: These constant conversions between different types of collections are sloooow
         for (c in components) {
             vertices.addAll(c.createGraphic(skin).toTypedArray())
         }
@@ -101,6 +134,81 @@ class Panel internal constructor(var layout: Layout): Entity() {
         }
         else {
             vertexBuffer.update(byteBuffer)
+        }
+    }
+
+    internal fun composeText(font: Font, textMaterial: Material, resourceFactory: ResourceFactory) {
+        val vertices = ArrayList<Float>()
+        for (t in texts) {
+            var cx = if (t.parentComponent != null) { t.parentComponent!!.x } else { 0.0f }
+            var cy = if (t.parentComponent != null) { t.parentComponent!!.y } else { 0.0f }
+            var cw = if (t.parentComponent != null) { t.parentComponent!!.w } else { 0.0f }
+            var ch = if (t.parentComponent != null) { t.parentComponent!!.h } else { 0.0f }
+            var align = TextAlign.CENTER
+            var color = Vector4f(1.0f, 1.0f, 1.0f, 1.0f)
+
+            if (t.parentComponent != null) {
+                cx = t.parentComponent!!.x
+                cy = t.parentComponent!!.y
+                cw = t.parentComponent!!.w
+                ch = t.parentComponent!!.h
+
+                // TODO: Could find a more scalable way of finding out this information
+                if (t.parentComponent is Button) {
+                    align = t.parentPanel.skin.buttonStyle.textAlign
+                    color = t.parentPanel.skin.buttonStyle.textColor
+                }
+                else if (t.parentComponent is Slider) {
+                    align = t.parentPanel.skin.sliderStyle.textAlign
+                    color = t.parentPanel.skin.sliderStyle.textColor
+                }
+            }
+
+            // TODO: These constant conversions between different types of collections are sloooow
+            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, cw, ch, align, t.string, font, color).toTypedArray())
+        }
+
+        if (vertices.size <= 0) {
+            if (::textRenderComponent.isInitialized) {
+                textRenderComponent.visible = false
+            }
+            return
+        }
+
+        val byteBuffer = memAlloc(vertices.size * 4)
+        val floatBuffer = byteBuffer.asFloatBuffer()
+        for (value in vertices) {
+            floatBuffer.put(value)
+        }
+        floatBuffer.flip()
+
+        if (!::textRenderComponent.isInitialized) {
+            textVertexBuffer = resourceFactory.buildVertexBuffer()
+                    .withState(VertexBufferState.STATIC)
+                    .withAttribute(VertexAttribute(0, 3))
+                    .withAttribute(VertexAttribute(1, 3))
+                    .withAttribute(VertexAttribute(2, 2))
+                    .withDataType(DataType.FLOAT)
+                    .withVertices(byteBuffer)
+                    .build()
+            textMesh = Mesh(textVertexBuffer, null)
+            textRenderComponent = RenderComponent(transform, textMesh, textMaterial)
+            textRenderComponent.createUniformData = {
+                val uniformData = memAlloc(18 * 4)
+                val f = uniformData.asFloatBuffer()
+                f.put(0, x)
+                f.put(1, y)
+                f.put(2, w)
+                f.put(3, h)
+                f.flip()
+
+                uniformData
+            }
+            renderManagerAddRenderComponent(getId(), textRenderComponent)
+        }
+        else {
+            textRenderComponent.visible = true
+            textVertexBuffer.update(byteBuffer)
         }
     }
 }

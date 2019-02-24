@@ -2,8 +2,18 @@ package rain.api.gui.v2
 
 import rain.api.Input
 
-class Button: Component(Input.InputState.PRESSED.value) {
+class Button internal constructor(panel: Panel): Component(Input.InputState.PRESSED.value) {
     var clicked = false
+    var string: String = ""
+        set(value) {
+            field = value
+            text.string = value
+            parentPanel.compose = true
+        }
+
+    init {
+        parentPanel = panel
+    }
 
     override fun createGraphic(skin: Skin): FloatArray {
         var backColor = skin.buttonStyle.backgroundColor

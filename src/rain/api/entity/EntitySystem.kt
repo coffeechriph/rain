@@ -4,7 +4,6 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
-import org.joml.Vector2f
 import rain.api.components.*
 import rain.api.gfx.Material
 import rain.api.gfx.Mesh
@@ -38,8 +37,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
         }
 
         animatorManagerRemoveAnimatorByEntity(entity.getId())
-        emitterManagerRemoveEmitterByEntity(entity.getId())
-        emitterManagerRemoveBurstEmitterByEntity(entity.getId())
         renderManagerRemoveRenderComponentByEntity(entity.getId())
 
         entityWrappersMap.remove(entity.getId())
@@ -48,8 +45,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
 
     fun clear() {
         for (entity in entities) {
-            emitterManagerRemoveEmitterByEntity(entity)
-            emitterManagerRemoveBurstEmitterByEntity(entity)
             renderManagerRemoveRenderComponentByEntity(entity)
         }
 
@@ -167,18 +162,6 @@ class EntitySystem<T: Entity>(val scene: Scene, val material: Material?) {
             val collider = Collider(body, entity.transform)
             system.colliderComponents.add(collider)
             system.colliderComponentsMap[entityId] = collider
-            return this
-        }
-
-        // TODO: Emitters should not be components but entities instead.
-        // TODO: We should be able to "attach" or "connect" entities with eachother
-        fun attachParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
-            emitterManagerCreateEmitter(entityId, entity.transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
-            return this
-        }
-
-        fun attachBurstParticleEmitter(numParticles: Int, particleSize: Float, particleLifetime: Float, velocity: Vector2f, directionType: DirectionType, spread: Float, tickRate: Float = 1.0f): Builder<T> {
-            emitterManagerCreateBurstEmitter(entityId, entity.transform, numParticles, particleSize, particleLifetime, velocity, directionType, spread, tickRate)
             return this
         }
 

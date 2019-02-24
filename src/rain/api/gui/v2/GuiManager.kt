@@ -64,7 +64,7 @@ internal fun guiManagerHandleInput(input: Input) {
 
                 onMouseHovered(c)
                 if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and c.inputFilter != 0) {
-                    onMouseClicked(input, c)
+                    onInput(input, c)
                 }
             }
             else {
@@ -106,7 +106,7 @@ internal fun guiManagerHandleInput(input: Input) {
     }
 }
 
-private fun onMouseClicked(input: Input, c: Component) {
+private fun onInput(input: Input, c: Component) {
     if (lastActiveComponent != null) {
         lastActiveComponent!!.active = false
     }
@@ -130,6 +130,7 @@ internal fun guiManagerHandleGfx() {
         if (panel.compose) {
             panel.compose = false
             panel.composeGraphics(uiMaterial, resourceFactory)
+            panel.composeText(font, textMaterial, resourceFactory)
         }
     }
 }

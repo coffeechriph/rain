@@ -1,8 +1,13 @@
 package rain.api.entity
 
 import rain.api.Input
-import rain.api.components.*
-import rain.api.manager.*
+import rain.api.components.Animator
+import rain.api.components.MoveComponent
+import rain.api.components.RenderComponent
+import rain.api.components.Transform
+import rain.api.manager.animatorManagerGetAnimatorByEntity
+import rain.api.manager.moveManagerGetMoveComponent
+import rain.api.manager.renderManagerGetRenderComponentByEntity
 import rain.api.scene.Scene
 
 private var currentId: Long = 0
@@ -21,14 +26,6 @@ open class Entity {
 
     fun getId(): Long {
         return id
-    }
-
-    fun getParticleEmitters(): List<ParticleEmitter> {
-        return emitterManagerGetEmitterFromId(id) ?: emptyList()
-    }
-
-    fun getBurstParticleEmitters(): List<BurstParticleEmitter> {
-        return emitterManagerGetBurstEmitterFromId(id) ?: emptyList()
     }
 
     fun getRenderComponents(): List<RenderComponent> {

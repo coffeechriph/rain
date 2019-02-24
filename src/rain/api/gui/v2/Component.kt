@@ -10,6 +10,7 @@ abstract class Component(internal val inputFilter: Int) {
     var layer = 0.0f
     var active = false
     var hovered = false
+    internal var text = Text()
     internal lateinit var parentPanel: Panel
 
     abstract fun createGraphic(skin: Skin): FloatArray

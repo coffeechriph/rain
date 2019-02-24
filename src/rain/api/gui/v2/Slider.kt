@@ -2,15 +2,20 @@ package rain.api.gui.v2
 
 import rain.api.Input
 
-class Slider: Component(Input.InputState.PRESSED.value or Input.InputState.DOWN.value) {
+class Slider internal constructor(panel: Panel): Component(Input.InputState.PRESSED.value or Input.InputState.DOWN.value) {
     var valueChanged = false
     var value = 0
         set(value) {
             field = value
             parentPanel.compose = true
+            text.string = value.toString()
         }
     var minValue = 0
     var maxValue = 100
+
+    init {
+        parentPanel = panel
+    }
 
     override fun createGraphic(skin: Skin): FloatArray {
         val factor = value.toFloat() / (maxValue-minValue).toFloat()
