@@ -54,6 +54,17 @@ class Panel internal constructor(var layout: Layout): Entity() {
         return slider
     }
 
+    fun createCheckbox(string: String): Checkbox {
+        val checkbox = Checkbox(this)
+        checkbox.text.parentComponent = checkbox
+        checkbox.text.parentPanel = this
+        checkbox.string = string
+        components.add(checkbox)
+        texts.add(checkbox.text)
+        compose = true
+        return checkbox
+    }
+
     fun addText(text: Text): Panel {
         text.parentPanel = this
         texts.add(text)
