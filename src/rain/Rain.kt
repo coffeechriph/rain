@@ -7,6 +7,7 @@ import rain.api.Timer
 import rain.api.Window
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.Gui
+import rain.api.gui.v2.guiManagerClear
 import rain.api.gui.v2.guiManagerHandleGfx
 import rain.api.gui.v2.guiManagerHandleInput
 import rain.api.gui.v2.guiManagerInit
@@ -101,6 +102,7 @@ open class Rain {
                 stateManager.switchState = false
                 scene.clear()
                 gui.clear()
+                guiManagerClear()
                 emitterManagerClear()
                 renderManagerClear()
                 vulkanRenderer.clearPipelines()
@@ -133,7 +135,7 @@ open class Rain {
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
 
-        guiManagerHandleInput(input)
+        guiManagerHandleInput(window.windowPointer, input)
         gui.update(input)
         moveManagerSimulate()
         emitterManagerSimulate()

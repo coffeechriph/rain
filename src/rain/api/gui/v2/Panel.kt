@@ -65,6 +65,17 @@ class Panel internal constructor(var layout: Layout): Entity() {
         return checkbox
     }
 
+    fun createTextField(string: String): TextField {
+        val textField = TextField(this)
+        textField.text.parentComponent = textField
+        textField.text.parentPanel = this
+        textField.string = string
+        components.add(textField)
+        texts.add(textField.text)
+        compose = true
+        return textField
+    }
+
     fun addText(text: Text): Panel {
         text.parentPanel = this
         texts.add(text)
@@ -151,10 +162,10 @@ class Panel internal constructor(var layout: Layout): Entity() {
     internal fun composeText(font: Font, textMaterial: Material, resourceFactory: ResourceFactory) {
         val vertices = ArrayList<Float>()
         for (t in texts) {
+            t.w = font.getStringWidth(t.string, 0, t.string.length)
             var cx = if (t.parentComponent != null) { t.parentComponent!!.x } else { 0.0f }
             var cy = if (t.parentComponent != null) { t.parentComponent!!.y } else { 0.0f }
             var cw = if (t.parentComponent != null) { t.parentComponent!!.w } else { 0.0f }
-            var ch = if (t.parentComponent != null) { t.parentComponent!!.h } else { 0.0f }
             var align = TextAlign.CENTER
             var color = Vector4f(1.0f, 1.0f, 1.0f, 1.0f)
 
@@ -162,7 +173,6 @@ class Panel internal constructor(var layout: Layout): Entity() {
                 cx = t.parentComponent!!.x
                 cy = t.parentComponent!!.y
                 cw = t.parentComponent!!.w
-                ch = t.parentComponent!!.h
 
                 // TODO: Could find a more scalable way of finding out this information
                 if (t.parentComponent is Button) {
@@ -176,7 +186,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
             }
 
             // TODO: These constant conversions between different types of collections are sloooow
-            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, cw, ch, align, t.string, font, color).toTypedArray())
+            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, cw, align, t.string, font, color).toTypedArray())
         }
 
         if (vertices.size <= 0) {

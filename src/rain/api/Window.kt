@@ -3,7 +3,6 @@ import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
-import org.lwjgl.system.MemoryStack.stackGet
 import rain.assertion
 import rain.log
 
@@ -67,6 +66,10 @@ internal class Window {
                     input.putMouseState(button, Input.InputState.RELEASED)
                 }
             }
+        }
+
+        glfwSetCharCallback(windowPointer) {window, codepoint ->
+            input.triggerSingleChar(codepoint)
         }
 
         glfwSetCursorPosCallback(windowPointer) {window, xpos, ypos ->

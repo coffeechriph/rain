@@ -1,5 +1,6 @@
 package rain.api.gui.v2
 
+import org.joml.Vector2f
 import rain.api.Input
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
@@ -15,6 +16,7 @@ private var lastActiveComponent: Component? = null
 private var lastHoveredComponent: Component? = null
 private var currentHookedPanel: Panel? = null
 private var currentHookedMode = 0 // TODO: Add enum instead
+private var lastHookedPoint = Vector2f(0.0f, 0.0f)
 
 internal fun guiManagerInit(resFactory: ResourceFactory) {
     resourceFactory = resFactory
@@ -34,13 +36,23 @@ internal fun guiManagerInit(resFactory: ResourceFactory) {
             .build()
 }
 
+internal fun guiManagerClear() {
+    panels.clear()
+}
+
 fun guiManagerCreatePanel(layout: Layout): Panel {
     val p = Panel(layout)
     panels.add(p)
     return p
 }
 
-internal fun guiManagerHandleInput(input: Input) {
+/*
+    TODO: THINGS TO IMPLEMENT
+    TODO: 1) Register components to events and have methods for it. Click,Resize,Move,CharInput
+    TODO: 2) Add generic triggers. onHoverEnter,onHoverLeave,onClick,onCharEdit,onResize,onMove,onActive,onDeactive
+ */
+
+internal fun guiManagerHandleInput(window: Long, input: Input) {
     val mx = input.mousePosition.x
     val my = input.mousePosition.y
 
@@ -56,6 +68,13 @@ internal fun guiManagerHandleInput(input: Input) {
 
     for (panel in panels) {
         panel.updateComponents()
+
+        // TODO: Special handling for component which use keyboard.
+        // We should allow components to define which events they listen to and have methods for those cases
+        if (lastActiveComponent != null && lastActiveComponent is TextField) {
+            lastActiveComponent!!.action(input)
+        }
+
         if (mx >= panel.x && mx <= panel.x + panel.w &&
             my >= panel.y && my <= panel.y + panel.h) {
             val c = panel.findComponentAtPoint(mx.toFloat(), my.toFloat())
@@ -71,7 +90,7 @@ internal fun guiManagerHandleInput(input: Input) {
                 if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED) {
                     // TODO: Add customizable coordinates as to where
                     // one must click in order to activate 'resize' or 'move' action
-                    if (my >= panel.y + 5) {
+                    if (mx >= panel.x + panel.w - 10 && my >= panel.y + panel.h - 10) {
                         if (panel.resizable) {
                             currentHookedPanel = panel
                             currentHookedMode = 0
@@ -80,6 +99,7 @@ internal fun guiManagerHandleInput(input: Input) {
                         if (panel.moveable) {
                             currentHookedPanel = panel
                             currentHookedMode = 1
+                            lastHookedPoint = Vector2f(input.mousePosition.x.toFloat(), input.mousePosition.y.toFloat())
                         }
                     }
                 }
@@ -98,8 +118,15 @@ internal fun guiManagerHandleInput(input: Input) {
                 panel.h = (input.mousePosition.y - panel.y)
                 panel.compose = true
             } else if (currentHookedMode == 1) {
-                panel.x = input.mousePosition.x.toFloat()
-                panel.y = input.mousePosition.y.toFloat()
+                val dx = input.mousePosition.x.toFloat() - lastHookedPoint.x
+                val dy = input.mousePosition.y.toFloat() - lastHookedPoint.y
+
+                panel.x += dx
+                panel.y += dy
+
+                lastHookedPoint.x = input.mousePosition.x.toFloat()
+                lastHookedPoint.y = input.mousePosition.y.toFloat()
+
                 panel.compose = true
             }
         }

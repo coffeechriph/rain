@@ -11,13 +11,16 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
             parentPanel.compose = true
         }
 
+    private var activated = false
+
     init {
         parentPanel = panel
     }
 
     override fun createGraphic(skin: Skin): FloatArray {
         var backColor = skin.buttonStyle.backgroundColor
-        if (clicked) {
+        if (activated) {
+            activated = false
             backColor = skin.buttonStyle.activeColor
         }
         else if (hovered) {
@@ -44,6 +47,7 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
 
     override fun action(input: Input) {
         clicked = true
+        activated = true
     }
 
     override fun handleState(): Boolean {

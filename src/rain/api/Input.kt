@@ -2,6 +2,7 @@ package rain.api
 
 import org.joml.Vector2i
 import org.lwjgl.glfw.GLFW.*
+import java.util.*
 
 class Input {
     enum class Button(internal val value: Int) {
@@ -156,6 +157,18 @@ class Input {
     private val mouseStates = Array(GLFW_MOUSE_BUTTON_8){ InputState.UP }
     private val lastFrameKeyState = ArrayList<Int>()
     private val lastFrameMouseState = ArrayList<Int>()
+    private val codepointInputQueue = ArrayDeque<Int>()
+
+    fun popCodePointQueue(): Int {
+        if (codepointInputQueue.isEmpty()) {
+            return -1
+        }
+        return codepointInputQueue.pop()
+    }
+
+    fun isCodePointQueueEmpty(): Boolean {
+        return codepointInputQueue.isEmpty()
+    }
 
     fun keyState(key: Key): InputState {
         return keyboardStates[key.value]
@@ -196,5 +209,9 @@ class Input {
 
         lastFrameMouseState.clear()
         lastFrameKeyState.clear()
+    }
+
+    internal fun triggerSingleChar(codepoint: Int) {
+        codepointInputQueue.add(codepoint)
     }
 }

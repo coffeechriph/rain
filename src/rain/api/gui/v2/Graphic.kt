@@ -9,8 +9,9 @@ import rain.api.gui.TextAlign
 import rain.util.Earcut
 import java.lang.Math.cos
 import java.lang.Math.sin
+import java.util.*
 
-internal fun gfxCreateText(tx: Float, ty: Float, w: Float, h: Float, textAlign: TextAlign, string: String, font: Font, color: Vector4f): FloatArray {
+internal fun gfxCreateText(tx: Float, ty: Float, w: Float, textAlign: TextAlign, string: String, font: Font, color: Vector4f): FloatArray {
     val depth = 9.0f
     val scale = STBTruetype.stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
@@ -21,24 +22,6 @@ internal fun gfxCreateText(tx: Float, ty: Float, w: Float, h: Float, textAlign: 
         TextAlign.CENTER -> font.fontHeight
         TextAlign.LEFT -> font.fontHeight
         TextAlign.RIGHT -> font.fontHeight
-        TextAlign.BOT_CENTER -> h
-        TextAlign.BOT_LEFT -> h
-        TextAlign.BOT_RIGHT -> h
-        TextAlign.TOP_CENTER -> (font.descent+font.ascent)*scale
-        TextAlign.TOP_LEFT -> (font.descent+font.ascent)*scale
-        TextAlign.TOP_RIGHT -> (font.descent+font.ascent)*scale
-    }
-
-    val paddingX = when(textAlign) {
-        TextAlign.CENTER -> (w / 2.0f - font.getStringWidth(string, 0, string.length) / 2.0f)
-        TextAlign.LEFT -> 0.0f
-        TextAlign.RIGHT -> w - font.getStringWidth(string, 0, string.length)
-        TextAlign.BOT_CENTER -> w/2.0f - font.getStringWidth(string, 0, string.length)/2.0f
-        TextAlign.BOT_LEFT -> 0.0f
-        TextAlign.BOT_RIGHT -> w - font.getStringWidth(string, 0, string.length)
-        TextAlign.TOP_CENTER -> w/2.0f - font.getStringWidth(string, 0, string.length)/2.0f
-        TextAlign.TOP_LEFT -> 0.0f
-        TextAlign.TOP_RIGHT -> w - font.getStringWidth(string, 0, string.length)
     }
 
     MemoryStack.stackPush().use { stack ->
@@ -48,11 +31,9 @@ internal fun gfxCreateText(tx: Float, ty: Float, w: Float, h: Float, textAlign: 
         val quad = STBTTAlignedQuad.mallocStack(stack)
 
         var index = 0
-        val displayString = CharArray(string.length)
-        var displayStringIndex = 0
-
+        var lastIndex = 0
+        var stringToDisplay = ""
         while(index < string.length) {
-            displayString[displayStringIndex++] = string[index]
             index += font.getCodePoint(string, string.length, index, codePoint)
             val cp = codePoint.get(0)
 
@@ -67,14 +48,21 @@ internal fun gfxCreateText(tx: Float, ty: Float, w: Float, h: Float, textAlign: 
                     x.put(0, x.get(0) + STBTruetype.stbtt_GetCodepointKernAdvance(font.fontInfo, cp, codePoint.get(0)) * scale)
                 }
 
-                val cx1 = tx + quad.x0() + paddingX
-                val cx2 = tx + quad.x1() + paddingX
+                val cx1 = tx + quad.x0()
+                val cx2 = tx + quad.x1()
                 val cy1 = ty + quad.y0() + paddingY
                 val cy2 = ty + quad.y1() + paddingY
                 val ux1 = quad.s0()
                 val ux2 = quad.s1()
                 val uy1 = quad.t0()
                 val uy2 = quad.t1()
+
+                if (x[0] + (quad.x1()-quad.x0()) >= w) {
+                    break
+                }
+
+                stringToDisplay += string[lastIndex]
+                lastIndex = index
 
                 textVertexData[textVertexDataIndex++] = cx1
                 textVertexData[textVertexDataIndex++] = cy1
@@ -131,9 +119,20 @@ internal fun gfxCreateText(tx: Float, ty: Float, w: Float, h: Float, textAlign: 
                 textVertexData[textVertexDataIndex++] = uy1
             }
         }
+
+        val stringToDisplayWidth = font.getStringWidth(stringToDisplay, 0, stringToDisplay.length)
+        val paddingX = when(textAlign) {
+            TextAlign.CENTER -> (w / 2.0f - stringToDisplayWidth / 2.0f)
+            TextAlign.LEFT -> 0.0f
+            TextAlign.RIGHT -> w - stringToDisplayWidth
+        }
+
+        for (i in 0 until textVertexDataIndex step 8) {
+            textVertexData[i] += paddingX
+        }
     }
 
-    return textVertexData
+    return Arrays.copyOfRange(textVertexData, 0, textVertexDataIndex)
 }
 
 internal fun gfxCreateRect(x: Float, y: Float, z: Float, width: Float, height: Float, color: Vector4f): FloatArray {
