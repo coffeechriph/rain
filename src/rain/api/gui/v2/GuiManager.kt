@@ -4,7 +4,6 @@ import org.joml.Vector2f
 import rain.api.Input
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
-import rain.api.gui.Font
 
 private val panels = ArrayList<Panel>()
 private lateinit var uiMaterial: Material
@@ -52,7 +51,7 @@ fun guiManagerCreatePanel(layout: Layout): Panel {
     TODO: 2) Add generic triggers. onHoverEnter,onHoverLeave,onClick,onCharEdit,onResize,onMove,onActive,onDeactive
  */
 
-internal fun guiManagerHandleInput(window: Long, input: Input) {
+internal fun guiManagerHandleInput(maxClipDepth: Float, input: Input) {
     val mx = input.mousePosition.x
     val my = input.mousePosition.y
 
@@ -152,12 +151,12 @@ private fun onMouseHovered(c: Component) {
     lastHoveredComponent = c
 }
 
-internal fun guiManagerHandleGfx() {
+internal fun guiManagerHandleGfx(maxClipDepth: Float) {
     for (panel in panels) {
         if (panel.compose) {
             panel.compose = false
-            panel.composeGraphics(uiMaterial, resourceFactory)
-            panel.composeText(font, textMaterial, resourceFactory)
+            panel.composeGraphics(maxClipDepth, uiMaterial, resourceFactory)
+            panel.composeText(maxClipDepth, font, textMaterial, resourceFactory)
         }
     }
 }

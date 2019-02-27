@@ -17,7 +17,7 @@ class Slider internal constructor(panel: Panel): Component(Input.InputState.PRES
         parentPanel = panel
     }
 
-    override fun createGraphic(skin: Skin): FloatArray {
+    override fun createGraphic(depth: Float, skin: Skin): FloatArray {
         val factor = value.toFloat() / (maxValue-minValue).toFloat()
         val cx = x + w * factor
         var backColor = skin.sliderStyle.backgroundColor
@@ -29,24 +29,26 @@ class Slider internal constructor(panel: Panel): Component(Input.InputState.PRES
 
         val ow = skin.sliderStyle.outlineWidth
         val back = when(skin.sliderStyle.shape) {
-            Shape.RECT -> gfxCreateRect(x + ow, y + ow, 1.0f, w - ow*2, h - ow*2, backColor)
-            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, 1.0f, w - ow*2, h - ow*2, 10.0f, backColor)
+            Shape.RECT -> gfxCreateRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, backColor)
+            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, 10.0f, backColor)
         }
 
         val cursor = when(skin.sliderStyle.cursorShape) {
-            Shape.RECT -> gfxCreateRect(cx, y, 2.0f, 2.0f, h, cursorColor)
-            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(cx, y, 2.0f, 2.0f, h, 1.0f, cursorColor)
+            Shape.RECT -> gfxCreateRect(cx, y, depth, 2.0f, h, cursorColor)
+            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(cx, y, depth, 2.0f, h, 1.0f, cursorColor)
         }
 
         if (ow > 0) {
             val outline = when(skin.sliderStyle.shape) {
-                Shape.RECT -> gfxCreateRect(x, y, 1.0f, w, h, skin.sliderStyle.outlineColor)
-                Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, 1.0f, w, h, 10.0f, skin.sliderStyle.outlineColor)
+                Shape.RECT -> gfxCreateRect(x, y, depth, w, h, skin.sliderStyle.outlineColor)
+                Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, depth, w, h, 10.0f, skin.sliderStyle.outlineColor)
             }
 
             return back + outline + cursor
         }
 
+        text.color = skin.sliderStyle.textColor
+        text.textAlign = skin.sliderStyle.textAlign
         return back + cursor
     }
 

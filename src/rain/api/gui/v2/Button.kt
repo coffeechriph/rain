@@ -8,7 +8,6 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
         set(value) {
             field = value
             text.string = value
-            parentPanel.compose = true
         }
 
     private var activated = false
@@ -17,7 +16,7 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
         parentPanel = panel
     }
 
-    override fun createGraphic(skin: Skin): FloatArray {
+    override fun createGraphic(depth: Float, skin: Skin): FloatArray {
         var backColor = skin.buttonStyle.backgroundColor
         if (activated) {
             activated = false
@@ -29,19 +28,21 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
 
         val ow = skin.buttonStyle.outlineWidth
         val back = when(skin.buttonStyle.shape) {
-            Shape.RECT -> gfxCreateRect(x + ow, y + ow, 1.0f, w - ow*2, h - ow*2, backColor)
-            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, 1.0f, w - ow*2, h - ow*2, 10.0f, backColor)
+            Shape.RECT -> gfxCreateRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, backColor)
+            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, 10.0f, backColor)
         }
 
         if (skin.buttonStyle.outlineWidth > 0) {
             val outline = when(skin.buttonStyle.shape) {
                 Shape.RECT -> gfxCreateRect(x, y, 1.0f, w, h, skin.buttonStyle.outlineColor)
-                Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, 1.0f, w, h, 10.0f, skin.buttonStyle.outlineColor)
+                Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, depth, w, h, 10.0f, skin.buttonStyle.outlineColor)
             }
 
             return back + outline
         }
 
+        text.color = skin.buttonStyle.textColor
+        text.textAlign = skin.buttonStyle.textAlign
         return back
     }
 

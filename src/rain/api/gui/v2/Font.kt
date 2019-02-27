@@ -1,4 +1,4 @@
-package rain.api.gui
+package rain.api.gui.v2
 
 import org.lwjgl.stb.STBTTAlignedQuad
 import org.lwjgl.stb.STBTTFontinfo

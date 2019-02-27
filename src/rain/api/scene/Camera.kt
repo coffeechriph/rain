@@ -8,9 +8,11 @@ class Camera(depthRange: Vector2f) {
     var y: Float = 0.0f
     var projection = Matrix4f()
         private set
+    var maxDepth = 1000.0f
+        private set
     var view = Matrix4f()
 
     init {
-        projection.setOrtho(0.0f, 1280.0f, 0.0f, 768.0f, -1000.0f, 1000.0f, true)
+        projection.setOrtho(0.0f, 1280.0f, 0.0f, 768.0f, -maxDepth, maxDepth, true)
     }
 }

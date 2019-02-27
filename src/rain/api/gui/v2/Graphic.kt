@@ -4,15 +4,12 @@ import org.joml.Vector4f
 import org.lwjgl.stb.STBTTAlignedQuad
 import org.lwjgl.stb.STBTruetype
 import org.lwjgl.system.MemoryStack
-import rain.api.gui.Font
-import rain.api.gui.TextAlign
 import rain.util.Earcut
 import java.lang.Math.cos
 import java.lang.Math.sin
 import java.util.*
 
-internal fun gfxCreateText(tx: Float, ty: Float, w: Float, textAlign: TextAlign, string: String, font: Font, color: Vector4f): FloatArray {
-    val depth = 9.0f
+internal fun gfxCreateText(tx: Float, ty: Float, depth: Float, w: Float, textAlign: TextAlign, string: String, font: Font, color: Vector4f): FloatArray {
     val scale = STBTruetype.stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
     var textVertexDataIndex = 0

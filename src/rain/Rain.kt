@@ -6,7 +6,6 @@ import rain.api.Input
 import rain.api.Timer
 import rain.api.Window
 import rain.api.gfx.ResourceFactory
-import rain.api.gui.Gui
 import rain.api.gui.v2.guiManagerClear
 import rain.api.gui.v2.guiManagerHandleGfx
 import rain.api.gui.v2.guiManagerHandleInput
@@ -28,7 +27,6 @@ open class Rain {
     protected lateinit var stateManager: StateManager
     private val input = Input()
     private lateinit var resourceFactory: ResourceFactory
-    private lateinit var gui: Gui
     private lateinit var scene: Scene
 
     var showMouse = true
@@ -53,8 +51,7 @@ open class Rain {
         }
 
         scene = Scene(resourceFactory)
-        gui = Gui(resourceFactory)
-        stateManager = StateManager(resourceFactory, scene, gui, input)
+        stateManager = StateManager(resourceFactory, scene, input)
     }
 
     private fun createVulkanApi() {
@@ -70,7 +67,6 @@ open class Rain {
     fun run() {
         startLog()
         emitterManagerInit(resourceFactory)
-        gui.init()
         guiManagerInit(resourceFactory)
         scene.init(resourceFactory)
         init()
@@ -95,13 +91,12 @@ open class Rain {
                 }
 
                 scene.render(vulkanRenderer, resourceFactory)
-                guiManagerHandleGfx()
+                guiManagerHandleGfx(scene.activeCamera.maxDepth)
                 vulkanRenderer.render()
             }
             else {
                 stateManager.switchState = false
                 scene.clear()
-                gui.clear()
                 guiManagerClear()
                 emitterManagerClear()
                 renderManagerClear()
@@ -109,7 +104,6 @@ open class Rain {
                 resourceFactory.clear()
 
                 emitterManagerInit(resourceFactory)
-                gui.init()
                 guiManagerInit(resourceFactory)
                 scene.init(resourceFactory)
 
@@ -135,8 +129,7 @@ open class Rain {
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
 
-        guiManagerHandleInput(window.windowPointer, input)
-        gui.update(input)
+        guiManagerHandleInput(scene.activeCamera.maxDepth, input)
         moveManagerSimulate()
         emitterManagerSimulate()
         animatorManagerSimulate()

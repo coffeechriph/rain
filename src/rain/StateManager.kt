@@ -2,9 +2,8 @@ package rain
 
 import rain.api.Input
 import rain.api.gfx.ResourceFactory
-import rain.api.gui.Gui
 import rain.api.scene.Scene
-class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val gui: Gui, val input: Input) {
+class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val input: Input) {
     var switchState = false
     val states = HashMap<String, State>()
     private lateinit var currentState: State
@@ -30,7 +29,7 @@ class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val g
 
     fun update(deltaTime: Float) {
         if (::currentState.isInitialized) {
-            currentState.update(resourceFactory, scene, gui, input, deltaTime)
+            currentState.update(resourceFactory, scene, input, deltaTime)
         }
     }
 
@@ -47,7 +46,7 @@ class StateManager(val resourceFactory: ResourceFactory, val scene: Scene, val g
             assertion("NextStateKey is null!")
         }
 
-        currentState.init(resourceFactory, scene, gui, input)
+        currentState.init(resourceFactory, scene, input)
         log("State $nextStateKey initialized!")
         nextStateKey = null
         return false
