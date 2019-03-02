@@ -154,9 +154,9 @@ private fun onMouseHovered(c: Component) {
 internal fun guiManagerHandleGfx(maxClipDepth: Float) {
     for (panel in panels) {
         if (panel.compose) {
-            panel.compose = false
             panel.composeGraphics(maxClipDepth, uiMaterial, resourceFactory)
             panel.composeText(maxClipDepth, font, textMaterial, resourceFactory)
+            panel.compose = false
         }
     }
 }

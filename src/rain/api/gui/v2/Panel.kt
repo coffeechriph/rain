@@ -14,18 +14,36 @@ private val TEXT_DEPTH = 0.1f
 
 class Panel internal constructor(var layout: Layout): Entity() {
     var x = 0.0f
+        set(value) {
+            field = value
+            compose = true
+        }
     var y = 0.0f
+        set(value) {
+            field = value
+            compose = true
+        }
     var w = 0.0f
+        set(value) {
+            field = value
+            compose = true
+        }
     var h = 0.0f
+        set(value) {
+            field = value
+            compose = true
+        }
     var skin = DEFAULT_SKIN
     var resizable = true
     var moveable = true
     var visible = true
         set(value) {
             field = value
-
             if (::renderComponent.isInitialized) {
                 renderComponent.visible = value
+            }
+
+            if (::textRenderComponent.isInitialized) {
                 textRenderComponent.visible = value
             }
         }
@@ -158,31 +176,38 @@ class Panel internal constructor(var layout: Layout): Entity() {
         floatBuffer.flip()
 
         if (!::renderComponent.isInitialized) {
-            vertexBuffer = resourceFactory.buildVertexBuffer()
-                    .withState(VertexBufferState.STATIC)
-                    .withAttribute(VertexAttribute(0, 3))
-                    .withAttribute(VertexAttribute(1, 3))
-                    .withDataType(DataType.FLOAT)
-                    .withVertices(byteBuffer)
-                    .build()
-            mesh = Mesh(vertexBuffer, null)
-            renderComponent = RenderComponent(transform, mesh, uiMaterial)
-            renderComponent.createUniformData = {
-                val uniformData = memAlloc(18 * 4)
-                val f = uniformData.asFloatBuffer()
-                f.put(0, x)
-                f.put(1, y)
-                f.put(2, w)
-                f.put(3, h)
-                f.flip()
+            if (vertices.size > 0) {
+                vertexBuffer = resourceFactory.buildVertexBuffer()
+                        .withState(VertexBufferState.STATIC)
+                        .withAttribute(VertexAttribute(0, 3))
+                        .withAttribute(VertexAttribute(1, 3))
+                        .withDataType(DataType.FLOAT)
+                        .withVertices(byteBuffer)
+                        .build()
+                mesh = Mesh(vertexBuffer, null)
+                renderComponent = RenderComponent(transform, mesh, uiMaterial)
+                renderComponent.createUniformData = {
+                    val uniformData = memAlloc(18 * 4)
+                    val f = uniformData.asFloatBuffer()
+                    f.put(0, x)
+                    f.put(1, y)
+                    f.put(2, w)
+                    f.put(3, h)
+                    f.flip()
 
-                uniformData
+                    uniformData
+                }
+                renderComponent.visible = visible
+                renderManagerAddRenderComponent(getId(), renderComponent)
             }
-            renderComponent.visible = visible
-            renderManagerAddRenderComponent(getId(), renderComponent)
         }
         else {
-            vertexBuffer.update(byteBuffer)
+            if (vertices.size > 0) {
+                vertexBuffer.update(byteBuffer)
+            }
+            else {
+                renderComponent.visible = false
+            }
         }
     }
 
@@ -204,13 +229,6 @@ class Panel internal constructor(var layout: Layout): Entity() {
             vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, maxClipDepth - TEXT_DEPTH, cw, t.textAlign, t.string, font, t.color).toTypedArray())
         }
 
-        if (vertices.size <= 0) {
-            if (::textRenderComponent.isInitialized) {
-                textRenderComponent.visible = false
-            }
-            return
-        }
-
         val byteBuffer = memAlloc(vertices.size * 4)
         val floatBuffer = byteBuffer.asFloatBuffer()
         for (value in vertices) {
@@ -219,32 +237,39 @@ class Panel internal constructor(var layout: Layout): Entity() {
         floatBuffer.flip()
 
         if (!::textRenderComponent.isInitialized) {
-            textVertexBuffer = resourceFactory.buildVertexBuffer()
-                    .withState(VertexBufferState.STATIC)
-                    .withAttribute(VertexAttribute(0, 3))
-                    .withAttribute(VertexAttribute(1, 3))
-                    .withAttribute(VertexAttribute(2, 2))
-                    .withDataType(DataType.FLOAT)
-                    .withVertices(byteBuffer)
-                    .build()
-            textMesh = Mesh(textVertexBuffer, null)
-            textRenderComponent = RenderComponent(transform, textMesh, textMaterial)
-            textRenderComponent.createUniformData = {
-                val uniformData = memAlloc(18 * 4)
-                val f = uniformData.asFloatBuffer()
-                f.put(0, x)
-                f.put(1, y)
-                f.put(2, w)
-                f.put(3, h)
-                f.flip()
+            if (vertices.size > 0) {
+                textVertexBuffer = resourceFactory.buildVertexBuffer()
+                        .withState(VertexBufferState.STATIC)
+                        .withAttribute(VertexAttribute(0, 3))
+                        .withAttribute(VertexAttribute(1, 3))
+                        .withAttribute(VertexAttribute(2, 2))
+                        .withDataType(DataType.FLOAT)
+                        .withVertices(byteBuffer)
+                        .build()
+                textMesh = Mesh(textVertexBuffer, null)
+                textRenderComponent = RenderComponent(transform, textMesh, textMaterial)
+                textRenderComponent.createUniformData = {
+                    val uniformData = memAlloc(18 * 4)
+                    val f = uniformData.asFloatBuffer()
+                    f.put(0, x)
+                    f.put(1, y)
+                    f.put(2, w)
+                    f.put(3, h)
+                    f.flip()
 
-                uniformData
+                    uniformData
+                }
+                textRenderComponent.visible = visible
+                renderManagerAddRenderComponent(getId(), textRenderComponent)
             }
-            textRenderComponent.visible = visible
-            renderManagerAddRenderComponent(getId(), textRenderComponent)
         }
         else {
-            textVertexBuffer.update(byteBuffer)
+            if (vertices.size > 0) {
+                textVertexBuffer.update(byteBuffer)
+            }
+            else {
+                textRenderComponent.visible = false
+            }
         }
     }
 }
