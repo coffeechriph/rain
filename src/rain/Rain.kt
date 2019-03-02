@@ -90,7 +90,7 @@ open class Rain {
                     numUpdates++
                 }
 
-                scene.render(vulkanRenderer, resourceFactory)
+                scene.render(vulkanRenderer)
                 guiManagerHandleGfx(scene.activeCamera.maxDepth)
                 vulkanRenderer.render()
             }
@@ -129,7 +129,7 @@ open class Rain {
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
 
-        guiManagerHandleInput(scene.activeCamera.maxDepth, input)
+        guiManagerHandleInput(input)
         moveManagerSimulate()
         emitterManagerSimulate()
         animatorManagerSimulate()

@@ -59,7 +59,7 @@ internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: Vu
         return isValid
     }
 
-    fun load(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: Queue, filePath: String, filter: TextureFilter) {
+    fun load(logicalDevice: LogicalDevice, commandBuffer: CommandPool.CommandBuffer, queue: Queue, filePath: String, filter: TextureFilter) {
         if (!File(filePath).exists()) {
             throw FileNotFoundException("File $filePath was not found!")
         }
@@ -73,10 +73,10 @@ internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: Vu
             throw RuntimeException("Failed to load image $filePath")
         }
 
-        createImage(logicalDevice, memoryProperties, commandBuffer, queue, imageData, width.get(0), height.get(0), channels.get(0), filter)
+        createImage(logicalDevice, commandBuffer, queue, imageData, width.get(0), height.get(0), channels.get(0), filter)
     }
 
-    fun createImage(logicalDevice: LogicalDevice, memoryProperties: VkPhysicalDeviceMemoryProperties, commandBuffer: CommandPool.CommandBuffer, queue: Queue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
+    fun createImage(logicalDevice: LogicalDevice, commandBuffer: CommandPool.CommandBuffer, queue: Queue, imageData: ByteBuffer, width: Int, height: Int, channels: Int, filter: TextureFilter) {
         val format = findTextureFormat(channels)
         val textureFilter = when(filter) {
             TextureFilter.NEAREST -> VK_FILTER_NEAREST

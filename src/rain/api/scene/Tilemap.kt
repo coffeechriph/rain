@@ -5,7 +5,10 @@ import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.components.RenderComponent
 import rain.api.components.Transform
-import rain.api.gfx.*
+import rain.api.gfx.Material
+import rain.api.gfx.Mesh
+import rain.api.gfx.ResourceFactory
+import rain.api.gfx.VertexBufferState
 import rain.api.manager.addNewRenderComponentToRenderer
 import rain.api.manager.removeRenderComponentFromRenderer
 import rain.log
@@ -137,9 +140,9 @@ class Tilemap {
                 modelMatrix.scale(transform.sx, transform.sy, 0.0f)
             }
 
-            val byteBuffer = MemoryUtil.memAlloc(16 * 4)
-            modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
-            byteBuffer
+            val uboBuffer = MemoryUtil.memAlloc(16 * 4)
+            modelMatrix.get(uboBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
+            uboBuffer
         }
     }
 

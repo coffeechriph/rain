@@ -132,8 +132,8 @@ class Earcut {
     }
 
     // eliminate colinear or duplicate points
-    internal fun filterPoints(start: Node?, end: Node?): Node? {
-        var end = end
+    internal fun filterPoints(start: Node?, endNode: Node?): Node? {
+        var end = endNode
         if (start == null) return start
         if (end == null) end = start
 
@@ -158,8 +158,12 @@ class Earcut {
     }
 
     // main ear slicing loop which triangulates a polygon (given as a linked list)
-    internal fun earcutLinked(ear: Node?, triangles: MutableList<Int>, dim: Int, minX: Double, minY: Double, invSize: Int, pass: Int) {
-        var ear: Node? = ear ?: return
+    internal fun earcutLinked(earNode: Node?, triangles: MutableList<Int>, dim: Int, minX: Double, minY: Double, invSize: Int, pass: Int) {
+        if (earNode == null) {
+            return
+        }
+
+        var ear: Node? = earNode
 
         // interlink polygon nodes in z-order
         if (pass == 0 && invSize != 0) indexCurve(ear!!, minX, minY, invSize)
@@ -286,8 +290,8 @@ class Earcut {
     }
 
     // go through all polygon nodes and cure small local self-intersections
-    internal fun cureLocalIntersections(start: Node, triangles: MutableList<Int>, dim: Int): Node {
-        var start = start
+    internal fun cureLocalIntersections(startNode: Node, triangles: MutableList<Int>, dim: Int): Node {
+        var start = startNode
         var p: Node? = start
         do {
             val a = p!!.prev
@@ -339,8 +343,8 @@ class Earcut {
     }
 
     // link every hole into the outer loop, producing a single-ring polygon without holes
-    internal fun eliminateHoles(data: DoubleArray, holeIndices: IntArray, outerNode: Node?, dim: Int): Node? {
-        var outerNode = outerNode
+    internal fun eliminateHoles(data: DoubleArray, holeIndices: IntArray, outer: Node?, dim: Int): Node? {
+        var outerNode = outer
         val queue = ArrayList<Node>()
         var i: Int
         val len: Int
@@ -377,8 +381,8 @@ class Earcut {
     }
 
     // find a bridge between vertices that connects hole with an outer ring and and link it
-    internal fun eliminateHole(hole: Node, outerNode: Node?) {
-        var outerNode = outerNode
+    internal fun eliminateHole(hole: Node, outer: Node?) {
+        var outerNode = outer
         outerNode = findHoleBridge(hole, outerNode)
         if (outerNode != null) {
             val b = splitPolygon(outerNode, hole)
@@ -512,9 +516,9 @@ class Earcut {
     }
 
     // z-order of a point given coords and inverse of the longer side of data bbox
-    internal fun zOrder(x: Int, y: Int, minX: Double, minY: Double, invSize: Int): Int {
-        var x = x
-        var y = y
+    internal fun zOrder(px: Int, py: Int, minX: Double, minY: Double, invSize: Int): Int {
+        var x = px
+        var y = py
         // coords are transformed into non-negative 15-bit integer range
         x = (32767.0 * (x - minX) * invSize.toDouble()).toInt()
         y = (32767.0 * (y - minY) * invSize.toDouble()).toInt()
@@ -585,8 +589,8 @@ class Earcut {
 
     // Simon Tatham's linked list merge sort algorithm
     // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-    internal fun sortLinked(list: Node?): Node? {
-        var list = list
+    internal fun sortLinked(listNode: Node?): Node? {
+        var list = listNode
         var i: Int
         var p: Node?
         var q: Node?

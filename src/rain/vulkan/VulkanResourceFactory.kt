@@ -89,7 +89,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
     }
 
     internal fun createMaterial(name: String, vertex: ShaderModule, fragment: ShaderModule, texture2d: Texture2d?, useBatching: Boolean = false, depthTestEnabled: Boolean = true, depthWriteEnabled: Boolean = true, enableBlend: Boolean = true, srcColor: BlendMode = BlendMode.BLEND_FACTOR_SRC_ALPHA, dstColor: BlendMode = BlendMode.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, srcAlpha: BlendMode = BlendMode.BLEND_FACTOR_ONE, dstAlpha: BlendMode = BlendMode.BLEND_FACTOR_ZERO): Material {
-        val textures = if (texture2d != null) { Array(1){texture2d!!} } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
+        val textures = if (texture2d != null) { Array(1){ texture2d!! } } else {Array<Texture2d>(0){VulkanTexture2d(0L, vk, this)}}
         val material = VulkanMaterial(vk, setupCommandBuffer, setupQueue, this, uniqueId(), name, vertex, fragment, textures, depthTestEnabled, depthWriteEnabled, enableBlend, srcColor, dstColor, srcAlpha, dstAlpha)
         material.batching = useBatching
         if (useBatching) {
@@ -146,7 +146,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         if (!textures.containsKey(name)) {
             log("Loading texture $name from $textureFile with filter $filter.")
             val texture2d = VulkanTexture2d(uniqueId(), vk, this)
-            texture2d.load(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue, textureFile, filter)
+            texture2d.load(logicalDevice, setupCommandBuffer, setupQueue, textureFile, filter)
             textures[name] = texture2d
         }
         else {
@@ -160,7 +160,7 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         if (!textures.containsKey(name)) {
             log("Creating texture $name from source with filter $filter.")
             val texture2d = VulkanTexture2d(uniqueId(), vk, this)
-            texture2d.createImage(logicalDevice, physicalDevice.memoryProperties, setupCommandBuffer, setupQueue, imageData, width, height, channels, filter)
+            texture2d.createImage(logicalDevice, setupCommandBuffer, setupQueue, imageData, width, height, channels, filter)
             textures[name] = texture2d
         }
         else {

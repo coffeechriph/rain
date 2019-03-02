@@ -51,7 +51,7 @@ fun guiManagerCreatePanel(layout: Layout): Panel {
     TODO: 2) Add generic triggers. onHoverEnter,onHoverLeave,onClick,onCharEdit,onResize,onMove,onActive,onDeactive
  */
 
-internal fun guiManagerHandleInput(maxClipDepth: Float, input: Input) {
+internal fun guiManagerHandleInput(input: Input) {
     val mx = input.mousePosition.x
     val my = input.mousePosition.y
 

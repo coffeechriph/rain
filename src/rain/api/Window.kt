@@ -47,6 +47,7 @@ internal class Window {
         // TODO: We can log this to a file
         GLFWErrorCallback.createPrint(System.err).set()
 
+        // TODO: Extend to properly handle mods
         glfwSetKeyCallback(windowPointer) { window, key, scancode, action, mods ->
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
                 glfwSetWindowShouldClose(window, true)
@@ -57,7 +58,8 @@ internal class Window {
             }
         }
 
-        glfwSetMouseButtonCallback(windowPointer) {window, button, action, mods ->
+        // TODO: Extend to properly handle mods
+        glfwSetMouseButtonCallback(windowPointer) { _, button, action, mods ->
             if (action != GLFW_REPEAT) {
                 if (action == GLFW_PRESS) {
                     input.putMouseState(button, Input.InputState.PRESSED)
@@ -68,15 +70,15 @@ internal class Window {
             }
         }
 
-        glfwSetCharCallback(windowPointer) {window, codepoint ->
+        glfwSetCharCallback(windowPointer) { _, codepoint ->
             input.triggerSingleChar(codepoint)
         }
 
-        glfwSetCursorPosCallback(windowPointer) {window, xpos, ypos ->
+        glfwSetCursorPosCallback(windowPointer) { _, xpos, ypos ->
             input.mousePosition.set(xpos.toInt(), ypos.toInt())
         }
 
-        glfwSetWindowSizeCallback(windowPointer) {window, width, height ->
+        glfwSetWindowSizeCallback(windowPointer) { _, _, _ ->
             windowDirty = true
         }
     }

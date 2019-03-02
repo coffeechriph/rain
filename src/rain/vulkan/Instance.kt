@@ -64,7 +64,7 @@ internal class Instance {
 
     private fun createDebugCallback(pCreateInfo: VkInstanceCreateInfo) {
         if (enableValidationLayers) {
-            val dbgFunc = VkDebugReportCallbackEXT.create { flags, objectType, `object`, location, messageCode, pLayerPrefix, pMessage, pUserData ->
+            val dbgFunc = VkDebugReportCallbackEXT.create { flags, _, _, _, messageCode, pLayerPrefix, pMessage, _ ->
                 val type: String
                 if (flags and VK_DEBUG_REPORT_INFORMATION_BIT_EXT != 0) {
                     type = "INFORMATION"
