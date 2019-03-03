@@ -5,6 +5,14 @@ import rain.api.Input
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 
+internal enum class GuiEventTypes(val value: Int) {
+    CLICK(2),
+    HOVER(4),
+    DRAG(8),
+    ACTIVATE(16),
+    CHAR_EDIT(32);
+}
+
 private val panels = ArrayList<Panel>()
 private lateinit var uiMaterial: Material
 private lateinit var textMaterial: Material
@@ -40,7 +48,7 @@ internal fun guiManagerClear() {
 }
 
 fun guiManagerCreatePanel(layout: Layout): Panel {
-    val p = Panel(layout)
+    val p = Panel(layout, font)
     panels.add(p)
     return p
 }
@@ -55,50 +63,71 @@ internal fun guiManagerHandleInput(input: Input) {
     val mx = input.mousePosition.x
     val my = input.mousePosition.y
 
-    if (lastHoveredComponent != null) {
-        val lhc = lastHoveredComponent!!
-        if (mx < lhc.x || mx > lhc.x + lhc.w ||
-            my < lhc.y || my > lhc.y + lhc.h) {
-            lhc.hovered = false
-            lhc.parentPanel.compose = true
-            lastHoveredComponent = null
+    // We don't want to update component events if we're currently draging
+    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value == 0) {
+        if (lastHoveredComponent != null) {
+            val lhc = lastHoveredComponent!!
+            if (mx < lhc.x || mx > lhc.x + lhc.w ||
+                my < lhc.y || my > lhc.y + lhc.h) {
+                lhc.hovered = false
+                lhc.hoverLeave = true
+                lhc.parentPanel.compose = true
+                lastHoveredComponent = null
+            }
         }
     }
 
-    for (panel in panels) {
-        panel.updateComponents()
-
-        // TODO: Special handling for component which use keyboard.
-        // We should allow components to define which events they listen to and have methods for those cases
-        if (lastActiveComponent != null && lastActiveComponent is TextField) {
-            lastActiveComponent!!.action(input)
+    if (lastActiveComponent != null) {
+        val component = lastActiveComponent!!
+        if (!input.isCodePointQueueEmpty() && component.eventTypes and GuiEventTypes.CHAR_EDIT.value != 0) {
+            component.onCharEdit(input)
         }
 
-        if (mx >= panel.x && mx <= panel.x + panel.w &&
-            my >= panel.y && my <= panel.y + panel.h) {
-            val c = panel.findComponentAtPoint(mx.toFloat(), my.toFloat())
-            if (c != null) {
-                panel.compose = true
-
-                onMouseHovered(c)
-                if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and c.inputFilter != 0) {
-                    onInput(input, c)
-                }
+        if (component.eventTypes and GuiEventTypes.DRAG.value != 0) {
+            if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value != 0) {
+                component.onDrag(input)
             }
-            else {
-                if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED) {
-                    // TODO: Add customizable coordinates as to where
-                    // one must click in order to activate 'resize' or 'move' action
-                    if (mx >= panel.x + panel.w - 10 && my >= panel.y + panel.h - 10) {
-                        if (panel.resizable) {
-                            currentHookedPanel = panel
-                            currentHookedMode = 0
+        }
+    }
+
+
+    for (panel in panels) {
+        panel.updateComponents()
+        // Only check these events if a drag event isn't happening
+        if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value == 0) {
+            if (mx >= panel.x && mx <= panel.x + panel.w &&
+                my >= panel.y && my <= panel.y + panel.h) {
+                val c = panel.findComponentAtPoint(mx.toFloat(), my.toFloat())
+                if (c != null) {
+                    panel.compose = true
+
+                    onMouseHovered(c)
+                    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and c.eventTypes != 0) {
+                        if (lastActiveComponent != null) {
+                            lastActiveComponent!!.active = false
+                            lastActiveComponent!!.deactivated = true
                         }
-                    } else {
-                        if (panel.moveable) {
-                            currentHookedPanel = panel
-                            currentHookedMode = 1
-                            lastHookedPoint = Vector2f(input.mousePosition.x.toFloat(), input.mousePosition.y.toFloat())
+
+                        lastActiveComponent = c
+                        lastActiveComponent!!.activated = true
+                        lastActiveComponent!!.active = true
+                        c.onClick(input)
+                    }
+                } else {
+                    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED) {
+                        // TODO: Add customizable coordinates as to where
+                        // one must click in order to activate 'resize' or 'move' action
+                        if (mx >= panel.x + panel.w - 10 && my >= panel.y + panel.h - 10) {
+                            if (panel.resizable) {
+                                currentHookedPanel = panel
+                                currentHookedMode = 0
+                            }
+                        } else {
+                            if (panel.moveable) {
+                                currentHookedPanel = panel
+                                currentHookedMode = 1
+                                lastHookedPoint = Vector2f(input.mousePosition.x.toFloat(), input.mousePosition.y.toFloat())
+                            }
                         }
                     }
                 }
@@ -132,22 +161,14 @@ internal fun guiManagerHandleInput(input: Input) {
     }
 }
 
-private fun onInput(input: Input, c: Component) {
-    if (lastActiveComponent != null) {
-        lastActiveComponent!!.active = false
-    }
-
-    lastActiveComponent = c
-    c.active = true
-    c.action(input)
-}
-
 private fun onMouseHovered(c: Component) {
     if (lastHoveredComponent != null) {
         lastHoveredComponent!!.hovered = false
+        lastHoveredComponent!!.hoverLeave = true
     }
 
     c.hovered = true
+    c.hoverEnter = true
     lastHoveredComponent = c
 }
 

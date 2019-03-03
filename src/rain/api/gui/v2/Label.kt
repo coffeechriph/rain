@@ -1,7 +1,5 @@
 package rain.api.gui.v2
 
-import rain.api.Input
-
 class Label internal constructor(panel: Panel): Component(0) {
     var string: String = ""
         set(value) {
@@ -27,10 +25,6 @@ class Label internal constructor(panel: Panel): Component(0) {
         text.color = skin.labelStyle.textColor
         text.textAlign = skin.labelStyle.textAlign
         return floatArrayOf()
-    }
-
-    override fun action(input: Input) {
-
     }
 
     override fun handleState(): Boolean {

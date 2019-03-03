@@ -3,6 +3,8 @@ package rain.api.gui.v2
 class FillRowLayout: Layout() {
     var componentsPerRow = 1
     var componentHeight = 30.0f
+    var rowPadding = 0.0f
+
     override fun manage(panel: Panel) {
         val cw = (panel.w - panel.skin.panelStyle.outlineWidth*2) / componentsPerRow
         var x = panel.x + panel.skin.panelStyle.outlineWidth
@@ -18,7 +20,7 @@ class FillRowLayout: Layout() {
             num += 1
             if (num >= componentsPerRow) {
                 x = panel.x + panel.skin.panelStyle.outlineWidth
-                y += componentHeight
+                y += componentHeight + rowPadding
             }
         }
     }

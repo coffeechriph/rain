@@ -12,7 +12,7 @@ private val PANEL_DEPTH = 0.3f
 private val COMPONENT_DEPTH = 0.2f
 private val TEXT_DEPTH = 0.1f
 
-class Panel internal constructor(var layout: Layout): Entity() {
+class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
     var x = 0.0f
         set(value) {
             field = value
@@ -63,6 +63,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
         button.text.parentComponent = button
         button.text.parentPanel = this
         button.string = string
+        button.text.w = font.getStringWidth(string, 0, string.length)
         components.add(button)
         texts.add(button.text)
         compose = true
@@ -76,6 +77,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
         slider.value = value
         slider.minValue = minValue
         slider.maxValue = maxValue
+        slider.text.w = font.getStringWidth(value.toString(), 0, value.toString().length)
         components.add(slider)
         texts.add(slider.text)
         compose = true
@@ -87,6 +89,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
         checkbox.text.parentComponent = checkbox
         checkbox.text.parentPanel = this
         checkbox.string = string
+        checkbox.text.w = font.getStringWidth(string, 0, string.length)
         components.add(checkbox)
         texts.add(checkbox.text)
         compose = true
@@ -98,6 +101,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
         textField.text.parentComponent = textField
         textField.text.parentPanel = this
         textField.string = string
+        textField.text.w = font.getStringWidth(string, 0, string.length)
         components.add(textField)
         texts.add(textField.text)
         compose = true
@@ -109,6 +113,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
         label.text.parentComponent = label
         label.text.parentPanel = this
         label.string = string
+        label.text.w = font.getStringWidth(string, 0, string.length)
         components.add(label)
         texts.add(label.text)
         compose = true
@@ -120,6 +125,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
         button.text.parentComponent = button
         button.text.parentPanel = this
         button.string = string
+        button.text.w = font.getStringWidth(string, 0, string.length)
         components.add(button)
         texts.add(button.text)
         compose = true
@@ -147,6 +153,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
             if(c.handleState()) {
                 compose = true
             }
+            c.resetState()
         }
     }
 
@@ -218,6 +225,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
             var cx = if (t.parentComponent != null) { t.parentComponent!!.x } else { 0.0f }
             var cy = if (t.parentComponent != null) { t.parentComponent!!.y } else { 0.0f }
             var cw = if (t.parentComponent != null) { t.parentComponent!!.w } else { 0.0f }
+            var ch = if (t.parentComponent != null) { t.parentComponent!!.h } else { 0.0f }
 
             if (t.parentComponent != null) {
                 cx = t.parentComponent!!.x
@@ -226,7 +234,7 @@ class Panel internal constructor(var layout: Layout): Entity() {
             }
 
             // TODO: These constant conversions between different types of collections are sloooow
-            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, maxClipDepth - TEXT_DEPTH, cw, t.textAlign, t.string, font, t.color).toTypedArray())
+            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, maxClipDepth - TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color).toTypedArray())
         }
 
         val byteBuffer = memAlloc(vertices.size * 4)

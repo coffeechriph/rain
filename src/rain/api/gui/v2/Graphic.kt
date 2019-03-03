@@ -9,16 +9,16 @@ import java.lang.Math.cos
 import java.lang.Math.sin
 import java.util.*
 
-internal fun gfxCreateText(tx: Float, ty: Float, depth: Float, w: Float, textAlign: TextAlign, string: String, font: Font, color: Vector4f): FloatArray {
+internal fun gfxCreateText(tx: Float, ty: Float, depth: Float, w: Float, h: Float, textAlign: TextAlign, string: String, font: Font, color: Vector4f): FloatArray {
     val scale = STBTruetype.stbtt_ScaleForPixelHeight(font.fontInfo, font.fontHeight)
 
     var textVertexDataIndex = 0
     val textVertexData = FloatArray(string.length*8*6)
 
     val paddingY = when(textAlign) {
-        TextAlign.CENTER -> font.fontHeight
-        TextAlign.LEFT -> font.fontHeight
-        TextAlign.RIGHT -> font.fontHeight
+        TextAlign.CENTER -> h * 0.5f + (font.fontHeight * 0.25f)
+        TextAlign.LEFT -> h * 0.5f + (font.fontHeight * 0.25f)
+        TextAlign.RIGHT -> h * 0.5f + (font.fontHeight * 0.25f)
     }
 
     MemoryStack.stackPush().use { stack ->

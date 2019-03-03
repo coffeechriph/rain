@@ -2,7 +2,8 @@ package rain.api.gui.v2
 
 import rain.api.Input
 
-class Checkbox internal constructor(panel: Panel): Component(Input.InputState.PRESSED.value) {
+class Checkbox internal constructor(panel: Panel):
+        Component(GuiEventTypes.CLICK.value or GuiEventTypes.HOVER.value or GuiEventTypes.ACTIVATE.value) {
     var checked = false
     var string: String = ""
         set(value) {
@@ -44,7 +45,7 @@ class Checkbox internal constructor(panel: Panel): Component(Input.InputState.PR
         return check + back
     }
 
-    override fun action(input: Input) {
+    override fun onClick(input: Input) {
         if (input.mousePosition.x >= x && input.mousePosition.x < x + h) {
             checked = !checked
         }
@@ -53,5 +54,4 @@ class Checkbox internal constructor(panel: Panel): Component(Input.InputState.PR
     override fun handleState(): Boolean {
         return false
     }
-
 }

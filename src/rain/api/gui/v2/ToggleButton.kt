@@ -8,7 +8,6 @@ class ToggleButton internal constructor(panel: Panel): Component(Input.InputStat
             field = value
             parentPanel.compose = true
         }
-    var clicked = false
     var string: String = ""
         set(value) {
             field = value
@@ -48,7 +47,7 @@ class ToggleButton internal constructor(panel: Panel): Component(Input.InputStat
         return back
     }
 
-    override fun action(input: Input) {
+    override fun onClick(input: Input) {
         checked = true
         clicked = true
     }

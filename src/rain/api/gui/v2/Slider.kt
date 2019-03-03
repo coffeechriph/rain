@@ -2,7 +2,8 @@ package rain.api.gui.v2
 
 import rain.api.Input
 
-class Slider internal constructor(panel: Panel): Component(Input.InputState.PRESSED.value or Input.InputState.DOWN.value) {
+class Slider internal constructor(panel: Panel):
+        Component(GuiEventTypes.CLICK.value or GuiEventTypes.DRAG.value or GuiEventTypes.ACTIVATE.value or GuiEventTypes.HOVER.value) {
     var valueChanged = false
     var value = 0
         set(value) {
@@ -52,7 +53,7 @@ class Slider internal constructor(panel: Panel): Component(Input.InputState.PRES
         return back + cursor
     }
 
-    override fun action(input: Input) {
+    override fun onDrag(input: Input) {
         val x = input.mousePosition.x - x
         val factor = 1.0f / w * x
         value = ((maxValue - minValue) * factor).toInt()

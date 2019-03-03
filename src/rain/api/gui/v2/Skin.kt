@@ -68,25 +68,25 @@ val DEFAULT_PANEL_STYLE = PanelStyle(
         true,
         0,
         Vector4f(0.1f, 0.1f, 0.1f, 1.0f),
-        Vector4f(0.2f, 0.0f, 0.0f, 1.0f),
+        Vector4f(0.094f, 0.196f, 0.318f, 1.0f),
         Shape.RECT)
 
 val DEFAULT_BUTTON_STYLE = ButtonStyle(
         0,
-        Vector4f(0.4f, 0.4f, 0.4f, 1.0f),
-        Vector4f(0.6f, 0.6f, 0.6f, 1.0f),
-        Vector4f(0.45f, 0.45f, 0.45f, 1.0f),
-        Vector4f(0.0f, 0.0f, 0.0f, 1.0f),
+        Vector4f(0.094f, 0.196f, 0.318f, 1.0f),
+        Vector4f(0.154f, 0.256f, 0.378f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
         Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
         TextAlign.CENTER,
         Shape.RECT)
 
 val DEFAULT_SLIDER_STYLE = SliderStyle(
         0,
-        Vector4f(0.4f, 0.4f, 0.4f, 1.0f),
-        Vector4f(0.6f, 0.6f, 0.6f, 1.0f),
-        Vector4f(0.45f, 0.45f, 0.45f, 1.0f),
-        Vector4f(0.0f, 0.0f, 0.0f, 1.0f),
+        Vector4f(0.094f, 0.196f, 0.318f, 1.0f),
+        Vector4f(0.154f, 0.256f, 0.378f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
         Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
         Vector4f(0.2f, 0.2f, 0.2f, 1.0f),
         TextAlign.CENTER,
@@ -95,20 +95,20 @@ val DEFAULT_SLIDER_STYLE = SliderStyle(
 
 val DEFAULT_TEXTFIELD_STYLE = TextFieldStyle(
         0,
-        Vector4f(0.4f, 0.4f, 0.4f, 1.0f),
-        Vector4f(0.6f, 0.6f, 0.6f, 1.0f),
-        Vector4f(0.45f, 0.45f, 0.45f, 1.0f),
-        Vector4f(0.0f, 0.0f, 0.0f, 1.0f),
+        Vector4f(0.094f, 0.196f, 0.318f, 1.0f),
+        Vector4f(0.154f, 0.256f, 0.378f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
         Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
         TextAlign.CENTER,
         Shape.RECT)
 
 val DEFAULT_LABEL_STYLE = LabelStyle(
         0,
-        Vector4f(0.4f, 0.4f, 0.4f, 1.0f),
-        Vector4f(0.6f, 0.6f, 0.6f, 1.0f),
-        Vector4f(0.45f, 0.45f, 0.45f, 1.0f),
-        Vector4f(0.0f, 0.0f, 0.0f, 1.0f),
+        Vector4f(0.094f, 0.196f, 0.318f, 1.0f),
+        Vector4f(0.154f, 0.256f, 0.378f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
+        Vector4f(0.194f, 0.296f, 0.418f, 1.0f),
         Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
         TextAlign.LEFT)
 

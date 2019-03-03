@@ -2,7 +2,8 @@ package rain.api.gui.v2
 
 import rain.api.Input
 
-class TextField internal constructor(parent: Panel): Component(Input.InputState.PRESSED.value) {
+class TextField internal constructor(parent: Panel):
+        Component(GuiEventTypes.CLICK.value or GuiEventTypes.HOVER.value or GuiEventTypes.ACTIVATE.value or GuiEventTypes.CHAR_EDIT.value) {
     var textEdited = false
     var string: String = ""
         set(value) {
@@ -43,7 +44,7 @@ class TextField internal constructor(parent: Panel): Component(Input.InputState.
         return back
     }
 
-    override fun action(input: Input) {
+    override fun onCharEdit(input: Input) {
         // TODO: Ensure the text is always visible around the cursor
         if (active) {
             if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {

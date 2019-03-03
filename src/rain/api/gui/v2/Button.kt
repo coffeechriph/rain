@@ -2,15 +2,15 @@ package rain.api.gui.v2
 
 import rain.api.Input
 
-class Button internal constructor(panel: Panel): Component(Input.InputState.PRESSED.value) {
-    var clicked = false
+class Button internal constructor(panel: Panel) :
+        Component(GuiEventTypes.CLICK.value or GuiEventTypes.HOVER.value or GuiEventTypes.ACTIVATE.value) {
     var string: String = ""
         set(value) {
             field = value
             text.string = value
         }
 
-    private var activated = false
+    private var wasClicked = false
 
     init {
         parentPanel = panel
@@ -18,8 +18,8 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
         var backColor = skin.buttonStyle.backgroundColor
-        if (activated) {
-            activated = false
+        if (wasClicked) {
+            wasClicked = false
             backColor = skin.buttonStyle.activeColor
         }
         else if (hovered) {
@@ -46,9 +46,8 @@ class Button internal constructor(panel: Panel): Component(Input.InputState.PRES
         return back
     }
 
-    override fun action(input: Input) {
-        clicked = true
-        activated = true
+    override fun onClick(input: Input) {
+        wasClicked = true
     }
 
     override fun handleState(): Boolean {
