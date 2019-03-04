@@ -132,6 +132,13 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
         return button
     }
 
+    fun createTreeView(title: String): TreeView {
+        val treeView = TreeView(this)
+        components.add(treeView)
+        compose = true
+        return treeView
+    }
+
     fun removeComponent(component: Component): Panel {
         texts.remove(component.text)
         components.remove(component)
@@ -172,7 +179,9 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
 
         // TODO: These constant conversions between different types of collections are sloooow
         for (c in components) {
-            vertices.addAll(c.createGraphic(maxClipDepth - COMPONENT_DEPTH, skin).toTypedArray())
+            if (c.visible) {
+                vertices.addAll(c.createGraphic(maxClipDepth - COMPONENT_DEPTH, skin).toTypedArray())
+            }
         }
 
         val byteBuffer = memAlloc(vertices.size * 4)
@@ -221,6 +230,10 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
     internal fun composeText(maxClipDepth: Float, font: Font, textMaterial: Material, resourceFactory: ResourceFactory) {
         val vertices = ArrayList<Float>()
         for (t in texts) {
+            if (!t.visible) {
+                continue
+            }
+
             t.w = font.getStringWidth(t.string, 0, t.string.length)
             var cx = if (t.parentComponent != null) { t.parentComponent!!.x } else { 0.0f }
             var cy = if (t.parentComponent != null) { t.parentComponent!!.y } else { 0.0f }
@@ -235,6 +248,10 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
 
             // TODO: These constant conversions between different types of collections are sloooow
             vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, maxClipDepth - TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color).toTypedArray())
+        }
+
+        for (c in components) {
+            vertices.addAll(c.createTextGraphic(maxClipDepth - TEXT_DEPTH, skin).toTypedArray())
         }
 
         val byteBuffer = memAlloc(vertices.size * 4)

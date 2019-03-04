@@ -1,32 +1,20 @@
 package rain.api.gui.v2
 
-internal class ListItem(val treeView: TreeView): Component(GuiEventTypes.CLICK.value or GuiEventTypes.HOVER.value) {
+class ListItem internal constructor(val treeView: TreeView) {
     var string: String = "Item"
-        set(value) {
-            field = value
-            text.string = value
-        }
     var expanded = false
-    val children = ArrayList<ListItem>()
+    internal var x = 0.0f
+    internal var y = 0.0f
+    internal var w = 100.0f
+    internal var h = 20.0f
+    internal val children = ArrayList<ListItem>()
 
-    override fun createGraphic(depth: Float, skin: Skin): FloatArray {
-        return floatArrayOf()
+    fun addItem(string: String): ListItem {
+        val item = ListItem(treeView)
+        item.x = x + 20
+        item.y = y + 30
+        item.string = string
+        children.add(item)
+        return item
     }
-
-    override fun handleState(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun getVisibleChildren(): List<ListItem> {
-        val list = ArrayList<ListItem>()
-        for (child in children) {
-            if (child.expanded) {
-                list.add(child)
-                list.addAll(child.getVisibleChildren())
-            }
-        }
-
-        return list
-    }
-
 }

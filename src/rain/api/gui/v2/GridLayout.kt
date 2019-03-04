@@ -7,6 +7,10 @@ class GridLayout : Layout() {
         var stepX = panel.x + panel.skin.panelStyle.outlineWidth
         var stepY = panel.y + 5 + panel.skin.panelStyle.outlineWidth
         for (c in panel.components) {
+            if (!c.visible) {
+                continue
+            }
+
             c.x = stepX
             c.y = stepY
             c.w = gridW

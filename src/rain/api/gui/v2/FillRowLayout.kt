@@ -11,6 +11,10 @@ class FillRowLayout: Layout() {
         var y = panel.y + 5
         var num = 0
         for (c in panel.components) {
+            if (!c.visible) {
+                continue
+            }
+
             c.x = x
             c.y = y
             c.w = cw

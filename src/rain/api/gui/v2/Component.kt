@@ -25,6 +25,11 @@ abstract class Component(internal val eventTypes: Int) {
 
         }
     var layer = 0.0f
+    var visible = true
+        set(value) {
+            field = value
+            text.visible = value
+        }
     var clicked = false
     var active = false
     var activated = false
@@ -45,6 +50,10 @@ abstract class Component(internal val eventTypes: Int) {
     }
 
     abstract fun createGraphic(depth: Float, skin: Skin): FloatArray
+    open fun createTextGraphic(depth: Float, skin: Skin): FloatArray {
+        return floatArrayOf()
+    }
+
     // abstract fun action(input: Input)
     abstract fun handleState(): Boolean
     open fun onCharEdit(input: Input){}
