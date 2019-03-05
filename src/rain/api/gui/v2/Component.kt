@@ -50,9 +50,6 @@ abstract class Component(internal val eventTypes: Int) {
     }
 
     abstract fun createGraphic(depth: Float, skin: Skin): FloatArray
-    open fun createTextGraphic(depth: Float, skin: Skin): FloatArray {
-        return floatArrayOf()
-    }
 
     // abstract fun action(input: Input)
     abstract fun handleState(): Boolean

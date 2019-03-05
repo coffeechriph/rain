@@ -53,11 +53,11 @@ fun guiManagerCreatePanel(layout: Layout): Panel {
     return p
 }
 
-/*
-    TODO: THINGS TO IMPLEMENT
-    TODO: 1) Register components to events and have methods for it. Click,Resize,Move,CharInput
-    TODO: 2) Add generic triggers. onHoverEnter,onHoverLeave,onClick,onCharEdit,onResize,onMove,onActive,onDeactive
- */
+fun guiManagerCreateTreeView(): TreeView {
+    val t = TreeView(font)
+    panels.add(t)
+    return t
+}
 
 internal fun guiManagerHandleInput(input: Input) {
     val mx = input.mousePosition.x
@@ -87,9 +87,11 @@ internal fun guiManagerHandleInput(input: Input) {
             if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value != 0) {
                 component.onDrag(input)
             }
+            else if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and (Input.InputState.RELEASED.value or Input.InputState.UP.value) != 0) {
+                lastActiveComponent = null
+            }
         }
     }
-
 
     for (panel in panels) {
         panel.updateComponents()
@@ -99,7 +101,9 @@ internal fun guiManagerHandleInput(input: Input) {
                 my >= panel.y && my <= panel.y + panel.h) {
                 val c = panel.findComponentAtPoint(mx.toFloat(), my.toFloat())
                 if (c != null) {
-                    panel.compose = true
+                    if (c != lastHoveredComponent) {
+                        panel.compose = true
+                    }
 
                     onMouseHovered(c)
                     if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and c.eventTypes != 0) {
@@ -112,6 +116,7 @@ internal fun guiManagerHandleInput(input: Input) {
                         lastActiveComponent!!.activated = true
                         lastActiveComponent!!.active = true
                         c.onClick(input)
+                        panel.compose = true
                     }
                 } else {
                     if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED) {

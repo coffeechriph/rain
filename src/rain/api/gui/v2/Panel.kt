@@ -12,7 +12,7 @@ private val PANEL_DEPTH = 0.3f
 private val COMPONENT_DEPTH = 0.2f
 private val TEXT_DEPTH = 0.1f
 
-class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
+open class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
     var x = 0.0f
         set(value) {
             field = value
@@ -49,7 +49,7 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
         }
     internal var compose = true
     internal val components = ArrayList<Component>()
-    private val texts = ArrayList<Text>()
+    internal val texts = ArrayList<Text>()
     private lateinit var renderComponent: RenderComponent
     private lateinit var vertexBuffer: VertexBuffer
     private lateinit var mesh: Mesh
@@ -130,13 +130,6 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
         texts.add(button.text)
         compose = true
         return button
-    }
-
-    fun createTreeView(title: String): TreeView {
-        val treeView = TreeView(this)
-        components.add(treeView)
-        compose = true
-        return treeView
     }
 
     fun removeComponent(component: Component): Panel {
@@ -220,6 +213,7 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
         else {
             if (vertices.size > 0) {
                 vertexBuffer.update(byteBuffer)
+                renderComponent.visible = visible
             }
             else {
                 renderComponent.visible = false
@@ -248,10 +242,6 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
 
             // TODO: These constant conversions between different types of collections are sloooow
             vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, maxClipDepth - TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color).toTypedArray())
-        }
-
-        for (c in components) {
-            vertices.addAll(c.createTextGraphic(maxClipDepth - TEXT_DEPTH, skin).toTypedArray())
         }
 
         val byteBuffer = memAlloc(vertices.size * 4)
@@ -291,6 +281,7 @@ class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
         else {
             if (vertices.size > 0) {
                 textVertexBuffer.update(byteBuffer)
+                textRenderComponent.visible = visible
             }
             else {
                 textRenderComponent.visible = false

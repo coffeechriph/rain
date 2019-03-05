@@ -28,15 +28,15 @@ class Slider internal constructor(panel: Panel):
             backColor = skin.sliderStyle.hoverColor
         }
 
+        val cursor = when(skin.sliderStyle.cursorShape) {
+            Shape.RECT -> gfxCreateRect(cx - 1.0f, y, depth, 2.0f, h, cursorColor)
+            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(cx - 1.0f, y, depth, 2.0f, h, 1.0f, cursorColor)
+        }
+
         val ow = skin.sliderStyle.outlineWidth
         val back = when(skin.sliderStyle.shape) {
             Shape.RECT -> gfxCreateRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, backColor)
             Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, 10.0f, backColor)
-        }
-
-        val cursor = when(skin.sliderStyle.cursorShape) {
-            Shape.RECT -> gfxCreateRect(cx, y, depth, 2.0f, h, cursorColor)
-            Shape.ROUNDED_RECT -> gfxCreateRoundedRect(cx, y, depth, 2.0f, h, 1.0f, cursorColor)
         }
 
         if (ow > 0) {
@@ -45,18 +45,20 @@ class Slider internal constructor(panel: Panel):
                 Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, depth, w, h, 10.0f, skin.sliderStyle.outlineColor)
             }
 
-            return back + outline + cursor
+            return cursor + back + outline
         }
 
         text.color = skin.sliderStyle.textColor
         text.textAlign = skin.sliderStyle.textAlign
-        return back + cursor
+        return cursor + back
     }
 
     override fun onDrag(input: Input) {
-        val x = input.mousePosition.x - x
+        val x = Math.max(0, Math.min(w.toInt(), input.mousePosition.x - x.toInt()))
+        //val x = input.mousePosition.x - x
         val factor = 1.0f / w * x
         value = ((maxValue - minValue) * factor).toInt()
+        value = Math.max(Math.min(maxValue, value), 0)
         valueChanged = true
     }
 
