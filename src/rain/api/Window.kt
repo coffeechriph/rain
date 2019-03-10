@@ -1,22 +1,27 @@
 package rain.api
+import org.joml.Vector2i
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
+import org.lwjgl.system.MemoryUtil.memAllocInt
 import rain.assertion
 import rain.log
 
-internal class Window {
-    var windowPointer: Long = -1
+class Window internal constructor() {
+    internal var windowPointer: Long = -1
+    internal var windowDirty = false
+
     var title: String = ""
         get() = this.toString()
         set(value) {
             glfwSetWindowTitle(windowPointer, value)
             field = value
         }
-    var windowDirty = false
+    var size: Vector2i = Vector2i(0,0)
+        private set
 
-    fun create(width: Int, height: Int, title: String, input: Input) {
+    internal fun create(width: Int, height: Int, title: String, input: Input) {
         if(!glfwInit()) {
             assertion("Could not init GLFW")
         }
@@ -40,7 +45,16 @@ internal class Window {
         this.title = title
         createCallbacks(input)
 
+        updateWindowSize()
         log("Created window[w: $width, h: $height]")
+    }
+
+    private fun updateWindowSize() {
+        val width = memAllocInt(1)
+        val height = memAllocInt(1)
+        glfwGetWindowSize(windowPointer, width, height)
+        size.x = width[0]
+        size.y = height[0]
     }
 
     private fun createCallbacks(input: Input) {
@@ -80,15 +94,16 @@ internal class Window {
 
         glfwSetWindowSizeCallback(windowPointer) { _, _, _ ->
             windowDirty = true
+            updateWindowSize()
         }
     }
 
-    fun pollEvents(): Boolean {
+    internal fun pollEvents(): Boolean {
         glfwPollEvents()
         return !glfwWindowShouldClose(windowPointer)
     }
 
-    fun destroy() {
+    internal fun destroy() {
         glfwFreeCallbacks(windowPointer)
         glfwDestroyWindow(windowPointer)
 

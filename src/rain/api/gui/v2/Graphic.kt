@@ -54,7 +54,7 @@ internal fun gfxCreateText(tx: Float, ty: Float, depth: Float, w: Float, h: Floa
                 val uy1 = quad.t0()
                 val uy2 = quad.t1()
 
-                if (x[0] + (quad.x1()-quad.x0()) >= w) {
+                if (x[0] > w) {
                     break
                 }
 

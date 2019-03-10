@@ -62,6 +62,9 @@ class ListItem internal constructor(val parent: ListItem?, val treeView: TreeVie
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        text.color = skin.buttonStyle.textColor
+        text.textAlign = TextAlign.LEFT
+
         if (expanded) {
             return  gfxCreateRect(x - 1, y + h*0.5f, depth, 1.0f, h, skin.buttonStyle.outlineColor) +
                     gfxCreateRect(x - 1, y + h, depth, 10.0f, 1.0f, skin.buttonStyle.outlineColor)

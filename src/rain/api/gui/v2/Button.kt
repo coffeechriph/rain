@@ -17,6 +17,9 @@ class Button internal constructor(panel: Panel) :
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        text.color = skin.buttonStyle.textColor
+        text.textAlign = skin.buttonStyle.textAlign
+
         var backColor = skin.buttonStyle.backgroundColor
         if (wasClicked) {
             wasClicked = false
@@ -32,22 +35,20 @@ class Button internal constructor(panel: Panel) :
             Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, 10.0f, backColor)
         }
 
-        if (skin.buttonStyle.outlineWidth > 0) {
+        if (ow > 0) {
             val outline = when(skin.buttonStyle.shape) {
-                Shape.RECT -> gfxCreateRect(x, y, 1.0f, w, h, skin.buttonStyle.outlineColor)
+                Shape.RECT -> gfxCreateRect(x, y, depth, w, h, skin.buttonStyle.outlineColor)
                 Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x, y, depth, w, h, 10.0f, skin.buttonStyle.outlineColor)
             }
 
             return back + outline
         }
-
-        text.color = skin.buttonStyle.textColor
-        text.textAlign = skin.buttonStyle.textAlign
         return back
     }
 
     override fun onClick(input: Input) {
         wasClicked = true
+        clicked = true
     }
 
     override fun handleState(): Boolean {

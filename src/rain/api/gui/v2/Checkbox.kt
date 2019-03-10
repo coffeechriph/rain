@@ -16,6 +16,9 @@ class Checkbox internal constructor(panel: Panel):
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        text.color = skin.buttonStyle.textColor
+        text.textAlign = skin.buttonStyle.textAlign
+
         val backColor = skin.buttonStyle.backgroundColor
         val checkColor = if (checked) { skin.buttonStyle.activeColor } else { skin.buttonStyle.hoverColor }
 
@@ -39,9 +42,6 @@ class Checkbox internal constructor(panel: Panel):
 
             return check + back + outline
         }
-
-        text.color = skin.buttonStyle.textColor
-        text.textAlign = skin.buttonStyle.textAlign
         return check + back
     }
 

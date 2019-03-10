@@ -77,24 +77,9 @@ internal fun guiManagerHandleInput(input: Input) {
         }
     }
 
-    if (lastActiveComponent != null) {
-        val component = lastActiveComponent!!
-        if (!input.isCodePointQueueEmpty() && component.eventTypes and GuiEventTypes.CHAR_EDIT.value != 0) {
-            component.onCharEdit(input)
-        }
-
-        if (component.eventTypes and GuiEventTypes.DRAG.value != 0) {
-            if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value != 0) {
-                component.onDrag(input)
-            }
-            else if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and (Input.InputState.RELEASED.value or Input.InputState.UP.value) != 0) {
-                lastActiveComponent = null
-            }
-        }
-    }
-
     for (panel in panels) {
         panel.updateComponents()
+
         // Only check these events if a drag event isn't happening
         if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value == 0) {
             if (mx >= panel.x && mx <= panel.x + panel.w &&
@@ -106,7 +91,8 @@ internal fun guiManagerHandleInput(input: Input) {
                     }
 
                     onMouseHovered(c)
-                    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and c.eventTypes != 0) {
+                    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED &&
+                        c.eventTypes and GuiEventTypes.CLICK.value != 0) {
                         if (lastActiveComponent != null) {
                             lastActiveComponent!!.active = false
                             lastActiveComponent!!.deactivated = true
@@ -136,6 +122,22 @@ internal fun guiManagerHandleInput(input: Input) {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    if (lastActiveComponent != null) {
+        val component = lastActiveComponent!!
+        if (component.eventTypes and GuiEventTypes.CHAR_EDIT.value != 0) {
+            component.onCharEdit(input)
+        }
+
+        if (component.eventTypes and GuiEventTypes.DRAG.value != 0) {
+            if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value != 0) {
+                component.onDrag(input)
+            }
+            else if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and (Input.InputState.RELEASED.value or Input.InputState.UP.value) != 0) {
+                lastActiveComponent = null
             }
         }
     }

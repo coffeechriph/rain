@@ -5,9 +5,11 @@ import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
 import org.joml.Matrix4f
 import org.joml.Random
+import org.joml.Vector2f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
+import rain.api.Window
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.entity.ParticleEmitterEntity
@@ -16,7 +18,7 @@ import rain.api.gfx.*
 import rain.api.manager.emitterManagerAddParticleEmitterEntity
 import rain.vulkan.VertexAttribute
 
-class Scene(val resourceFactory: ResourceFactory) {
+class Scene(val resourceFactory: ResourceFactory, val window: Window) {
     private lateinit var quadVertexBuffer: VertexBuffer
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
@@ -27,7 +29,7 @@ class Scene(val resourceFactory: ResourceFactory) {
         private set
     private var physicsContactListener = PhysicsContactListener()
 
-    var activeCamera = Camera(1000.0f)
+    var activeCamera = Camera(1000.0f, Vector2f(window.size.x.toFloat(), window.size.y.toFloat()))
 
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }

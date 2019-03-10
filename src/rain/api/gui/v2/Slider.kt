@@ -19,6 +19,9 @@ class Slider internal constructor(panel: Panel):
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        text.color = skin.sliderStyle.textColor
+        text.textAlign = skin.sliderStyle.textAlign
+
         val factor = value.toFloat() / (maxValue-minValue).toFloat()
         val cx = x + w * factor
         var backColor = skin.sliderStyle.backgroundColor
@@ -47,9 +50,6 @@ class Slider internal constructor(panel: Panel):
 
             return cursor + back + outline
         }
-
-        text.color = skin.sliderStyle.textColor
-        text.textAlign = skin.sliderStyle.textAlign
         return cursor + back
     }
 

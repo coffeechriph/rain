@@ -19,7 +19,7 @@ import rain.vulkan.VulkanResourceFactory
 import kotlin.math.min
 
 open class Rain {
-    private val window = Window()
+    protected val window = Window()
     private val vk = Vk()
     private val timer = Timer()
     private lateinit var api: Api
@@ -50,7 +50,7 @@ open class Rain {
             Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
         }
 
-        scene = Scene(resourceFactory)
+        scene = Scene(resourceFactory, window)
         stateManager = StateManager(resourceFactory, scene, input)
     }
 

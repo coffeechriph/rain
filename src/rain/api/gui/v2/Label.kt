@@ -17,13 +17,13 @@ class Label internal constructor(panel: Panel): Component(0) {
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        text.color = skin.labelStyle.textColor
+        text.textAlign = skin.labelStyle.textAlign
+
         if (background) {
             val backColor = skin.labelStyle.backgroundColor
             return gfxCreateRect(x,y,depth,w,h,backColor)
         }
-
-        text.color = skin.labelStyle.textColor
-        text.textAlign = skin.labelStyle.textAlign
         return floatArrayOf()
     }
 

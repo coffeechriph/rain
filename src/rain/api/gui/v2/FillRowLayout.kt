@@ -23,6 +23,7 @@ class FillRowLayout: Layout() {
             x += cw
             num += 1
             if (num >= componentsPerRow) {
+                num = 0
                 x = panel.x + panel.skin.panelStyle.outlineWidth
                 y += componentHeight + rowPadding
             }

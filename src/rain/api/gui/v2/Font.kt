@@ -123,6 +123,11 @@ class Font(ttfFile: String) {
         return width * stbtt_ScaleForPixelHeight(fontInfo, fontHeight)
     }
 
+    fun getCodePointWidth(codePoint: Int): Float {
+        stbtt_GetCodepointHMetrics(fontInfo, codePoint, pAdvancedWidth, pLeftSideBearing)
+        return pAdvancedWidth.get(0).toFloat()
+    }
+
     fun getCodePoint(text: String, to: Int, i: Int, cpOut: IntBuffer): Int {
         val c1 = text[i]
         if (Character.isHighSurrogate(c1) && i + 1 < to) {

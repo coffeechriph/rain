@@ -1,10 +1,15 @@
 package rain.api.gui.v2
 
+import org.joml.Vector3f
 import org.joml.Vector4f
 
 enum class Shape {
     RECT,
     ROUNDED_RECT
+}
+
+fun rgb2float(r: Int, g: Int, b: Int): Vector3f {
+    return Vector3f(r.toFloat() / 255.0f, g.toFloat() / 255.0f, b.toFloat() / 255.0f)
 }
 
 data class PanelStyle(
