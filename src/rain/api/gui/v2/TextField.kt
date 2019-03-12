@@ -133,7 +133,7 @@ class TextField internal constructor(parent: Panel):
         }
     }
 
-    override fun onClick(input: Input) {
+    override fun onMouseEvent(input: Input) {
         parentPanel.compose = true
     }
 

@@ -78,6 +78,10 @@ internal fun guiManagerHandleInput(input: Input) {
     }
 
     for (panel in panels) {
+        if (!panel.visible) {
+            continue
+        }
+
         panel.updateComponents()
 
         // Only check these events if a drag event isn't happening
@@ -91,7 +95,8 @@ internal fun guiManagerHandleInput(input: Input) {
                     }
 
                     onMouseHovered(c)
-                    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED &&
+                    if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED
+                    || input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.RELEASED &&
                         c.eventTypes and GuiEventTypes.CLICK.value != 0) {
                         if (lastActiveComponent != null) {
                             lastActiveComponent!!.active = false
@@ -101,7 +106,7 @@ internal fun guiManagerHandleInput(input: Input) {
                         lastActiveComponent = c
                         lastActiveComponent!!.activated = true
                         lastActiveComponent!!.active = true
-                        c.onClick(input)
+                        c.onMouseEvent(input)
                         panel.compose = true
                     }
                 } else {

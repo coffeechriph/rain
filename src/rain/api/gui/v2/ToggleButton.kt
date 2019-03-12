@@ -47,9 +47,11 @@ class ToggleButton internal constructor(panel: Panel): Component(Input.InputStat
         return back
     }
 
-    override fun onClick(input: Input) {
-        checked = true
-        clicked = true
+    override fun onMouseEvent(input: Input) {
+        if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.RELEASED) {
+            checked = true
+            clicked = true
+        }
     }
 
     override fun handleState(): Boolean {

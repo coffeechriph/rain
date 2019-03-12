@@ -45,8 +45,10 @@ class Checkbox internal constructor(panel: Panel):
         return check + back
     }
 
-    override fun onClick(input: Input) {
-        if (input.mousePosition.x >= x && input.mousePosition.x < x + h) {
+    override fun onMouseEvent(input: Input) {
+        if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED &&
+            input.mousePosition.x >= x &&
+            input.mousePosition.x < x + h) {
             checked = !checked
         }
     }

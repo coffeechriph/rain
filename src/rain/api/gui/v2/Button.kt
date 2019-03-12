@@ -10,7 +10,7 @@ class Button internal constructor(panel: Panel) :
             text.string = value
         }
 
-    private var wasClicked = false
+    private var pressed = false
 
     init {
         parentPanel = panel
@@ -21,8 +21,7 @@ class Button internal constructor(panel: Panel) :
         text.textAlign = skin.buttonStyle.textAlign
 
         var backColor = skin.buttonStyle.backgroundColor
-        if (wasClicked) {
-            wasClicked = false
+        if (pressed) {
             backColor = skin.buttonStyle.activeColor
         }
         else if (hovered) {
@@ -46,9 +45,15 @@ class Button internal constructor(panel: Panel) :
         return back
     }
 
-    override fun onClick(input: Input) {
-        wasClicked = true
-        clicked = true
+    override fun onMouseEvent(input: Input) {
+        if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED) {
+            pressed = true
+        }
+        else if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.RELEASED &&
+         pressed) {
+            pressed = false
+            clicked = true
+        }
     }
 
     override fun handleState(): Boolean {

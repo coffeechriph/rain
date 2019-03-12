@@ -52,24 +52,41 @@ class ListItem internal constructor(val parent: ListItem?, val treeView: TreeVie
         return item
     }
 
-    override fun onClick(input: Input) {
-        if (children.size > 0) {
-            expanded = !expanded
-        }
+    override fun onMouseEvent(input: Input) {
+        if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.RELEASED) {
+            if (children.size > 0) {
+                expanded = !expanded
+            }
 
-        treeView.selectedItem = this
-        treeView.compose = true
+            treeView.selectedItem = this
+            treeView.compose = true
+        }
     }
 
+    // TODO: Make TreeView or ListItem skinnable
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
         text.color = skin.buttonStyle.textColor
         text.textAlign = TextAlign.LEFT
 
+        val body = if (treeView.selectedItem == this) {
+            gfxCreateRect(x, y, depth, w, h, skin.buttonStyle.backgroundColor)
+        }
+        else {
+            if (hovered) {
+                gfxCreateRect(x, y, depth, w, h, skin.buttonStyle.hoverColor)
+            }
+            else {
+                gfxCreateRect(x, y, depth, w, h, skin.buttonStyle.activeColor)
+            }
+        }
+
         if (expanded) {
             return  gfxCreateRect(x - 1, y + h*0.5f, depth, 1.0f, h, skin.buttonStyle.outlineColor) +
-                    gfxCreateRect(x - 1, y + h, depth, 10.0f, 1.0f, skin.buttonStyle.outlineColor)
+                    gfxCreateRect(x - 1, y + h, depth, 10.0f, 1.0f, skin.buttonStyle.outlineColor) +
+                    body
         }
-        return floatArrayOf()
+
+        return body
     }
 
     override fun handleState(): Boolean {

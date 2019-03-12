@@ -54,6 +54,6 @@ abstract class Component(internal val eventTypes: Int) {
     // abstract fun action(input: Input)
     abstract fun handleState(): Boolean
     open fun onCharEdit(input: Input){}
-    open fun onClick(input: Input){}
+    open fun onMouseEvent(input: Input){}
     open fun onDrag(input: Input){}
 }
