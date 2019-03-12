@@ -23,7 +23,6 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
-    private val simpleDraws = ArrayList<SimpleDraw>()
     private val spriteBatchers = ArrayList<SpriteBatcher>()
     lateinit var physicWorld: World
         private set
@@ -71,10 +70,6 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
                 particleSpread)
         emitterManagerAddParticleEmitterEntity(emitter)
         return emitter
-    }
-
-    fun addSimpleDraw(simpleDraw: SimpleDraw) {
-        simpleDraws.add(simpleDraw)
     }
 
     // TODO: Remove sprite batchers as well when systems are deleted
@@ -131,37 +126,12 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
 
     internal fun render(renderer: Renderer) {
         renderer.setActiveCamera(activeCamera)
-        val submitListSorted = ArrayList<Drawable>()
-        val submitListParticles = ArrayList<Drawable>()
-
-        for (simpleDraw in simpleDraws) {
-            val modelMatrix = Matrix4f()
-            modelMatrix.identity()
-            modelMatrix.rotateZ(simpleDraw.transform.rot)
-            modelMatrix.translate(simpleDraw.transform.x, simpleDraw.transform.y, simpleDraw.transform.z)
-            modelMatrix.scale(simpleDraw.transform.sx, simpleDraw.transform.sy, 0.0f)
-
-            val byteBuffer = MemoryUtil.memAlloc(16 * 4)
-            modelMatrix.get(byteBuffer) ?: throw IllegalStateException("Unable to get matrix content!")
-
-            submitListSorted.add(Drawable(simpleDraw.material, byteBuffer, simpleDraw.vertexBuffer, simpleDraw.transform.z))
-        }
 
         /*for (batcher in spriteBatchers) {
             if (batcher.hasSprites()) {
                 submitListSorted.add(Drawable(batcher.material, memAlloc(4), batcher.vertexBuffer, 0.0f))
             }
         }*/
-
-        // TODO: Right now we must draw stuff in correct order as we're using alpha blending per default..
-        submitListSorted.sortBy { drawable -> drawable.z }
-        for (drawable in submitListSorted) {
-            renderer.submitDraw(drawable)
-        }
-
-        for (drawable in submitListParticles) {
-            renderer.submitDraw(drawable)
-        }
     }
 
     fun clear() {
@@ -172,7 +142,6 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
 
         entitySystems.clear()
         cameras.clear()
-        simpleDraws.clear()
         spriteBatchers.clear()
         physicWorld.dispose()
     }

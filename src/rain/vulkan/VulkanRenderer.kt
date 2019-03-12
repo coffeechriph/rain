@@ -44,7 +44,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     private val pRenderCompleteSemaphore = MemoryUtil.memAllocLong(1)
     private val pImageIndex = MemoryUtil.memAllocInt(1)
 
-    private val drawOpsQueue = ArrayDeque<Drawable>()
     private val activeRenderComponents = ArrayList<RenderComponent>()
 
     var swapchainIsDirty = true
@@ -72,26 +71,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
     override fun setActiveCamera(camera: Camera) {
         this.camera = camera
-    }
-
-    override fun submitDraw(drawable: Drawable) {
-        val vbuf = drawable.vertexBuffer as VulkanVertexBuffer
-        if (!vbuf.isValid) {
-            assertion("Can't submit a drawable with invalid vertex buffer!")
-        }
-
-        val vmat = drawable.material as VulkanMaterial
-        if (!vmat.isValid) {
-            assertion("Can't submit a drawable with invalid material!")
-        }
-
-        if(drawable.indexBuffer != null) {
-            if (!(drawable.indexBuffer as VulkanIndexBuffer).isValid) {
-                assertion("Cant submit a drawable with invalid index buffer!")
-            }
-        }
-
-        drawOpsQueue.add(drawable)
     }
 
     override fun getDepthRange(): Vector2f {
@@ -313,7 +292,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
     private fun drawRenderPass(nextImage: Int) {
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
-        issueDrawingCommands()
 
         val projectionMatrixBuffer = memAlloc(16 * 4)
         val pvMatrix = Matrix4f(camera.projection)
@@ -342,56 +320,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         }
         pipelines.removeAll(obsoletePipelines)
         renderpass.end(renderCommandBuffers[frameIndex])
-    }
-
-    private fun issueDrawingCommands() {
-        val obsoletePipelines = ArrayList<Pipeline>()
-        // TODO: Performance: Don't update sceneData every frame (should contain mostly static stuff)
-        val projectionMatrixBuffer = memAlloc(16 * 4)
-        val pvMatrix = Matrix4f(camera.projection)
-        pvMatrix.mul(camera.view)
-        pvMatrix.get(projectionMatrixBuffer)
-
-        for (draw in drawOpsQueue) {
-            val mat = draw.material as VulkanMaterial
-            val buffer = draw.vertexBuffer as VulkanVertexBuffer
-
-            if (!mat.isValid || !buffer.isValid) {
-                continue
-            }
-
-            var found = false
-            for (pipeline in pipelines) {
-                if (!pipeline.isValid) {
-                    obsoletePipelines.add(pipeline)
-                    continue
-                }
-
-                if (pipeline.matches(mat, buffer)) {
-                    // If a materials texel buffer has changed we must recreate the descriptor sets
-                    if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
-                        mat.texelBufferUniform.referencesHasChanged = false
-                        mat.descriptorPool.build(vk.logicalDevice)
-                    }
-
-                    pipeline.material.sceneData.update(projectionMatrixBuffer)
-                    pipeline.begin(renderCommandBuffers[frameIndex])
-                    pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
-                    found = true
-                }
-            }
-
-            if (!found) {
-                val pipeline = Pipeline(mat, buffer.attributes, buffer.vertexPipelineVertexInputStateCreateInfo)
-                pipeline.create(logicalDevice, renderpass)
-                pipeline.material.sceneData.update(projectionMatrixBuffer)
-                pipeline.begin(renderCommandBuffers[frameIndex])
-                pipeline.drawInstance(renderCommandBuffers[frameIndex], draw)
-                pipelines.add(pipeline)
-            }
-        }
-        pipelines.removeAll(obsoletePipelines)
-        drawOpsQueue.clear()
     }
 
     private fun presentImage() {

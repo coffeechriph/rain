@@ -7,6 +7,5 @@ internal interface Renderer {
     fun create()
     fun render()
     fun setActiveCamera(camera: Camera)
-    fun submitDraw(drawable: Drawable)
     fun getDepthRange(): Vector2f
 }
