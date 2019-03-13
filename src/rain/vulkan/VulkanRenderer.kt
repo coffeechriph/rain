@@ -87,6 +87,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     }
 
     private fun addGuiRenderComponent(guiRenderComponent: GuiRenderComponent) {
+        addGuiRenderComponentInternal(guiRenderComponent)
+        activeGuiRenderComponents.add(guiRenderComponent)
+    }
+
+    private fun addGuiRenderComponentInternal(guiRenderComponent: GuiRenderComponent) {
         val material = guiRenderComponent.material as VulkanMaterial
         val mesh = guiRenderComponent.mesh
         val vertexBuffer = mesh.vertexBuffer as VulkanVertexBuffer
@@ -101,8 +106,6 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         }
 
         pipeline.guiRenderComponents.add(guiRenderComponent)
-        activeGuiRenderComponents.add(guiRenderComponent)
-
         if (!guiPipelines.contains(pipeline)) {
             pipeline.create(logicalDevice, renderpass)
             guiPipelines.add(pipeline)
@@ -250,7 +253,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             }
 
             for (component in activeGuiRenderComponents) {
-                addGuiRenderComponent(component)
+                addGuiRenderComponentInternal(component)
             }
 
             log("Successfully recreated swapchain.")
@@ -356,13 +359,13 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         pvMatrix.mul(camera.view)
         pvMatrix.get(projectionMatrixBuffer)
 
-        renderPipelines(projectionMatrixBuffer, pipelines)
+        renderPipelines(projectionMatrixBuffer)
         clearDepthBuffer(renderCommandBuffers[frameIndex], window.size.x, window.size.y)
-        renderPipelines(projectionMatrixBuffer, guiPipelines)
+        renderGuiPipelines(projectionMatrixBuffer)
         renderpass.end(renderCommandBuffers[frameIndex])
     }
 
-    private fun renderPipelines(projectionMatrixBuffer: ByteBuffer, pipelines: MutableList<Pipeline>) {
+    private fun renderPipelines(projectionMatrixBuffer: ByteBuffer) {
         val obsoletePipelines = ArrayList<Pipeline>()
         pipelines.sortBy { pipeline -> pipeline.material.blendEnabled }
         for (pipeline in pipelines) {
@@ -384,6 +387,28 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
         pipelines.removeAll(obsoletePipelines)
+    }
+
+    private fun renderGuiPipelines(projectionMatrixBuffer: ByteBuffer) {
+        val obsoletePipelines = ArrayList<Pipeline>()
+        for (pipeline in guiPipelines) {
+            if (!pipeline.isValid) {
+                obsoletePipelines.add(pipeline)
+                continue
+            }
+
+            val mat = pipeline.material
+
+            // If a materials texel buffer has changed we must recreate the descriptor sets
+            if (mat.hasTexelBuffer() && mat.texelBufferUniform.referencesHasChanged) {
+                mat.texelBufferUniform.referencesHasChanged = false
+                mat.descriptorPool.build(vk.logicalDevice)
+            }
+
+            mat.sceneData.update(projectionMatrixBuffer)
+            pipeline.drawAll(renderCommandBuffers[frameIndex])
+        }
+        guiPipelines.removeAll(obsoletePipelines)
     }
 
     private fun clearDepthBuffer(cmdBuffer: CommandPool.CommandBuffer, width: Int, height: Int) {

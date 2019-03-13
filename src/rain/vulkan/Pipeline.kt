@@ -233,33 +233,4 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
         pDescriptorSet.put(0, material.descriptorPool.descriptorSet)
         vkCmdBindDescriptorSets(cmdBuffer.buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, pDescriptorSet, null)
     }
-
-    fun drawInstance(cmdBuffer: CommandPool.CommandBuffer, drawable: Drawable) {
-        if (drawable.indexBuffer == null) {
-            val vbo = drawable.vertexBuffer as VulkanVertexBuffer
-            val pushData = drawable.uniformData
-
-            pOffset.put(0, 0L)
-            pBuffer.put(0, vbo.rawBuffer.buffer)
-
-            vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
-
-            vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-            vkCmdDraw(cmdBuffer.buffer, vbo.vertexCount, 1, 0, 0)
-        }
-        else {
-            val pushData = drawable.uniformData
-            val vbo = drawable.vertexBuffer as VulkanVertexBuffer
-            val ibo = drawable.indexBuffer as VulkanIndexBuffer
-
-            pOffset.put(0, 0L)
-            pBuffer.put(0, vbo.rawBuffer.buffer)
-
-            vkCmdBindVertexBuffers(cmdBuffer.buffer, 0, pBuffer, pOffset)
-            vkCmdBindIndexBuffer(cmdBuffer.buffer, ibo.rawBuffer.buffer, 0, VK_INDEX_TYPE_UINT32)
-
-            vkCmdPushConstants(cmdBuffer.buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushData)
-            vkCmdDrawIndexed(cmdBuffer.buffer, ibo.indexCount, 1, 0, 0, 0)
-        }
-    }
 }

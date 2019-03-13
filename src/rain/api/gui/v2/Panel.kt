@@ -2,17 +2,15 @@ package rain.api.gui.v2
 
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.components.GuiRenderComponent
-import rain.api.components.RenderComponent
 import rain.api.entity.Entity
 import rain.api.gfx.*
 import rain.api.manager.renderManagerAddGuiRenderComponent
-import rain.api.manager.renderManagerAddRenderComponent
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 
-private val PANEL_DEPTH = 0.3f
-private val COMPONENT_DEPTH = 0.2f
-private val TEXT_DEPTH = 0.1f
+private val PANEL_DEPTH = 0.2f
+private val COMPONENT_DEPTH = 0.3f
+private val TEXT_DEPTH = 0.4f
 
 open class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
     var x = 0.0f
@@ -22,6 +20,11 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         }
     var y = 0.0f
         set(value) {
+            field = value
+            compose = true
+        }
+    var z = 0.0f
+        internal set(value) {
             field = value
             compose = true
         }
@@ -159,23 +162,23 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         }
     }
 
-    internal fun composeGraphics(maxClipDepth: Float, uiMaterial: Material, resourceFactory: ResourceFactory) {
+    internal fun composeGraphics(zOrder: Float, uiMaterial: Material, resourceFactory: ResourceFactory) {
         layout.manage(this)
         val vertices = ArrayList<Float>()
 
         if (skin.panelStyle.background) {
             val ow = skin.panelStyle.outlineWidth
-            vertices.addAll(gfxCreateRect(x + ow, y + ow, maxClipDepth - PANEL_DEPTH, w - ow*2, h - ow*2, skin.panelStyle.backgroundColor).toTypedArray())
+            vertices.addAll(gfxCreateRect(x + ow, y + ow, zOrder + PANEL_DEPTH, w - ow*2, h - ow*2, skin.panelStyle.backgroundColor).toTypedArray())
 
             if (ow > 0) {
-                vertices.addAll(gfxCreateRect(x, y, maxClipDepth - PANEL_DEPTH, w, h, skin.panelStyle.outlineColor).toTypedArray())
+                vertices.addAll(gfxCreateRect(x, y, zOrder + PANEL_DEPTH, w, h, skin.panelStyle.outlineColor).toTypedArray())
             }
         }
 
         // TODO: These constant conversions between different types of collections are sloooow
         for (c in components) {
             if (c.visible) {
-                vertices.addAll(c.createGraphic(maxClipDepth - COMPONENT_DEPTH, skin).toTypedArray())
+                vertices.addAll(c.createGraphic(zOrder + COMPONENT_DEPTH, skin).toTypedArray())
             }
         }
 
@@ -223,7 +226,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         }
     }
 
-    internal fun composeText(maxClipDepth: Float, font: Font, textMaterial: Material, resourceFactory: ResourceFactory) {
+    internal fun composeText(zOrder: Float, font: Font, textMaterial: Material, resourceFactory: ResourceFactory) {
         val vertices = ArrayList<Float>()
         for (t in texts) {
             if (!t.visible) {
@@ -243,7 +246,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
             }
 
             // TODO: These constant conversions between different types of collections are sloooow
-            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, maxClipDepth - TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color).toTypedArray())
+            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, zOrder + TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color).toTypedArray())
         }
 
         val byteBuffer = memAlloc(vertices.size * 4)

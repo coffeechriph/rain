@@ -91,8 +91,8 @@ open class Rain {
                 }
 
                 scene.render(vulkanRenderer)
+                guiManagerHandleGfx()
                 vulkanRenderer.render()
-                guiManagerHandleGfx(scene.activeCamera.maxDepth)
             }
             else {
                 stateManager.switchState = false

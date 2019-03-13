@@ -24,6 +24,7 @@ private var lastHoveredComponent: Component? = null
 private var currentHookedPanel: Panel? = null
 private var currentHookedMode = 0 // TODO: Add enum instead
 private var lastHookedPoint = Vector2f(0.0f, 0.0f)
+private var lastActivePanel: Panel? = null
 
 internal fun guiManagerInit(resFactory: ResourceFactory) {
     resourceFactory = resFactory
@@ -49,6 +50,7 @@ internal fun guiManagerClear() {
 
 fun guiManagerCreatePanel(layout: Layout): Panel {
     val p = Panel(layout, font)
+    p.z = panels.size.toFloat() + 1.0f
     panels.add(p)
     return p
 }
@@ -77,17 +79,26 @@ internal fun guiManagerHandleInput(input: Input) {
         }
     }
 
+    lastActivePanel = null
     for (panel in panels) {
         if (!panel.visible) {
             continue
         }
 
         panel.updateComponents()
+        if (lastActivePanel != null) {
+            continue
+        }
 
         // Only check these events if a drag event isn't happening
         if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value == 0) {
             if (mx >= panel.x && mx <= panel.x + panel.w &&
                 my >= panel.y && my <= panel.y + panel.h) {
+
+                if(input.mouseState(Input.Button.MOUSE_BUTTON_LEFT) == Input.InputState.PRESSED) {
+                    lastActivePanel = panel
+                }
+
                 val c = panel.findComponentAtPoint(mx.toFloat(), my.toFloat())
                 if (c != null) {
                     if (c != lastHoveredComponent) {
@@ -171,6 +182,14 @@ internal fun guiManagerHandleInput(input: Input) {
             }
         }
     }
+
+    if (panels.size > 0 && lastActivePanel != null) {
+        lastActivePanel!!.z = panels.size + 1.0f
+        panels.sortBy { p -> p.z }
+        for (i in 1 until panels.size) {
+            panels[i].z = i.toFloat()
+        }
+    }
 }
 
 private fun onMouseHovered(c: Component) {
@@ -184,11 +203,11 @@ private fun onMouseHovered(c: Component) {
     lastHoveredComponent = c
 }
 
-internal fun guiManagerHandleGfx(maxClipDepth: Float) {
+internal fun guiManagerHandleGfx() {
     for (panel in panels) {
         if (panel.compose) {
-            panel.composeGraphics(2.0f, uiMaterial, resourceFactory)
-            panel.composeText(2.0f, font, textMaterial, resourceFactory)
+            panel.composeGraphics(panel.z, uiMaterial, resourceFactory)
+            panel.composeText(panel.z, font, textMaterial, resourceFactory)
             panel.compose = false
         }
     }
