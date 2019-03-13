@@ -1,9 +1,11 @@
 package rain.api.gui.v2
 
 import org.lwjgl.system.MemoryUtil.memAlloc
+import rain.api.components.GuiRenderComponent
 import rain.api.components.RenderComponent
 import rain.api.entity.Entity
 import rain.api.gfx.*
+import rain.api.manager.renderManagerAddGuiRenderComponent
 import rain.api.manager.renderManagerAddRenderComponent
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
@@ -50,11 +52,11 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
     internal var compose = true
     internal val components = ArrayList<Component>()
     internal val texts = ArrayList<Text>()
-    private lateinit var renderComponent: RenderComponent
+    private lateinit var renderComponent: GuiRenderComponent
     private lateinit var vertexBuffer: VertexBuffer
     private lateinit var mesh: Mesh
 
-    private lateinit var textRenderComponent: RenderComponent
+    private lateinit var textRenderComponent: GuiRenderComponent
     private lateinit var textVertexBuffer: VertexBuffer
     private lateinit var textMesh: Mesh
 
@@ -194,7 +196,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                         .withVertices(byteBuffer)
                         .build()
                 mesh = Mesh(vertexBuffer, null)
-                renderComponent = RenderComponent(transform, mesh, uiMaterial)
+                renderComponent = GuiRenderComponent(mesh, uiMaterial)
                 renderComponent.createUniformData = {
                     val uniformData = memAlloc(18 * 4)
                     val f = uniformData.asFloatBuffer()
@@ -207,7 +209,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                     uniformData
                 }
                 renderComponent.visible = visible
-                renderManagerAddRenderComponent(getId(), renderComponent)
+                renderManagerAddGuiRenderComponent(renderComponent)
             }
         }
         else {
@@ -262,7 +264,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                         .withVertices(byteBuffer)
                         .build()
                 textMesh = Mesh(textVertexBuffer, null)
-                textRenderComponent = RenderComponent(transform, textMesh, textMaterial)
+                textRenderComponent = GuiRenderComponent(textMesh, textMaterial)
                 textRenderComponent.createUniformData = {
                     val uniformData = memAlloc(18 * 4)
                     val f = uniformData.asFloatBuffer()
@@ -275,7 +277,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                     uniformData
                 }
                 textRenderComponent.visible = visible
-                renderManagerAddRenderComponent(getId(), textRenderComponent)
+                renderManagerAddGuiRenderComponent(textRenderComponent)
             }
         }
         else {

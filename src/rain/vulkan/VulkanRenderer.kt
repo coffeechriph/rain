@@ -9,18 +9,20 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
 import rain.api.Window
+import rain.api.components.GuiRenderComponent
 import rain.api.components.RenderComponent
-import rain.api.gfx.Drawable
 import rain.api.gfx.Renderer
 import rain.api.manager.renderManagerInit
 import rain.api.scene.Camera
 import rain.assertion
 import rain.log
-import java.util.*
+import java.nio.ByteBuffer
 import kotlin.collections.ArrayList
 
 internal class VulkanRenderer (private val vk: Vk, val window: Window) : Renderer {
     private val pipelines: MutableList<Pipeline> = ArrayList()
+    private val guiPipelines: MutableList<Pipeline> = ArrayList()
+
     private val physicalDevice: PhysicalDevice = vk.physicalDevice
     private val logicalDevice: LogicalDevice = vk.logicalDevice
     private val renderpass: Renderpass = Renderpass()
@@ -45,6 +47,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     private val pImageIndex = MemoryUtil.memAllocInt(1)
 
     private val activeRenderComponents = ArrayList<RenderComponent>()
+    private val activeGuiRenderComponents = ArrayList<GuiRenderComponent>()
 
     var swapchainIsDirty = true
     private var frameIndex = 0
@@ -66,7 +69,8 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
 
         setupQueue = Queue()
         setupQueue.create(logicalDevice, vk.transferFamilyIndex)
-        renderManagerInit(this::addRenderComponent, this::removeRenderComponent)
+        renderManagerInit(this::addRenderComponent, this::removeRenderComponent,
+                this::addGuiRenderComponent, this::removeGuiRenderComponent)
     }
 
     override fun setActiveCamera(camera: Camera) {
@@ -80,6 +84,29 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     private fun addRenderComponent(renderComponent: RenderComponent) {
         addRenderComponentInternal(renderComponent)
         activeRenderComponents.add(renderComponent)
+    }
+
+    private fun addGuiRenderComponent(guiRenderComponent: GuiRenderComponent) {
+        val material = guiRenderComponent.material as VulkanMaterial
+        val mesh = guiRenderComponent.mesh
+        val vertexBuffer = mesh.vertexBuffer as VulkanVertexBuffer
+        val pipeline = guiPipelines.stream()
+                .filter{p -> p.matches(material, vertexBuffer)}
+                .findFirst()
+                .orElse(Pipeline(material, vertexBuffer.attributes, vertexBuffer.vertexPipelineVertexInputStateCreateInfo))
+
+        if (material.hasTexelBuffer() && material.texelBufferUniform.referencesHasChanged) {
+            material.texelBufferUniform.referencesHasChanged = false
+            material.descriptorPool.build(vk.logicalDevice)
+        }
+
+        pipeline.guiRenderComponents.add(guiRenderComponent)
+        activeGuiRenderComponents.add(guiRenderComponent)
+
+        if (!guiPipelines.contains(pipeline)) {
+            pipeline.create(logicalDevice, renderpass)
+            guiPipelines.add(pipeline)
+        }
     }
 
     private fun addRenderComponentInternal(renderComponent: RenderComponent) {
@@ -127,6 +154,23 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                     if (renderComponent == component2) {
                         pipeline.renderComponents.remove(renderComponent)
                         activeRenderComponents.remove(renderComponent)
+                        break
+                    }
+                }
+                break
+            }
+        }
+    }
+
+    private fun removeGuiRenderComponent(guiRenderComponent: GuiRenderComponent) {
+        val mat = guiRenderComponent.material as VulkanMaterial
+        val buffer = guiRenderComponent.mesh.vertexBuffer as VulkanVertexBuffer
+        for (pipeline in guiPipelines) {
+            if (pipeline.matches(mat, buffer)) {
+                for (component2 in pipeline.guiRenderComponents) {
+                    if (guiRenderComponent == component2) {
+                        pipeline.guiRenderComponents.remove(guiRenderComponent)
+                        activeGuiRenderComponents.remove(guiRenderComponent)
                         break
                     }
                 }
@@ -205,6 +249,10 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 addRenderComponentInternal(component)
             }
 
+            for (component in activeGuiRenderComponents) {
+                addGuiRenderComponent(component)
+            }
+
             log("Successfully recreated swapchain.")
             return true
         }
@@ -218,6 +266,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             pipeline.destroy(logicalDevice)
         }
         pipelines.clear()
+
+        for (pipeline in guiPipelines) {
+            pipeline.destroy(logicalDevice)
+        }
+        guiPipelines.clear()
         vkDeviceWaitIdle(logicalDevice.device)
     }
 
@@ -232,6 +285,11 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             pipeline.destroy(logicalDevice)
         }
         pipelines.clear()
+
+        for (pipeline in guiPipelines) {
+            pipeline.destroy(logicalDevice)
+        }
+        guiPipelines.clear()
 
         for (b in renderCommandBuffers) {
             vkFreeCommandBuffers(logicalDevice.device, renderCommandPool.pool, b.buffer)
@@ -298,6 +356,13 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         pvMatrix.mul(camera.view)
         pvMatrix.get(projectionMatrixBuffer)
 
+        renderPipelines(projectionMatrixBuffer, pipelines)
+        clearDepthBuffer(renderCommandBuffers[frameIndex], window.size.x, window.size.y)
+        renderPipelines(projectionMatrixBuffer, guiPipelines)
+        renderpass.end(renderCommandBuffers[frameIndex])
+    }
+
+    private fun renderPipelines(projectionMatrixBuffer: ByteBuffer, pipelines: MutableList<Pipeline>) {
         val obsoletePipelines = ArrayList<Pipeline>()
         pipelines.sortBy { pipeline -> pipeline.material.blendEnabled }
         for (pipeline in pipelines) {
@@ -319,7 +384,28 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             pipeline.drawAll(renderCommandBuffers[frameIndex])
         }
         pipelines.removeAll(obsoletePipelines)
-        renderpass.end(renderCommandBuffers[frameIndex])
+    }
+
+    private fun clearDepthBuffer(cmdBuffer: CommandPool.CommandBuffer, width: Int, height: Int) {
+        val clearAttachment = VkClearAttachment.calloc(1)
+        val depthStencil = VkClearDepthStencilValue.calloc()
+                .depth(1.0f)
+                .stencil(0)
+        val clearValue = VkClearValue.calloc()
+                .depthStencil(depthStencil)
+        clearAttachment
+                .aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT)
+                .clearValue(clearValue)
+        val rect = VkRect2D.calloc()
+        rect.extent()
+                .width(width)
+                .height(height)
+        rect.offset()
+                .set(0, 0)
+        val clearRect = VkClearRect.calloc(1)
+                .rect(rect)
+                .layerCount(1)
+        vkCmdClearAttachments(cmdBuffer.buffer, clearAttachment, clearRect)
     }
 
     private fun presentImage() {
