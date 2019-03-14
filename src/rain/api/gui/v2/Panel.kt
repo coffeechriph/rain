@@ -12,6 +12,9 @@ private val PANEL_DEPTH = 0.2f
 private val COMPONENT_DEPTH = 0.3f
 private val TEXT_DEPTH = 0.4f
 
+// TODO: Make it possible for panels to follow other panels relative to criterias
+// 1) Same Width, Height, X or Y. Panels that follow will also inherit the other panels Z
+// Panels that follow should never overlap!
 open class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
     var x = 0.0f
         set(value) {
@@ -52,6 +55,8 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                 textRenderComponent.visible = value
             }
         }
+    var autoScroll = true
+
     internal var compose = true
     internal val components = ArrayList<Component>()
     internal val texts = ArrayList<Text>()
@@ -135,6 +140,30 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         texts.add(button.text)
         compose = true
         return button
+    }
+
+    fun createHScrollBar(maxScrollAmount: Float, string: String): HScrollBar {
+        val scrollBar = HScrollBar(this)
+        scrollBar.text.parentComponent = scrollBar
+        scrollBar.text.parentPanel = this
+        scrollBar.string = string
+        scrollBar.text.w = font.getStringWidth(string, 0, string.length)
+        components.add(scrollBar)
+        texts.add(scrollBar.text)
+        compose = true
+        return scrollBar
+    }
+
+    fun createVScrollBar(maxScrollAmount: Float, string: String): VScrollBar {
+        val scrollBar = VScrollBar(this)
+        scrollBar.text.parentComponent = scrollBar
+        scrollBar.text.parentPanel = this
+        scrollBar.string = string
+        scrollBar.text.w = font.getStringWidth(string, 0, string.length)
+        components.add(scrollBar)
+        texts.add(scrollBar.text)
+        compose = true
+        return scrollBar
     }
 
     fun removeComponent(component: Component): Panel {
