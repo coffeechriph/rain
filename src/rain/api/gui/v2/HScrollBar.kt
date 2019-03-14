@@ -12,8 +12,8 @@ class HScrollBar internal constructor(panel: Panel) :
             text.string = value
         }
 
-    var maxScrollAmount = 100.0f
-    var value = 0.0f
+    var maxScrollAmount = 100
+    var value = 0
     var valueChanged = false
 
     init {
@@ -25,7 +25,7 @@ class HScrollBar internal constructor(panel: Panel) :
         text.color = skin.sliderStyle.textColor
         text.textAlign = skin.sliderStyle.textAlign
 
-        val factor = value / maxScrollAmount
+        val factor = value.toFloat() / maxScrollAmount.toFloat()
         var backColor = skin.sliderStyle.backgroundColor
         val cursorColor = skin.sliderStyle.cursorColor
         val scrollW = w * factor
@@ -63,8 +63,8 @@ class HScrollBar internal constructor(panel: Panel) :
         val x = Math.max(0, Math.min(w.toInt(), input.mousePosition.x - x.toInt()))
         //val x = input.mousePosition.x - x
         val factor = 1.0f / w * x
-        value = (maxScrollAmount * factor).toInt().toFloat()
-        value = Math.max(Math.min(maxScrollAmount, value), 0.0f)
+        value = (maxScrollAmount * factor).toInt()
+        value = Math.max(Math.min(maxScrollAmount, value), 0)
         valueChanged = true
     }
 

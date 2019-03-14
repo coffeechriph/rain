@@ -142,7 +142,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         return button
     }
 
-    fun createHScrollBar(maxScrollAmount: Float, string: String): HScrollBar {
+    fun createHScrollBar(maxScrollAmount: Int, string: String): HScrollBar {
         val scrollBar = HScrollBar(this)
         scrollBar.text.parentComponent = scrollBar
         scrollBar.text.parentPanel = this
@@ -154,7 +154,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         return scrollBar
     }
 
-    fun createVScrollBar(maxScrollAmount: Float, string: String): VScrollBar {
+    fun createVScrollBar(maxScrollAmount: Int, string: String): VScrollBar {
         val scrollBar = VScrollBar(this)
         scrollBar.text.parentComponent = scrollBar
         scrollBar.text.parentPanel = this

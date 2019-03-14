@@ -11,8 +11,8 @@ class VScrollBar internal constructor(panel: Panel) :
             text.string = value
         }
 
-    var maxScrollAmount = 100.0f
-    var value = 0.0f
+    var maxScrollAmount = 100
+    var value = 0
     var valueChanged = false
 
     init {
@@ -24,7 +24,7 @@ class VScrollBar internal constructor(panel: Panel) :
         text.color = skin.sliderStyle.textColor
         text.textAlign = skin.sliderStyle.textAlign
 
-        val factor = value / maxScrollAmount
+        val factor = value.toFloat() / maxScrollAmount.toFloat()
         var backColor = skin.sliderStyle.backgroundColor
         val cursorColor = skin.sliderStyle.cursorColor
         val scrollH = h * factor
@@ -35,7 +35,6 @@ class VScrollBar internal constructor(panel: Panel) :
 
         val ow = skin.sliderStyle.outlineWidth
 
-        println("$factor, $scrollH")
         val cursor = when(skin.sliderStyle.cursorShape) {
             Shape.RECT -> gfxCreateRect(x + ow, y + ow, depth, w - ow, scrollH, cursorColor)
             Shape.ROUNDED_RECT -> gfxCreateRoundedRect(x + ow, y + ow, depth, w - ow, scrollH, 1.0f,
@@ -61,8 +60,8 @@ class VScrollBar internal constructor(panel: Panel) :
     override fun onDrag(input: Input) {
         val cy = Math.max(0, Math.min(h.toInt(), input.mousePosition.y - y.toInt()))
         val factor = 1.0f / h * cy
-        value = (maxScrollAmount * factor)
-        value = Math.max(Math.min(maxScrollAmount, value), 0.0f)
+        value = (maxScrollAmount * factor).toInt()
+        value = Math.max(Math.min(maxScrollAmount, value), 0)
         valueChanged = true
     }
 

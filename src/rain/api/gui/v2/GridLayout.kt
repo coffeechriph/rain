@@ -3,10 +3,11 @@ package rain.api.gui.v2
 class GridLayout : Layout() {
     var gridW = 50.0f
     var gridH = 50.0f
-    override fun manage(panel: Panel) {
-        var stepX = panel.x + panel.skin.panelStyle.outlineWidth
-        var stepY = panel.y + 5 + panel.skin.panelStyle.outlineWidth
-        for (c in panel.components) {
+    override fun apply(components: List<Component>, panelX: Float, panelY: Float, panelWidth:
+    Float, panelHeight: Float, outlineWidth: Float) {
+        var stepX = panelX + outlineWidth
+        var stepY = panelY + outlineWidth
+        for (c in components) {
             if (!c.visible) {
                 continue
             }
@@ -17,8 +18,8 @@ class GridLayout : Layout() {
             c.h = gridH
 
             stepX += gridW
-            if (stepX + gridW > panel.x + panel.w) {
-                stepX = panel.x + panel.skin.panelStyle.outlineWidth
+            if (stepX + gridW > panelX + panelWidth) {
+                stepX = panelX + outlineWidth
                 stepY += gridH
             }
         }

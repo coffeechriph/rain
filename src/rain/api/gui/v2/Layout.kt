@@ -21,69 +21,85 @@ open class Layout {
     var autoScrollHeight = 30.0f
     protected var vScrollBar: VScrollBar? = null
     protected var hScrollBar: HScrollBar? = null
-    internal var fillableWidth = 0.0f
-    internal var fillableHeight = 0.0f
 
-    protected fun resetScrollbars(panel: Panel) {
-        fillableWidth = panel.w
-        fillableHeight = panel.h
+    open fun apply(components: List<Component>, panelX: Float, panelY: Float, panelWidth:
+    Float, panelHeight: Float, outlineWidth: Float){}
 
-        // We must remove the auto scrollbars before managing layout
-        if (hScrollBar != null) {
-            panel.removeComponent(hScrollBar!!)
+    fun manage(panel: Panel) {
+        val components = ArrayList<Component>()
+        for (c in panel.components) {
+            if (c.affectedByLayout) {
+                components.add(c)
+            }
         }
 
-        if (vScrollBar != null) {
-            panel.removeComponent(vScrollBar!!)
-        }
-    }
+        apply(components, panel.x, panel.y, panel.w, panel.h,
+                panel.skin.panelStyle.outlineWidth.toFloat())
 
-    protected fun recreateScrollbars(panel: Panel, x: Float, y: Float) {
+        // If we want to have auto scrolls we must place them and reposition the other components
         if (panel.autoScroll) {
-            if (x > panel.x + panel.w) {
-                val value = x - (panel.x + panel.w)
-                if (hScrollBar == null) {
-                    hScrollBar = panel.createHScrollBar(value, "")
+            var x = Float.MIN_VALUE
+            var y = Float.MIN_VALUE
+
+            for (c in components) {
+                if (c.x + c.w > x) {
+                    x = c.x + c.w
                 }
-                else {
-                    hScrollBar!!.maxScrollAmount = value
-                    panel.components.add(hScrollBar!!)
-                    panel.texts.add(hScrollBar!!.text)
+
+                if (c.y + c.h > y) {
+                    y = c.y + c.h
                 }
             }
 
-            if (y > panel.y + panel.h) {
-                val value = y - (panel.y + panel.h)
-                if (vScrollBar == null) {
-                    vScrollBar = panel.createVScrollBar(value, "")
+            var subHeight = 0.0f
+            if (x > panel.x + panel.w + 1) {
+                if (hScrollBar == null) {
+                    hScrollBar = panel.createHScrollBar(0, "")
+                    hScrollBar!!.affectedByLayout = false
                 }
-                else {
-                    vScrollBar!!.maxScrollAmount = value
-                    panel.components.add(vScrollBar!!)
-                    panel.texts.add(vScrollBar!!.text)
+                subHeight = autoScrollHeight
+            }
+
+            var subWidth = 0.0f
+            if (y > panel.y + panel.h + 1) {
+                if (vScrollBar == null) {
+                    vScrollBar = panel.createVScrollBar(0, "")
+                    vScrollBar!!.affectedByLayout = false
+                }
+                subWidth = autoScrollWidth
+            }
+
+            apply(components, panel.x, panel.y, panel.w - subWidth, panel.h - subHeight,
+                    panel.skin.panelStyle.outlineWidth.toFloat())
+
+            for (component in components) {
+                if (hScrollBar != null) {
+                    component.x -= hScrollBar!!.value
+                }
+                if (vScrollBar != null) {
+                    component.y -= vScrollBar!!.value
                 }
             }
 
             if (hScrollBar != null) {
+                val value = x.toInt() - (panel.x + panel.w).toInt()
+                hScrollBar!!.maxScrollAmount = value
                 hScrollBar!!.x = panel.x
-                hScrollBar!!.y = panel.y + 5 + panel.h - autoScrollHeight
+                hScrollBar!!.y = panel.y + panel.h - autoScrollHeight
                 hScrollBar!!.w = panel.w
                 hScrollBar!!.h = autoScrollHeight
+                hScrollBar!!.affectedByLayout = false
             }
 
             if (vScrollBar != null) {
-                vScrollBar!!.x = panel.x + 5 + panel.w - autoScrollWidth
+                val value = y.toInt() - (panel.y + panel.h).toInt()
+                vScrollBar!!.maxScrollAmount = value
+                vScrollBar!!.x = panel.x + panel.w - autoScrollWidth
                 vScrollBar!!.y = panel.y
                 vScrollBar!!.w = autoScrollWidth
                 vScrollBar!!.h = panel.w
+                vScrollBar!!.affectedByLayout = false
             }
         }
-    }
-
-    open fun manage(panel: Panel) {
-    }
-
-    open fun updateFillableArea(panel: Panel) {
-
     }
 }

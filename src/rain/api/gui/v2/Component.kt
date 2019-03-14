@@ -39,6 +39,7 @@ abstract class Component(internal val eventTypes: Int) {
     var hoverLeave = false
     var charEdited = false
     internal var text = Text()
+    internal var affectedByLayout = true
     internal lateinit var parentPanel: Panel
 
     fun resetState() {
