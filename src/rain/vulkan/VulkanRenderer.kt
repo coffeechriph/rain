@@ -360,7 +360,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         pvMatrix.get(projectionMatrixBuffer)
 
         renderPipelines(projectionMatrixBuffer)
-        clearDepthBuffer(renderCommandBuffers[frameIndex], window.size.x, window.size.y)
+        clearDepthBuffer(renderCommandBuffers[frameIndex], camera.resolution.x, camera.resolution.y)
         renderGuiPipelines(projectionMatrixBuffer)
         renderpass.end(renderCommandBuffers[frameIndex])
     }

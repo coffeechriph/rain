@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.World
 import org.joml.Matrix4f
 import org.joml.Random
 import org.joml.Vector2f
+import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
@@ -28,7 +29,10 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
         private set
     private var physicsContactListener = PhysicsContactListener()
 
-    var activeCamera = Camera(1000.0f, Vector2f(window.size.x.toFloat(), window.size.y.toFloat()))
+    var activeCamera = Camera(1000.0f, Vector2i(window.size.x, window.size.y))
+        set(value) {
+
+        }
 
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }

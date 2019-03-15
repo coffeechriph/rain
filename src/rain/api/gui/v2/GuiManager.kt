@@ -81,11 +81,12 @@ internal fun guiManagerHandleInput(input: Input) {
 
     lastActivePanel = null
     for (panel in panels) {
+        panel.updateComponents()
+
         if (!panel.visible) {
             continue
         }
 
-        panel.updateComponents()
         if (lastActivePanel != null) {
             continue
         }

@@ -177,6 +177,11 @@ internal class Pipeline(internal val material: VulkanMaterial, private val verte
                 continue
             }
 
+            if (material.name == "tilemapMaterial") {
+                println("Tilemap: ${component.visible}, ${component.transform.x}, ${component
+                        .transform.y}, ${component.transform.sx}, ${component.transform.sy}")
+            }
+
             val vbo = component.mesh.vertexBuffer as VulkanVertexBuffer
             val pushData = component.createUniformData()
 

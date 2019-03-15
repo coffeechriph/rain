@@ -1,9 +1,9 @@
 package rain.api.scene
 
 import org.joml.Matrix4f
-import org.joml.Vector2f
+import org.joml.Vector2i
 
-class Camera(depthRange: Float, resolution: Vector2f) {
+class Camera(depthRange: Float, val resolution: Vector2i) {
     var x: Float = 0.0f
     var y: Float = 0.0f
     var projection = Matrix4f()
@@ -14,6 +14,7 @@ class Camera(depthRange: Float, resolution: Vector2f) {
 
     init {
         maxDepth = depthRange
-        projection.setOrtho(0.0f, resolution.x, 0.0f, resolution.y, -maxDepth, maxDepth, true)
+        projection.setOrtho(0.0f, resolution.x.toFloat(), 0.0f, resolution.y.toFloat(), -maxDepth,
+                maxDepth, true)
     }
 }
