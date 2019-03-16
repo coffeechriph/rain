@@ -20,6 +20,8 @@ class Window internal constructor() {
         }
     var size: Vector2i = Vector2i(0,0)
         private set
+    var framebufferSize: Vector2i = Vector2i(0,0)
+        private set
 
     internal fun create(width: Int, height: Int, title: String, input: Input) {
         if(!glfwInit()) {
@@ -46,6 +48,7 @@ class Window internal constructor() {
         createCallbacks(input)
 
         updateWindowSize()
+        updateFramebufferSize()
         log("Created window[w: $width, h: $height]")
     }
 
@@ -55,6 +58,14 @@ class Window internal constructor() {
         glfwGetWindowSize(windowPointer, width, height)
         size.x = width[0]
         size.y = height[0]
+    }
+
+    private fun updateFramebufferSize() {
+        val width = memAllocInt(1)
+        val height = memAllocInt(1)
+        glfwGetFramebufferSize(windowPointer, width, height)
+        framebufferSize.x = width[0]
+        framebufferSize.y = height[0]
     }
 
     private fun createCallbacks(input: Input) {
@@ -95,6 +106,7 @@ class Window internal constructor() {
         glfwSetWindowSizeCallback(windowPointer) { _, _, _ ->
             windowDirty = true
             updateWindowSize()
+            updateFramebufferSize()
         }
     }
 

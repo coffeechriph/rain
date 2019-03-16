@@ -360,9 +360,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         pvMatrix.get(projectionMatrixBuffer)
 
         renderPipelines(projectionMatrixBuffer)
-        println("${camera.resolution.x}, ${camera.resolution.y} -- ${window.size.x}, ${window
-                .size.y}")
-        clearDepthBuffer(renderCommandBuffers[frameIndex], camera.resolution.x, camera.resolution.y)
+        clearDepthBuffer(renderCommandBuffers[frameIndex])
         renderGuiPipelines(projectionMatrixBuffer)
         renderpass.end(renderCommandBuffers[frameIndex])
     }
@@ -413,30 +411,22 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
         guiPipelines.removeAll(obsoletePipelines)
     }
 
-    private fun clearDepthBuffer(cmdBuffer: CommandPool.CommandBuffer, width: Int, height: Int) {
+    private fun clearDepthBuffer(cmdBuffer: CommandPool.CommandBuffer) {
         val clearAttachment = VkClearAttachment.calloc(1)
         val depthStencil = VkClearDepthStencilValue.calloc()
                 .depth(1.0f)
                 .stencil(0)
-        val colors = memAllocFloat(4)
-        colors.put(0, 1.0f)
-        colors.put(1, 1.0f)
-        colors.put(2, 1.0f)
-        colors.put(3, 1.0f)
-        val colorClear = VkClearColorValue.calloc()
-                .float32(colors)
         val clearValue = VkClearValue.calloc()
                 .depthStencil(depthStencil)
-                .color(colorClear)
         clearAttachment
                 .aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT)
                 .clearValue(clearValue)
         val rect = VkRect2D.calloc()
         rect.extent()
-                .width(width)
-                .height(height)
+                .width(window.framebufferSize.x)
+                .height(window.framebufferSize.y)
         rect.offset()
-                .set(width/2, height/2)
+                .set(0, 0)
         val clearRect = VkClearRect.calloc(1)
                 .rect(rect)
                 .layerCount(1)
