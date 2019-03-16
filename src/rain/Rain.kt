@@ -6,10 +6,7 @@ import rain.api.Input
 import rain.api.Timer
 import rain.api.Window
 import rain.api.gfx.ResourceFactory
-import rain.api.gui.v2.guiManagerClear
-import rain.api.gui.v2.guiManagerHandleGfx
-import rain.api.gui.v2.guiManagerHandleInput
-import rain.api.gui.v2.guiManagerInit
+import rain.api.gui.v2.*
 import rain.api.manager.*
 import rain.api.scene.Scene
 import rain.util.ShaderCompiler
@@ -51,7 +48,7 @@ open class Rain {
         }
 
         scene = Scene(resourceFactory, window)
-        stateManager = StateManager(resourceFactory, scene, input)
+        stateManager = StateManager(resourceFactory, scene)
     }
 
     private fun createVulkanApi() {
@@ -130,11 +127,18 @@ open class Rain {
         window.windowDirty = false
 
         guiManagerHandleInput(input)
+
+        // Allow the UI to steal input events
+        var localInput = input
+        if (guiManagerShouldStealInput()) {
+            localInput = Input()
+        }
+
         moveManagerSimulate()
         emitterManagerSimulate()
         animatorManagerSimulate()
-        scene.update(input, deltaTime)
-        stateManager.update(deltaTime)
+        scene.update(localInput, deltaTime)
+        stateManager.update(localInput, deltaTime)
         input.updateKeyState()
     }
 }

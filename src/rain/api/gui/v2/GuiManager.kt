@@ -28,6 +28,8 @@ private var currentHookedMode = 0 // TODO: Add enum instead
 private var lastHookedPoint = Vector2f(0.0f, 0.0f)
 private var lastActivePanel: Panel? = null
 
+private var stealInput = false
+
 // TODO: We want 1 material per panel instead.
 internal fun guiManagerInit(resFactory: ResourceFactory) {
     resourceFactory = resFactory
@@ -75,7 +77,7 @@ internal fun guiManagerHandleInput(input: Input) {
     val mx = input.mousePosition.x
     val my = input.mousePosition.y
 
-    // We don't want to update component events if we're currently draging
+    // We don't want to update hovered component if we're currently dragging another component
     if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value == 0) {
         if (lastHoveredComponent != null) {
             val lhc = lastHoveredComponent!!
@@ -156,6 +158,7 @@ internal fun guiManagerHandleInput(input: Input) {
     if (lastActiveComponent != null) {
         val component = lastActiveComponent!!
         if (component.eventTypes and GuiEventTypes.CHAR_EDIT.value != 0) {
+            stealInput = true
             component.onCharEdit(input)
         }
 
@@ -167,6 +170,7 @@ internal fun guiManagerHandleInput(input: Input) {
             else if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and (Input.InputState.RELEASED.value or Input.InputState.UP.value) != 0) {
                 lastActiveComponent = null
             }
+            stealInput = true
         }
     }
 
@@ -192,6 +196,8 @@ internal fun guiManagerHandleInput(input: Input) {
 
                 panel.compose = true
             }
+
+            stealInput = true
         }
     }
 
@@ -202,6 +208,23 @@ internal fun guiManagerHandleInput(input: Input) {
             panels[i].z = i.toFloat()
         }
     }
+
+    // Steal input as soon as we're hovering over a panel
+    for (panel in panels) {
+        if (!panel.visible) {
+            continue
+        }
+
+        if (input.mousePosition.x >= panel.x && input.mousePosition.x <= panel.x + panel.w &&
+            input.mousePosition.y >= panel.y && input.mousePosition.y <= panel.y + panel.h) {
+            stealInput = true
+            break
+        }
+    }
+}
+
+internal fun guiManagerShouldStealInput(): Boolean {
+    return stealInput
 }
 
 private fun onMouseHovered(c: Component) {
@@ -216,6 +239,8 @@ private fun onMouseHovered(c: Component) {
 }
 
 internal fun guiManagerHandleGfx() {
+    stealInput = false
+
     for (panel in panels) {
         if (panel.compose) {
             panel.composeGraphics(panel.z, uiMaterial, resourceFactory)

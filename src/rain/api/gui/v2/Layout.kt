@@ -97,7 +97,7 @@ open class Layout {
                 vScrollBar!!.x = panel.x + panel.w - autoScrollWidth
                 vScrollBar!!.y = panel.y
                 vScrollBar!!.w = autoScrollWidth
-                vScrollBar!!.h = panel.w
+                vScrollBar!!.h = panel.h
                 vScrollBar!!.affectedByLayout = false
             }
         }

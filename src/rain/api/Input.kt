@@ -153,11 +153,35 @@ class Input {
 
     var mousePosition = Vector2i()
         internal set
-    private val keyboardStates = Array(GLFW_KEY_LAST){ InputState.UP }
-    private val mouseStates = Array(GLFW_MOUSE_BUTTON_8){ InputState.UP }
-    private val lastFrameKeyState = ArrayList<Int>()
-    private val lastFrameMouseState = ArrayList<Int>()
-    private val codepointInputQueue = ArrayDeque<Int>()
+    private val keyboardStates: Array<InputState>
+    private val mouseStates: Array<InputState>
+    private val lastFrameKeyState: ArrayList<Int>
+    private val lastFrameMouseState: ArrayList<Int>
+    private val codepointInputQueue: ArrayDeque<Int>
+
+    constructor() {
+        keyboardStates = Array(GLFW_KEY_LAST){ InputState.UP }
+        mouseStates = Array(GLFW_MOUSE_BUTTON_8){ InputState.UP }
+        lastFrameKeyState = ArrayList()
+        lastFrameMouseState = ArrayList()
+        codepointInputQueue = ArrayDeque()
+    }
+
+    private constructor(keyboardStates: Array<InputState>,
+                        mouseStates: Array<InputState>,
+                        lastFrameKeyState: ArrayList<Int>,
+                        lastFrameMouseState: ArrayList<Int>,
+                        codepointInputState: ArrayDeque<Int>) {
+        this.keyboardStates = keyboardStates.clone()
+        this.mouseStates = mouseStates.clone()
+        this.lastFrameKeyState = ArrayList(lastFrameKeyState)
+        this.lastFrameMouseState = ArrayList(lastFrameMouseState)
+        this.codepointInputQueue = ArrayDeque(codepointInputState)
+    }
+
+    internal fun copy(): Input {
+        return Input(keyboardStates, mouseStates, lastFrameKeyState, lastFrameMouseState, codepointInputQueue)
+    }
 
     fun popCodePointQueue(): Int {
         if (codepointInputQueue.isEmpty()) {
@@ -186,6 +210,18 @@ class Input {
     internal fun putMouseState(button: Int, inputState: InputState) {
         mouseStates[button] = inputState
         lastFrameMouseState.add(button)
+    }
+
+    internal fun resetKeyState() {
+        for (key in lastFrameKeyState) {
+            keyboardStates[key] = Input.InputState.UP
+        }
+    }
+
+    internal fun resetMouseState() {
+        for (i in 0 until mouseStates.size) {
+            mouseStates[i] = InputState.UP
+        }
     }
 
     internal fun updateKeyState() {
