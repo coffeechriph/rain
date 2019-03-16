@@ -154,7 +154,13 @@ class Tilemap {
         var x = 0.0f
         var y = 0.0f
 
-        val vertices = ArrayList<Float>()
+        if (!::byteBuffer.isInitialized || tileGfx.size * 48 * 4 > byteBuffer.capacity()) {
+            byteBuffer = memAlloc(tileGfx.size * 48 * 4)
+        }
+
+        val vertices = byteBuffer.asFloatBuffer()
+        var bufferIndex = 0
+
         for (i in 0 until tileNumX*tileNumY) {
             if (tileGfx[i] != TileGfxNone) {
                 val tileX = tileGfx[i].x
@@ -166,59 +172,59 @@ class Tilemap {
                 val uvx = renderComponent.material.getTexture2d()[0].getTexCoordWidth()
                 val uvy = renderComponent.material.getTexture2d()[0].getTexCoordHeight()
 
-                vertices.add(x)
-                vertices.add(y)
-                vertices.add(tileX * uvx)
-                vertices.add(tileY * uvy)
-                vertices.add(red)
-                vertices.add(green)
-                vertices.add(blue)
-                vertices.add(alpha)
+                vertices.put(bufferIndex++, x)
+                vertices.put(bufferIndex++, y)
+                vertices.put(bufferIndex++, tileX * uvx)
+                vertices.put(bufferIndex++, tileY * uvy)
+                vertices.put(bufferIndex++, red)
+                vertices.put(bufferIndex++, green)
+                vertices.put(bufferIndex++, blue)
+                vertices.put(bufferIndex++, alpha)
 
-                vertices.add(x)
-                vertices.add(y + tileHeight)
-                vertices.add(tileX * uvx)
-                vertices.add(uvy + tileY * uvy)
-                vertices.add(red)
-                vertices.add(green)
-                vertices.add(blue)
-                vertices.add(alpha)
+                vertices.put(bufferIndex++, x)
+                vertices.put(bufferIndex++, y + tileHeight)
+                vertices.put(bufferIndex++, tileX * uvx)
+                vertices.put(bufferIndex++, uvy + tileY * uvy)
+                vertices.put(bufferIndex++, red)
+                vertices.put(bufferIndex++, green)
+                vertices.put(bufferIndex++, blue)
+                vertices.put(bufferIndex++, alpha)
 
-                vertices.add(x + tileWidth)
-                vertices.add(y + tileHeight)
-                vertices.add(uvx + tileX * uvx)
-                vertices.add(uvy + tileY * uvy)
-                vertices.add(red)
-                vertices.add(green)
-                vertices.add(blue)
-                vertices.add(alpha)
+                vertices.put(bufferIndex++, x + tileWidth)
+                vertices.put(bufferIndex++, y + tileHeight)
+                vertices.put(bufferIndex++, uvx + tileX * uvx)
+                vertices.put(bufferIndex++, uvy + tileY * uvy)
+                vertices.put(bufferIndex++, red)
+                vertices.put(bufferIndex++, green)
+                vertices.put(bufferIndex++, blue)
+                vertices.put(bufferIndex++, alpha)
 
-                vertices.add(x + tileWidth)
-                vertices.add(y + tileHeight)
-                vertices.add(uvx + tileX * uvx)
-                vertices.add(uvy + tileY * uvy)
-                vertices.add(red)
-                vertices.add(green)
-                vertices.add(blue)
-                vertices.add(alpha)
+                vertices.put(bufferIndex++, x + tileWidth)
+                vertices.put(bufferIndex++, y + tileHeight)
+                vertices.put(bufferIndex++, uvx + tileX * uvx)
+                vertices.put(bufferIndex++, uvy + tileY * uvy)
+                vertices.put(bufferIndex++, red)
+                vertices.put(bufferIndex++, green)
+                vertices.put(bufferIndex++, blue)
+                vertices.put(bufferIndex++, alpha)
 
-                vertices.add(x + tileWidth)
-                vertices.add(y)
-                vertices.add(uvx + tileX * uvx)
-                vertices.add(tileY * uvy)
-                vertices.add(red)
-                vertices.add(green)
-                vertices.add(blue)
-                vertices.add(alpha)
+                vertices.put(bufferIndex++, x + tileWidth)
+                vertices.put(bufferIndex++, y)
+                vertices.put(bufferIndex++, uvx + tileX * uvx)
+                vertices.put(bufferIndex++, tileY * uvy)
+                vertices.put(bufferIndex++, red)
+                vertices.put(bufferIndex++, green)
+                vertices.put(bufferIndex++, blue)
+                vertices.put(bufferIndex++, alpha)
 
-                vertices.add(x)
-                vertices.add(y)
-                vertices.add(tileX * uvx)
-                vertices.add(tileY * uvy)
-                vertices.add(red)
-                vertices.add(green)
-                vertices.add(blue)
-                vertices.add(alpha)
+                vertices.put(bufferIndex++, x)
+                vertices.put(bufferIndex++, y)
+                vertices.put(bufferIndex++, tileX * uvx)
+                vertices.put(bufferIndex++, tileY * uvy)
+                vertices.put(bufferIndex++, red)
+                vertices.put(bufferIndex++, green)
+                vertices.put(bufferIndex++, blue)
+                vertices.put(bufferIndex++, alpha)
             }
 
             x += tileWidth
@@ -229,9 +235,6 @@ class Tilemap {
         }
 
         if (renderComponent.mesh.vertexBuffer.valid()) {
-            // TODO: Optimize this
-            val byteBuffer = memAlloc(vertices.size*4)
-            byteBuffer.asFloatBuffer().put(vertices.toFloatArray()).flip()
             renderComponent.mesh.vertexBuffer.update(byteBuffer)
         }
     }
