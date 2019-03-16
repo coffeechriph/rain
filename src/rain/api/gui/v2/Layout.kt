@@ -82,7 +82,7 @@ open class Layout {
             }
 
             if (hScrollBar != null) {
-                val value = x.toInt() - (panel.x + panel.w).toInt()
+                val value = x - (panel.x + panel.w)
                 hScrollBar!!.maxScrollAmount = value
                 hScrollBar!!.x = panel.x
                 hScrollBar!!.y = panel.y + panel.h - autoScrollHeight
@@ -92,7 +92,7 @@ open class Layout {
             }
 
             if (vScrollBar != null) {
-                val value = y.toInt() - (panel.y + panel.h).toInt()
+                val value = y - (panel.y + panel.h)
                 vScrollBar!!.maxScrollAmount = value
                 vScrollBar!!.x = panel.x + panel.w - autoScrollWidth
                 vScrollBar!!.y = panel.y

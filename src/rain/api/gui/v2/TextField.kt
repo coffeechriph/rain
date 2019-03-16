@@ -8,17 +8,12 @@ class TextField internal constructor(parent: Panel):
     var string: String = ""
         set(value) {
             field = value
-            istring = value
-            cursorPos = 0
-            displayStart = 0
-            displayEnd = value.length
             parentPanel.compose = true
+            cursorPos = string.length
         }
 
-    private var istring: String = ""
     private var cursorPos = 0
     private var displayStart = 0
-    private var displayEnd = 0
     private var displayString = ""
 
     init {
@@ -29,7 +24,6 @@ class TextField internal constructor(parent: Panel):
         text.color = skin.textFieldStyle.textColor
         text.textAlign = skin.textFieldStyle.textAlign
 
-        updateDisplayableString()
         text.string = displayString
 
         var backColor = skin.textFieldStyle.backgroundColor
@@ -66,87 +60,40 @@ class TextField internal constructor(parent: Panel):
     }
 
     override fun onCharEdit(input: Input) {
-        clampCursorPos()
-
-        // TODO: Ensure the text is always visible around the cursor
-        if (active) {
-            if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
-                if (cursorPos > 0) {
-                    cursorPos -= 1
-                }
-                // Always move display start back when we move cursor pos
-                if (displayStart > 0) {
-                    displayStart -= 1
-                }
-                if (parentPanel.font.getStringWidth(istring, displayStart, displayEnd) > w) {
-                    displayEnd -= 1
-                }
-                parentPanel.compose = true
+        if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
+            if (cursorPos > 0) {
+                cursorPos -= 1
             }
-            else if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
-                if (cursorPos < istring.length) {
-                    cursorPos += 1
-                }
+        }
 
-                // Move display start forward if the string gets too large
-                if (parentPanel.font.getStringWidth(istring, displayStart, displayEnd) > w) {
-                    displayStart += 1
-                }
-                if (displayEnd < istring.length) {
-                    displayEnd += 1
-                }
-                parentPanel.compose = true
-            }
-            else if (input.keyState(Input.Key.KEY_BACKSPACE) == Input.InputState.PRESSED) {
-                if (istring.isNotEmpty() && cursorPos > 0) {
-                    istring = StringBuilder(istring).deleteCharAt(cursorPos - 1).toString()
-                    cursorPos -= 1
-
-                    // Always move display start back when we move cursor pos
-                    if (displayStart > 0) {
-                        displayStart -= 1
-                    }
-                    if (parentPanel.font.getStringWidth(istring, displayStart, displayEnd) > w) {
-                        displayEnd -= 1
-                    }
-                    textEdited = true
-                    parentPanel.compose = true
-                }
-            }
-
-            var codepoint = input.popCodePointQueue()
-            while(codepoint > -1) {
-                istring = StringBuilder(istring).insert(cursorPos, codepoint.toChar()).toString()
+        if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
+            if (cursorPos < string.length) {
                 cursorPos += 1
+            }
+        }
 
-                // Move display start forward if the string gets too large
-                if (parentPanel.font.getStringWidth(istring, displayStart, cursorPos) > w) {
-                    displayStart += 1
-                }
-                if (displayEnd < istring.length) {
-                    displayEnd += 1
-                }
-                codepoint = input.popCodePointQueue()
-                textEdited = true
-                parentPanel.compose = true
+        if (input.keyState(Input.Key.KEY_BACKSPACE) == Input.InputState.PRESSED) {
+            if (cursorPos < string.length) {
+                StringBuilder(string).deleteCharAt(cursorPos)
+            }
+            else {
+                StringBuilder(string).substring(0, string.length-1)
+            }
+        }
+
+        while (!input.isCodePointQueueEmpty()) {
+            if (cursorPos < string.length) {
+                StringBuilder(string).insert(cursorPos, input.popCodePointQueue())
+            }
+            else {
+                StringBuilder(string).append(input.popCodePointQueue())
+                cursorPos += 1
             }
         }
     }
 
     override fun onMouseEvent(input: Input) {
         parentPanel.compose = true
-    }
-
-    private fun clampCursorPos() {
-        if (cursorPos > istring.length) {
-            cursorPos = istring.length
-        } else if (cursorPos < 0) {
-            cursorPos = 0
-        }
-    }
-
-    private fun updateDisplayableString() {
-        displayString = istring.substring(displayStart, displayEnd)
     }
 
     override fun handleState(): Boolean {

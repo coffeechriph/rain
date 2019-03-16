@@ -152,6 +152,7 @@ internal fun guiManagerHandleInput(input: Input) {
         if (component.eventTypes and GuiEventTypes.DRAG.value != 0) {
             if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and Input.InputState.DOWN.value != 0) {
                 component.onDrag(input)
+                component.parentPanel.compose = true
             }
             else if (input.mouseState(Input.Button.MOUSE_BUTTON_LEFT).value and (Input.InputState.RELEASED.value or Input.InputState.UP.value) != 0) {
                 lastActiveComponent = null
