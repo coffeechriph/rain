@@ -1,9 +1,11 @@
 package rain.api.gui.v2
 
+import org.joml.Vector2f
 import org.joml.Vector4f
 import org.lwjgl.stb.STBTTAlignedQuad
 import org.lwjgl.stb.STBTruetype
 import org.lwjgl.system.MemoryStack
+import rain.assertion
 import rain.util.Earcut
 import java.lang.Math.cos
 import java.lang.Math.sin
@@ -132,25 +134,40 @@ internal fun gfxCreateText(tx: Float, ty: Float, depth: Float, w: Float, h: Floa
     return Arrays.copyOfRange(textVertexData, 0, textVertexDataIndex)
 }
 
-internal fun gfxCreateRect(x: Float, y: Float, z: Float, width: Float, height: Float, color: Vector4f): FloatArray {
+internal fun gfxCreateRect(x: Float,
+                           y: Float,
+                           z: Float,
+                           width: Float,
+                           height: Float,
+                           color: Vector4f,
+                           uvs: Array<Vector2f> = arrayOf(Vector2f(-1.0f, -1.0f), Vector2f(-1.0f, -1.0f), Vector2f(-1.0f, -1.0f), Vector2f(-1.0f, -1.0f))): FloatArray {
     val w = width
     val h = height
-    return floatArrayOf(
-        x, y, z, color.x, color.y, color.z,
-        x, y+h, z, color.x, color.y, color.z,
-        x+w, y+h, z, color.x, color.y, color.z,
+    if (uvs.size != 4) {
+        assertion("There must be 4 specified UVs. One for each corner of the rectangle.")
+    }
 
-        x+w, y+h, z, color.x, color.y, color.z,
-        x+w, y, z, color.x, color.y, color.z,
-        x, y, z, color.x, color.y, color.z
+    return floatArrayOf(
+        x, y, z, color.x, color.y, color.z, uvs[0].x, uvs[0].y,
+        x, y+h, z, color.x, color.y, color.z, uvs[1].x, uvs[1].y,
+        x+w, y+h, z, color.x, color.y, color.z, uvs[2].x, uvs[2].y,
+
+        x+w, y+h, z, color.x, color.y, color.z, uvs[2].x, uvs[2].y,
+        x+w, y, z, color.x, color.y, color.z, uvs[3].x, uvs[3].y,
+        x, y, z, color.x, color.y, color.z, uvs[0].x, uvs[0].y
     )
 }
 
 // TODO: We don't actually have to triangulate such a simple mesh
 // Change that in the future
-internal fun gfxCreateRoundedRect(cx: Float, cy: Float, cz: Float, width: Float, height: Float, radius: Float, color: Vector4f): FloatArray {
+internal fun gfxCreateRoundedRect(cx: Float, cy: Float, cz: Float, width: Float, height: Float, radius: Float, color: Vector4f,
+                                  uvs: Array<Vector2f> = arrayOf(Vector2f(-1.0f, -1.0f), Vector2f(-1.0f, -1.0f), Vector2f(-1.0f, -1.0f), Vector2f(-1.0f, -1.0f))): FloatArray {
     val w = width.toDouble()
     val h = height.toDouble()
+
+    if (uvs.size != 4) {
+        assertion("There must be 4 specified UVs. One for each corner of the rectangle unaffected by the rounding of corners.")
+    }
 
     val list = ArrayList<Double>()
     list.addAll(listOf(0.0,  h - radius))
@@ -199,6 +216,10 @@ internal fun gfxCreateRoundedRect(cx: Float, cy: Float, cz: Float, width: Float,
 
     val indices = Earcut().triangulate(list.toDoubleArray(), null, 2)
     val vertices = ArrayList<Float>()
+
+    val centerX = cx + width/2.0f
+    val centerY = cy + height/2.0f
+
     for (i in indices) {
         vertices.add(cx + list[i*2].toFloat())
         vertices.add(cy + list[i*2+1].toFloat())
@@ -206,6 +227,23 @@ internal fun gfxCreateRoundedRect(cx: Float, cy: Float, cz: Float, width: Float,
         vertices.add(color.x)
         vertices.add(color.y)
         vertices.add(color.z)
+
+        if (list[i*2].toFloat() < centerX && list[i*2+1].toFloat() < centerY) {
+            vertices.add(uvs[0].x)
+            vertices.add(uvs[0].y)
+        }
+        else if (list[i*2].toFloat() < centerX && list[i*2+1].toFloat() > centerY) {
+            vertices.add(uvs[1].x)
+            vertices.add(uvs[1].y)
+        }
+        else if (list[i*2].toFloat() > centerX && list[i*2+1].toFloat() > centerY) {
+            vertices.add(uvs[2].x)
+            vertices.add(uvs[2].y)
+        }
+        else if (list[i*2].toFloat() > centerX && list[i*2+1].toFloat() < centerY) {
+            vertices.add(uvs[3].x)
+            vertices.add(uvs[3].y)
+        }
         //vertices.add(color.w)
     }
 

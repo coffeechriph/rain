@@ -9,11 +9,11 @@ import rain.api.gfx.Texture2d
 import rain.log
 
 internal class VulkanMaterial(val vk: Vk,
-                              private val setupCommandBuffer: CommandPool.CommandBuffer,
-                              private val setupQueue: Queue,
+                              setupCommandBuffer: CommandPool.CommandBuffer,
+                              setupQueue: Queue,
                               val resourceFactory: VulkanResourceFactory,
                               val id: Long,
-                              val name: String,
+                              internal val name: String,
                               internal val vertexShader: ShaderModule,
                               internal val fragmentShader: ShaderModule,
                               internal val texture2d: Array<Texture2d>,
@@ -91,6 +91,10 @@ internal class VulkanMaterial(val vk: Vk,
 
     override fun valid(): Boolean {
         return isValid
+    }
+
+    override fun getName(): String {
+        return name
     }
 
     init {

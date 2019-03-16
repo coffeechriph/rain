@@ -3,11 +3,8 @@ package rain.api.scene
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
-import org.joml.Matrix4f
 import org.joml.Random
-import org.joml.Vector2f
 import org.joml.Vector2i
-import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.Window
@@ -19,6 +16,7 @@ import rain.api.gfx.*
 import rain.api.manager.emitterManagerAddParticleEmitterEntity
 import rain.vulkan.VertexAttribute
 
+// TODO: The window should not be accessible from the scene ...
 class Scene(val resourceFactory: ResourceFactory, val window: Window) {
     private lateinit var quadVertexBuffer: VertexBuffer
     private val entitySystems = ArrayList<EntitySystem<Entity>>()

@@ -14,7 +14,9 @@ internal enum class GuiEventTypes(val value: Int) {
 }
 
 private val panels = ArrayList<Panel>()
-private lateinit var uiMaterial: Material
+
+// TODO: As soon as we move the UI material to the panel we'll hide this
+internal lateinit var uiMaterial: Material
 private lateinit var textMaterial: Material
 private lateinit var font: Font
 private lateinit var resourceFactory: ResourceFactory
@@ -26,6 +28,7 @@ private var currentHookedMode = 0 // TODO: Add enum instead
 private var lastHookedPoint = Vector2f(0.0f, 0.0f)
 private var lastActivePanel: Panel? = null
 
+// TODO: We want 1 material per panel instead.
 internal fun guiManagerInit(resFactory: ResourceFactory) {
     resourceFactory = resFactory
     font = Font("./data/fonts/FreeSans.ttf")
@@ -46,6 +49,13 @@ internal fun guiManagerInit(resFactory: ResourceFactory) {
 
 internal fun guiManagerClear() {
     panels.clear()
+}
+
+fun guiManagerSetMaterial(material: Material) {
+    if (::uiMaterial.isInitialized) {
+        resourceFactory.deleteMaterial(uiMaterial.getName())
+    }
+    uiMaterial = material
 }
 
 fun guiManagerCreatePanel(layout: Layout): Panel {

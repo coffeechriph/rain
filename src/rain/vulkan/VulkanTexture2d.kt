@@ -33,6 +33,8 @@ internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: Vu
     private var height = 0
     private var texCoordWidth = 1.0f
     private var texCoordHeight = 1.0f
+    private var tileWidthPixels = 1
+    private var tileHeightPixels = 1
 
     override fun getWidth(): Int {
         return width
@@ -40,6 +42,14 @@ internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: Vu
 
     override fun getHeight(): Int {
         return height
+    }
+
+    override fun getTileHeightPixels(): Int {
+        return tileWidthPixels
+    }
+
+    override fun getTileWidthPixels(): Int {
+        return tileHeightPixels
     }
 
     override fun getTexCoordWidth(): Float {
@@ -53,6 +63,8 @@ internal class VulkanTexture2d(val id: Long, val vk: Vk, val resourceFactory: Vu
     override fun setTiledTexture(tileWidth: Int, tileHeight: Int) {
         texCoordWidth = (tileWidth.toFloat() / width.toFloat())
         texCoordHeight = (tileHeight.toFloat() / height.toFloat())
+        tileWidthPixels = tileWidth
+        tileHeightPixels = tileHeight
     }
 
     override fun valid(): Boolean {

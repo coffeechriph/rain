@@ -187,7 +187,11 @@ internal class VulkanResourceFactory(private val vk: Vk) : ResourceFactory {
         val material = materials[index]
         material.invalidate()
         deleteRawBufferQueue.add(DeleteBuffer(material.sceneData.rawBuffer.buffer, material.sceneData.rawBuffer.allocation))
-        deleteRawBufferQueue.add(DeleteBuffer(material.textureDataUBO.rawBuffer.buffer, material.textureDataUBO.rawBuffer.allocation))
+
+        if (material.hasTexelBuffer()) {
+            deleteRawBufferQueue.add(DeleteBuffer(material.textureDataUBO.rawBuffer.buffer, material.textureDataUBO.rawBuffer.allocation))
+        }
+
         deleteMaterialQueue.add(DeleteMaterial(material.descriptorPool.pool))
         materials.remove(material)
     }

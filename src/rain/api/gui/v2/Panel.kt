@@ -166,6 +166,20 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         return scrollBar
     }
 
+    fun createImage(imageTileIndexX: Int, imageTileIndexY: Int, string: String): Image {
+        val image = Image(this)
+        image.text.parentComponent = image
+        image.text.parentPanel = this
+        image.string = string
+        image.text.w = font.getStringWidth(string, 0, string.length)
+        image.imageTileIndexX = imageTileIndexX
+        image.imageTileIndexY = imageTileIndexY
+        components.add(image)
+        texts.add(image.text)
+        compose = true
+        return image
+    }
+
     fun removeComponent(component: Component): Panel {
         texts.remove(component.text)
         components.remove(component)
@@ -224,6 +238,7 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                         .withState(VertexBufferState.STATIC)
                         .withAttribute(VertexAttribute(0, 3))
                         .withAttribute(VertexAttribute(1, 3))
+                        .withAttribute(VertexAttribute(2, 2))
                         .withDataType(DataType.FLOAT)
                         .withVertices(byteBuffer)
                         .build()
