@@ -37,8 +37,15 @@ class Tilemap {
         var x = 0.0f
         var y = 0.0f
 
-        if (!::byteBuffer.isInitialized || map.size * 48 * 4 > byteBuffer.capacity()) {
-            byteBuffer = memAlloc(map.size * 48 * 4)
+        var dataBufferSize = 0
+        for (gfx in map) {
+            if (gfx != TileGfxNone) {
+                dataBufferSize += 48 * 4
+            }
+        }
+
+        if (!::byteBuffer.isInitialized || dataBufferSize != byteBuffer.capacity()) {
+            byteBuffer = memAlloc(dataBufferSize)
         }
 
         val vertices = byteBuffer.asFloatBuffer()
@@ -154,8 +161,15 @@ class Tilemap {
         var x = 0.0f
         var y = 0.0f
 
-        if (!::byteBuffer.isInitialized || tileGfx.size * 48 * 4 > byteBuffer.capacity()) {
-            byteBuffer = memAlloc(tileGfx.size * 48 * 4)
+        var dataBufferSize = 0
+        for (gfx in tileGfx) {
+            if (gfx != TileGfxNone) {
+                dataBufferSize += 48 * 4
+            }
+        }
+
+        if (!::byteBuffer.isInitialized || dataBufferSize != byteBuffer.capacity()) {
+            byteBuffer = memAlloc(dataBufferSize)
         }
 
         val vertices = byteBuffer.asFloatBuffer()
