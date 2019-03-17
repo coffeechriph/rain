@@ -9,11 +9,16 @@ class TextField internal constructor(parent: Panel):
         set(value) {
             field = value
             parentPanel.compose = true
-            cursorPos = string.length
+            cursorPos = value.length
+            internalString = value
         }
-
+        get(){
+            return internalString
+        }
+    private var internalString = ""
     private var cursorPos = 0
     private var displayStart = 0
+    private var displayEnd = 0
     private var displayString = ""
 
     init {
@@ -21,9 +26,9 @@ class TextField internal constructor(parent: Panel):
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        updateDisplayString()
         text.color = skin.textFieldStyle.textColor
         text.textAlign = skin.textFieldStyle.textAlign
-
         text.string = displayString
 
         var backColor = skin.textFieldStyle.backgroundColor
@@ -59,36 +64,67 @@ class TextField internal constructor(parent: Panel):
         return cursor + back
     }
 
+    private fun updateDisplayString() {
+        displayStart = 0
+        displayEnd = internalString.length
+        displayString = ""
+
+        while (parentPanel.font.getStringWidth(internalString, displayStart, displayEnd) > w) {
+            if (displayStart < cursorPos) {
+                displayStart++
+            }
+
+            if (displayEnd > cursorPos) {
+                displayEnd--
+            }
+        }
+
+        for (i in displayStart until displayEnd) {
+            displayString += internalString[i]
+        }
+    }
+
     override fun onCharEdit(input: Input) {
         if (input.keyState(Input.Key.KEY_LEFT) == Input.InputState.PRESSED) {
             if (cursorPos > 0) {
                 cursorPos -= 1
+                parentPanel.compose = true
             }
         }
 
         if (input.keyState(Input.Key.KEY_RIGHT) == Input.InputState.PRESSED) {
-            if (cursorPos < string.length) {
+            if (cursorPos < internalString.length) {
                 cursorPos += 1
+                parentPanel.compose = true
             }
         }
 
         if (input.keyState(Input.Key.KEY_BACKSPACE) == Input.InputState.PRESSED) {
-            if (cursorPos < string.length) {
-                StringBuilder(string).deleteCharAt(cursorPos)
-            }
-            else {
-                StringBuilder(string).substring(0, string.length-1)
+            if (internalString.isNotEmpty()) {
+                if (cursorPos < internalString.length) {
+                    internalString = StringBuilder(internalString).deleteCharAt(cursorPos).toString()
+                } else {
+                    internalString = StringBuilder(internalString).substring(0, internalString.length - 1)
+                }
+
+                if (cursorPos > 0) {
+                    cursorPos--
+                }
+
+                parentPanel.compose = true
             }
         }
 
         while (!input.isCodePointQueueEmpty()) {
-            if (cursorPos < string.length) {
-                StringBuilder(string).insert(cursorPos, input.popCodePointQueue())
+            val ch = input.popCodePointQueue().toChar()
+            if (cursorPos < internalString.length) {
+                internalString = StringBuilder(internalString).insert(cursorPos, ch).toString()
             }
             else {
-                StringBuilder(string).append(input.popCodePointQueue())
+                internalString = StringBuilder(internalString).append(ch).toString()
                 cursorPos += 1
             }
+            parentPanel.compose = true
         }
     }
 
