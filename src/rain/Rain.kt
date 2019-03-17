@@ -13,7 +13,6 @@ import rain.util.ShaderCompiler
 import rain.vulkan.Vk
 import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
-import kotlin.math.min
 
 open class Rain {
     protected val window = Window()
@@ -68,23 +67,25 @@ open class Rain {
         scene.init(resourceFactory)
         init()
 
-        var currentTime = System.nanoTime() / 1000_000_000.0f
-        val maxUpdates = 10
+        var oldTime = System.nanoTime() / 1000_000_000.0
+        var accumulator = 0.0
 
         while (window.pollEvents()) {
             timer.update()
 
             if (!stateManager.switchState) {
                 // Ensure we update the physics enough times even under low fps
-                val newTime = System.nanoTime() / 1000_000_000.0f
-                var frameTime = newTime - currentTime
-                var numUpdates = 0
-                currentTime = newTime
-                while (frameTime > 0.0f && numUpdates < maxUpdates) {
-                    val deltaTime = min(frameTime, 1.0f / 60.0f)
+                val currentTime = System.nanoTime() / 1000_000_000.0
+                val deltaTime = currentTime - oldTime
+                oldTime = currentTime
+                accumulator += deltaTime
+                accumulator = Math.min(8.0/60.0, accumulator)
+                while (accumulator > 1.0f / 61.0) {
                     updateLoop(deltaTime)
-                    frameTime -= deltaTime
-                    numUpdates++
+                    accumulator -= 1.0f/59.0
+                    if (accumulator < 0) {
+                        accumulator = 0.0;
+                    }
                 }
 
                 scene.render(vulkanRenderer)
@@ -121,7 +122,7 @@ open class Rain {
         endLog()
     }
 
-    private fun updateLoop(deltaTime: Float) {
+    private fun updateLoop(deltaTime: Double) {
         window.title = "FPS: " + timer.framesPerSecond
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
@@ -137,8 +138,8 @@ open class Rain {
         moveManagerSimulate()
         emitterManagerSimulate()
         animatorManagerSimulate()
-        scene.update(localInput, deltaTime)
-        stateManager.update(localInput, deltaTime)
+        scene.update(localInput)
+        stateManager.update(localInput)
         input.updateKeyState()
     }
 }

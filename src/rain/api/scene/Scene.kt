@@ -104,7 +104,7 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
         physicWorld.setContactListener(physicsContactListener)
     }
 
-    internal fun update(input: Input, deltaTime: Float) {
+    internal fun update(input: Input) {
         physicWorld.step(1.0f / 60.0f, 6, 2)
         physicWorld.clearForces()
 
@@ -115,7 +115,7 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
 
         for (system in entitySystems) {
             for (entity in system.getEntityList()) {
-                entity!!.update(this, input, system, deltaTime)
+                entity!!.update(this, input, system)
             }
 
             for (collider in system.getColliderList()) {

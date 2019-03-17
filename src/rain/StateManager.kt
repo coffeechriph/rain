@@ -27,9 +27,9 @@ class StateManager(val resourceFactory: ResourceFactory, val scene: Scene) {
         assertion("State $key does not exist!")
     }
 
-    fun update(input: Input, deltaTime: Float) {
+    fun update(input: Input) {
         if (::currentState.isInitialized) {
-            currentState.update(resourceFactory, scene, input, deltaTime)
+            currentState.update(resourceFactory, scene, input)
         }
     }
 
