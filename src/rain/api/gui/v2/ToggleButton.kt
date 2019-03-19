@@ -19,6 +19,9 @@ class ToggleButton internal constructor(panel: Panel): Component(Input.InputStat
     }
 
     override fun createGraphic(depth: Float, skin: Skin): FloatArray {
+        text.color = skin.buttonStyle.textColor
+        text.textAlign = skin.buttonStyle.textAlign
+
         var backColor = skin.buttonStyle.backgroundColor
         if (checked) {
             backColor = skin.buttonStyle.activeColor
