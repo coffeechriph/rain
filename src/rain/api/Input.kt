@@ -212,19 +212,8 @@ class Input {
         lastFrameMouseState.add(button)
     }
 
-    internal fun resetKeyState() {
-        for (key in lastFrameKeyState) {
-            keyboardStates[key] = Input.InputState.UP
-        }
-    }
-
-    internal fun resetMouseState() {
-        for (i in 0 until mouseStates.size) {
-            mouseStates[i] = InputState.UP
-        }
-    }
-
     internal fun updateKeyState() {
+        codepointInputQueue.clear()
         for (key in lastFrameKeyState) {
             if (keyboardStates[key] == InputState.PRESSED) {
                 keyboardStates[key] = InputState.DOWN

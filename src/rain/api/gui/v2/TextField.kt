@@ -112,6 +112,7 @@ class TextField internal constructor(parent: Panel):
                 }
 
                 parentPanel.compose = true
+                textEdited = true
             }
         }
 
@@ -125,6 +126,7 @@ class TextField internal constructor(parent: Panel):
                 cursorPos += 1
             }
             parentPanel.compose = true
+            textEdited = true
         }
     }
 
