@@ -38,6 +38,7 @@ class ListItem internal constructor(val parent: ListItem?, val treeView: TreeVie
 
     internal val children = ArrayList<ListItem>()
 
+    // TODO: Implement a remove method
     fun addItem(string: String): ListItem {
         val item = ListItem(this, treeView)
         item.parentPanel = treeView
@@ -80,10 +81,13 @@ class ListItem internal constructor(val parent: ListItem?, val treeView: TreeVie
             }
         }
 
-        if (expanded) {
-            return  gfxCreateRect(x - 1, y + h*0.5f, depth, 1.0f, h, skin.buttonStyle.outlineColor) +
-                    gfxCreateRect(x - 1, y + h, depth, 10.0f, 1.0f, skin.buttonStyle.outlineColor) +
-                    body
+        if (children.size > 0) {
+            if (!expanded) {
+                text.string = "+$string"
+            }
+            else {
+                text.string = "-$string"
+            }
         }
 
         return body

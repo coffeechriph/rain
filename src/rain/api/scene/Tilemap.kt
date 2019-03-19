@@ -29,8 +29,11 @@ class Tilemap {
 
     private lateinit var renderComponent: RenderComponent
     private lateinit var byteBuffer: ByteBuffer
+    private lateinit var resourceFactory: ResourceFactory
+    private lateinit var material: Material
 
-    fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32, tileNumY: Int = 32,
+    fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32,
+               tileNumY: Int = 32,
                tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileGfx>) {
         assert(map.size == tileNumX * tileNumY)
 
@@ -125,6 +128,24 @@ class Tilemap {
             }
         }
 
+        this.tileNumX = tileNumX
+        this.tileNumY = tileNumY
+        this.tileWidth = tileWidth
+        this.tileHeight = tileHeight
+
+        this.resourceFactory = resourceFactory
+        this.material = material
+
+        if (byteBuffer.remaining() > 0) {
+            ensureRenderComponentSetup()
+        }
+    }
+
+    private fun ensureRenderComponentSetup() {
+        if (::renderComponent.isInitialized) {
+            return
+        }
+
         val vertexBuffer = resourceFactory.buildVertexBuffer()
                 .withVertices(byteBuffer)
                 .withState(VertexBufferState.STATIC)
@@ -133,11 +154,6 @@ class Tilemap {
                 .withAttribute(VertexAttribute(2, 4))
                 .build()
         val mesh = Mesh(vertexBuffer, null)
-
-        this.tileNumX = tileNumX
-        this.tileNumY = tileNumY
-        this.tileWidth = tileWidth
-        this.tileHeight = tileHeight
 
         renderComponent = RenderComponent(transform, mesh, material)
         addNewRenderComponentToRenderer(renderComponent)
@@ -183,8 +199,8 @@ class Tilemap {
                 val green = tileGfx[i].green
                 val blue = tileGfx[i].blue
                 val alpha = tileGfx[i].alpha
-                val uvx = renderComponent.material.getTexture2d()[0].getTexCoordWidth()
-                val uvy = renderComponent.material.getTexture2d()[0].getTexCoordHeight()
+                val uvx = material.getTexture2d()[0].getTexCoordWidth()
+                val uvy = material.getTexture2d()[0].getTexCoordHeight()
 
                 vertices.put(bufferIndex++, x)
                 vertices.put(bufferIndex++, y)
@@ -248,8 +264,11 @@ class Tilemap {
             }
         }
 
-        if (renderComponent.mesh.vertexBuffer.valid()) {
-            renderComponent.mesh.vertexBuffer.update(byteBuffer)
+        if (byteBuffer.remaining() > 0) {
+            ensureRenderComponentSetup()
+            if (renderComponent.mesh.vertexBuffer.valid()) {
+                renderComponent.mesh.vertexBuffer.update(byteBuffer)
+            }
         }
     }
 
