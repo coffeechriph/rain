@@ -18,28 +18,38 @@ private val TEXT_DEPTH = 0.4f
 open class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
     var x = 0.0f
         set(value) {
+            if (field != value) {
+                compose = true
+            }
             field = value
-            compose = true
         }
     var y = 0.0f
         set(value) {
+            if (field != value) {
+                compose = true
+            }
             field = value
-            compose = true
         }
     var z = 0.0f
         internal set(value) {
+            if (field != value) {
+                compose = true
+            }
             field = value
-            compose = true
         }
     var w = 0.0f
         set(value) {
+            if (field != value) {
+                compose = true
+            }
             field = value
-            compose = true
         }
     var h = 0.0f
         set(value) {
+            if (field != value) {
+                compose = true
+            }
             field = value
-            compose = true
         }
     var skin = DEFAULT_SKIN
     var resizable = true
