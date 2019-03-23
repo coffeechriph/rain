@@ -10,7 +10,7 @@ class Camera(depthRange: Float, val resolution: Vector2i) {
         private set
     var maxDepth = 1000.0f
         private set
-    var view = Matrix4f()
+    internal var view = Matrix4f()
 
     init {
         maxDepth = depthRange

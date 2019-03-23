@@ -354,14 +354,20 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
     private fun drawRenderPass(nextImage: Int) {
         renderpass.begin(swapchain.framebuffers[nextImage], renderCommandBuffers[frameIndex], swapchain.extent)
 
-        val projectionMatrixBuffer = memAlloc(16 * 4)
+        val pvMatrixBuffer = memAlloc(16 * 4)
+        camera.view = Matrix4f()
+        camera.view.translate(camera.x, camera.y, 0.0f)
         val pvMatrix = Matrix4f(camera.projection)
         pvMatrix.mul(camera.view)
-        pvMatrix.get(projectionMatrixBuffer)
+        pvMatrix.get(pvMatrixBuffer)
 
-        renderPipelines(projectionMatrixBuffer)
+        renderPipelines(pvMatrixBuffer)
         clearDepthBuffer(renderCommandBuffers[frameIndex])
-        renderGuiPipelines(projectionMatrixBuffer)
+
+        // We don't want the scene camera to influence the gui
+        camera.projection.get(pvMatrixBuffer)
+        renderGuiPipelines(pvMatrixBuffer)
+
         renderpass.end(renderCommandBuffers[frameIndex])
     }
 
