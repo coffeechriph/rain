@@ -28,9 +28,6 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
     private var physicsContactListener = PhysicsContactListener()
 
     var activeCamera = Camera(1000.0f, Vector2i(window.size.x, window.size.y))
-        set(value) {
-
-        }
 
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
@@ -53,8 +50,11 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
         return system
     }
 
-    fun addTilemap(tilemap: Tilemap) {
+    fun createTilemap(material: Material, tileNumX: Int, tileNumY: Int, tileWidth: Float, tileHeight: Float): Tilemap {
+        val tilemap = Tilemap()
         tilemaps.add(tilemap)
+        tilemap.create(resourceFactory, material, tileNumX, tileNumY, tileWidth, tileHeight)
+        return tilemap
     }
 
     fun addCamera(camera: Camera) {
@@ -128,6 +128,9 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
 
     internal fun render(renderer: Renderer) {
         renderer.setActiveCamera(activeCamera)
+        for (tilemap in tilemaps) {
+            tilemap.updateRenderComponent()
+        }
 
         /*for (batcher in spriteBatchers) {
             if (batcher.hasSprites()) {

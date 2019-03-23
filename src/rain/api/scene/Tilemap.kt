@@ -3,6 +3,7 @@ package rain.api.scene
 import org.joml.Matrix4f
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
+import org.lwjgl.system.MemoryUtil.memFree
 import rain.api.components.RenderComponent
 import rain.api.components.Transform
 import rain.api.gfx.Material
@@ -11,10 +12,11 @@ import rain.api.gfx.ResourceFactory
 import rain.api.gfx.VertexBufferState
 import rain.api.manager.addNewRenderComponentToRenderer
 import rain.api.manager.removeRenderComponentFromRenderer
+import rain.assertion
 import rain.vulkan.VertexAttribute
 import java.nio.ByteBuffer
 
-class Tilemap {
+class Tilemap internal constructor(){
     private val modelMatrix = Matrix4f()
     var tileNumX = 128
         private set
@@ -31,102 +33,158 @@ class Tilemap {
     private lateinit var byteBuffer: ByteBuffer
     private lateinit var resourceFactory: ResourceFactory
     private lateinit var material: Material
+    private var vertexData = floatArrayOf()
+    private var updateMesh = false
 
-    fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32,
+    fun getTileImageIndex(tileX: Int, tileY: Int): Pair<Int, Int> {
+        val bufferIndex = (tileX + tileY * tileNumX) * 48
+        // Potential rounding errors
+        return Pair((vertexData[bufferIndex+2] / material.getTexture2d()[0].getTexCoordWidth()).toInt(),
+                    (vertexData[bufferIndex+3] / material.getTexture2d()[0].getTexCoordHeight()).toInt())
+    }
+
+    fun setTile(tileX: Int, tileY: Int, imageX: Int, imageY: Int) {
+        setTile(tileX, tileY, imageX, imageY, 1.0f, 1.0f, 1.0f, 1.0f)
+    }
+
+    fun setTile(tileX: Int, tileY: Int, red: Float, green: Float, blue: Float, alpha: Float) {
+        val imageIndex = getTileImageIndex(tileX, tileY)
+        setTile(tileX, tileY, imageIndex.first, imageIndex.second, red, green, blue, alpha)
+    }
+
+    fun setTile(tileX: Int, tileY: Int, imageX: Int, imageY: Int, red: Float, green: Float, blue: Float, alpha: Float) {
+        if (tileX < 0 || tileX > tileNumX || tileY < 0 || tileY > tileNumY) {
+            assertion("Tile index out of bounds $tileX, $tileY")
+        }
+
+        var bufferIndex = (tileX + tileY * tileNumX) * 48
+        val x = tileX.toFloat() * tileWidth
+        val y = tileY.toFloat() * tileHeight
+        val uvx = material.getTexture2d()[0].getTexCoordWidth()
+        val uvy = material.getTexture2d()[0].getTexCoordHeight()
+
+        vertexData[bufferIndex++] = x
+        vertexData[bufferIndex++] = y
+        vertexData[bufferIndex++] = imageX * uvx
+        vertexData[bufferIndex++] = imageY * uvy
+        vertexData[bufferIndex++] = red
+        vertexData[bufferIndex++] = green
+        vertexData[bufferIndex++] = blue
+        vertexData[bufferIndex++] = alpha
+
+        vertexData[bufferIndex++] = x
+        vertexData[bufferIndex++] = y + tileHeight
+        vertexData[bufferIndex++] = imageX * uvx
+        vertexData[bufferIndex++] = uvy + imageY * uvy
+        vertexData[bufferIndex++] = red
+        vertexData[bufferIndex++] = green
+        vertexData[bufferIndex++] = blue
+        vertexData[bufferIndex++] = alpha
+
+        vertexData[bufferIndex++] = x + tileWidth
+        vertexData[bufferIndex++] = y + tileHeight
+        vertexData[bufferIndex++] = uvx + imageX * uvx
+        vertexData[bufferIndex++] = uvy + imageY * uvy
+        vertexData[bufferIndex++] = red
+        vertexData[bufferIndex++] = green
+        vertexData[bufferIndex++] = blue
+        vertexData[bufferIndex++] = alpha
+
+        vertexData[bufferIndex++] = x + tileWidth
+        vertexData[bufferIndex++] = y + tileHeight
+        vertexData[bufferIndex++] = uvx + imageX * uvx
+        vertexData[bufferIndex++] = uvy + imageY * uvy
+        vertexData[bufferIndex++] = red
+        vertexData[bufferIndex++] = green
+        vertexData[bufferIndex++] = blue
+        vertexData[bufferIndex++] = alpha
+
+        vertexData[bufferIndex++] = x + tileWidth
+        vertexData[bufferIndex++] = y
+        vertexData[bufferIndex++] = uvx + imageX * uvx
+        vertexData[bufferIndex++] = imageY * uvy
+        vertexData[bufferIndex++] = red
+        vertexData[bufferIndex++] = green
+        vertexData[bufferIndex++] = blue
+        vertexData[bufferIndex++] = alpha
+
+        vertexData[bufferIndex++] = x
+        vertexData[bufferIndex++] = y
+        vertexData[bufferIndex++] = imageX * uvx
+        vertexData[bufferIndex++] = imageY * uvy
+        vertexData[bufferIndex++] = red
+        vertexData[bufferIndex++] = green
+        vertexData[bufferIndex++] = blue
+        vertexData[bufferIndex] = alpha
+        updateMesh = true
+    }
+
+    fun removeTile(tileX: Int, tileY: Int) {
+        var bufferIndex = (tileX + tileY * tileNumX) * 48
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex++] = -1.0f
+        vertexData[bufferIndex] = -1.0f
+        updateMesh = true
+    }
+
+    fun clearTiles() {
+        vertexData = FloatArray(tileNumX*tileNumY*48){-1.0f}
+    }
+
+    internal fun create(resourceFactory: ResourceFactory, material: Material, tileNumX: Int = 32,
                tileNumY: Int = 32,
-               tileWidth: Float = 32.0f, tileHeight: Float = 32.0f, map: Array<TileGfx>) {
-        assert(map.size == tileNumX * tileNumY)
-
-        var x = 0.0f
-        var y = 0.0f
-
-        var dataBufferSize = 0
-        for (gfx in map) {
-            if (gfx != TileGfxNone) {
-                dataBufferSize += 48 * 4
-            }
-        }
-
-        if (!::byteBuffer.isInitialized || dataBufferSize != byteBuffer.capacity()) {
-            byteBuffer = memAlloc(dataBufferSize)
-        }
-
-        val vertices = byteBuffer.asFloatBuffer()
-        var bufferIndex = 0
-        // TODO: We can optimize this by specifying x,y as 1 int32 and scale them in the shader by size
-        // This would allow us to have a tilemap with 65535 tiles on every axis
-        for (i in 0 until tileNumX*tileNumY) {
-            if (map[i] != TileGfxNone) {
-                val tileX = map[i].x
-                val tileY = map[i].y
-                val red = map[i].red
-                val green = map[i].green
-                val blue = map[i].blue
-                val alpha = map[i].alpha
-                val uvx = material.getTexture2d()[0].getTexCoordWidth()
-                val uvy = material.getTexture2d()[0].getTexCoordHeight()
-
-                vertices.put(bufferIndex++, x)
-                vertices.put(bufferIndex++, y)
-                vertices.put(bufferIndex++, tileX * uvx)
-                vertices.put(bufferIndex++, tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x)
-                vertices.put(bufferIndex++, y + tileHeight)
-                vertices.put(bufferIndex++, tileX * uvx)
-                vertices.put(bufferIndex++, uvy + tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x + tileWidth)
-                vertices.put(bufferIndex++, y + tileHeight)
-                vertices.put(bufferIndex++, uvx + tileX * uvx)
-                vertices.put(bufferIndex++, uvy + tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x + tileWidth)
-                vertices.put(bufferIndex++, y + tileHeight)
-                vertices.put(bufferIndex++, uvx + tileX * uvx)
-                vertices.put(bufferIndex++, uvy + tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x + tileWidth)
-                vertices.put(bufferIndex++, y)
-                vertices.put(bufferIndex++, uvx + tileX * uvx)
-                vertices.put(bufferIndex++, tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x)
-                vertices.put(bufferIndex++, y)
-                vertices.put(bufferIndex++, tileX * uvx)
-                vertices.put(bufferIndex++, tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-            }
-
-            x += tileWidth
-            if (x >= tileNumX * tileWidth) {
-                x = 0.0f
-                y += tileHeight
-            }
-        }
+               tileWidth: Float = 32.0f, tileHeight: Float = 32.0f) {
+        vertexData = FloatArray(tileNumX*tileNumY*48){-1.0f}
 
         this.tileNumX = tileNumX
         this.tileNumY = tileNumY
@@ -135,10 +193,6 @@ class Tilemap {
 
         this.resourceFactory = resourceFactory
         this.material = material
-
-        if (byteBuffer.remaining() > 0) {
-            ensureRenderComponentSetup()
-        }
     }
 
     private fun ensureRenderComponentSetup() {
@@ -171,103 +225,45 @@ class Tilemap {
         }
     }
 
-    fun update(tileGfx: Array<TileGfx>) {
-        assert(tileGfx.size == tileNumX * tileNumY)
-
-        var x = 0.0f
-        var y = 0.0f
-
-        var dataBufferSize = 0
-        for (gfx in tileGfx) {
-            if (gfx != TileGfxNone) {
-                dataBufferSize += 48 * 4
-            }
-        }
-
-        if (!::byteBuffer.isInitialized || dataBufferSize != byteBuffer.capacity()) {
-            byteBuffer = memAlloc(dataBufferSize)
-        }
-
-        val vertices = byteBuffer.asFloatBuffer()
-        var bufferIndex = 0
-
-        for (i in 0 until tileNumX*tileNumY) {
-            if (tileGfx[i] != TileGfxNone) {
-                val tileX = tileGfx[i].x
-                val tileY = tileGfx[i].y
-                val red = tileGfx[i].red
-                val green = tileGfx[i].green
-                val blue = tileGfx[i].blue
-                val alpha = tileGfx[i].alpha
-                val uvx = material.getTexture2d()[0].getTexCoordWidth()
-                val uvy = material.getTexture2d()[0].getTexCoordHeight()
-
-                vertices.put(bufferIndex++, x)
-                vertices.put(bufferIndex++, y)
-                vertices.put(bufferIndex++, tileX * uvx)
-                vertices.put(bufferIndex++, tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x)
-                vertices.put(bufferIndex++, y + tileHeight)
-                vertices.put(bufferIndex++, tileX * uvx)
-                vertices.put(bufferIndex++, uvy + tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x + tileWidth)
-                vertices.put(bufferIndex++, y + tileHeight)
-                vertices.put(bufferIndex++, uvx + tileX * uvx)
-                vertices.put(bufferIndex++, uvy + tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x + tileWidth)
-                vertices.put(bufferIndex++, y + tileHeight)
-                vertices.put(bufferIndex++, uvx + tileX * uvx)
-                vertices.put(bufferIndex++, uvy + tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x + tileWidth)
-                vertices.put(bufferIndex++, y)
-                vertices.put(bufferIndex++, uvx + tileX * uvx)
-                vertices.put(bufferIndex++, tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
-
-                vertices.put(bufferIndex++, x)
-                vertices.put(bufferIndex++, y)
-                vertices.put(bufferIndex++, tileX * uvx)
-                vertices.put(bufferIndex++, tileY * uvy)
-                vertices.put(bufferIndex++, red)
-                vertices.put(bufferIndex++, green)
-                vertices.put(bufferIndex++, blue)
-                vertices.put(bufferIndex++, alpha)
+    internal fun updateRenderComponent() {
+        if (updateMesh) {
+            var bufferSize = 0
+            for (i in 0 until vertexData.size step 8) {
+                if (vertexData[i+2] < 0.0f) {
+                    continue
+                }
+                bufferSize += 8 * 4
             }
 
-            x += tileWidth
-            if (x >= tileNumX * tileWidth) {
-                x = 0.0f
-                y += tileHeight
+            if (!::byteBuffer.isInitialized) {
+                byteBuffer = memAlloc(bufferSize)
             }
-        }
+            else if (byteBuffer.capacity() < bufferSize) {
+                memFree(byteBuffer)
+                byteBuffer = memAlloc(bufferSize)
+            }
 
-        if (byteBuffer.remaining() > 0) {
-            ensureRenderComponentSetup()
-            if (renderComponent.mesh.vertexBuffer.valid()) {
-                renderComponent.mesh.vertexBuffer.update(byteBuffer)
+            if (bufferSize > 0) {
+                val vertexBuffer = byteBuffer.asFloatBuffer()
+                for (i in 0 until vertexData.size step 8) {
+                    if (vertexData[i+2] < 0.0f) {
+                        continue
+                    }
+
+                    vertexBuffer.put(vertexData[i])
+                    vertexBuffer.put(vertexData[i+1])
+                    vertexBuffer.put(vertexData[i+2])
+                    vertexBuffer.put(vertexData[i+3])
+                    vertexBuffer.put(vertexData[i+4])
+                    vertexBuffer.put(vertexData[i+5])
+                    vertexBuffer.put(vertexData[i+6])
+                    vertexBuffer.put(vertexData[i+7])
+                }
+                vertexBuffer.flip()
+                ensureRenderComponentSetup()
+                if (renderComponent.mesh.vertexBuffer.valid()) {
+                    renderComponent.mesh.vertexBuffer.update(byteBuffer)
+                }
             }
         }
     }
