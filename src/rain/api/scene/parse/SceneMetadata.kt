@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IntermediateMetadata constructor(
+data class SceneMetadata constructor(
     @SerialName("name")
     var name: String,
     @SerialName("value")

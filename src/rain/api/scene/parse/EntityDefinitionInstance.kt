@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IntermediateEntityInstance constructor(
+data class EntityDefinitionInstance constructor(
     @SerialName("pos_x")
     var posX: Float,
     @SerialName("pos_y")

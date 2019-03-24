@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IntermediateTileGroup constructor(
+data class MapLayerTileGroup constructor(
         @SerialName("image_x")
         val imageX: Int,
         @SerialName("image_y")

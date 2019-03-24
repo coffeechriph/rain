@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TilemapLayer constructor(
+data class MapLayerDefinition constructor(
         @SerialName("tile_group")
-        var intermediateTileGroup: MutableList<IntermediateTileGroup>,
+        var mapLayerTileGroup: MutableList<MapLayerTileGroup>,
         @SerialName("metadata")
-        var metadata: MutableList<IntermediateMetadata>)
+        var metadata: MutableList<SceneMetadata>)
