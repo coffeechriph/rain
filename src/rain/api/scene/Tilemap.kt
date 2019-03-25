@@ -28,6 +28,14 @@ class Tilemap internal constructor(){
         private set
     var transform = Transform()
         private set
+    var visible = true
+        set(value) {
+            field = value
+
+            if (::renderComponent.isInitialized) {
+                renderComponent.visible = value
+            }
+        }
 
     private lateinit var renderComponent: RenderComponent
     private lateinit var byteBuffer: ByteBuffer
@@ -210,6 +218,7 @@ class Tilemap internal constructor(){
         val mesh = Mesh(vertexBuffer, null)
 
         renderComponent = RenderComponent(transform, mesh, material)
+        renderComponent.visible = visible
         addNewRenderComponentToRenderer(renderComponent)
         renderComponent.createUniformData = {
             if (transform.updated) {
