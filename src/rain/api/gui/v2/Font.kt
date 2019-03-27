@@ -15,12 +15,16 @@ import rain.util.readFileAsByteBuffer
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
+import org.lwjgl.stb.STBTruetype.stbtt_GetCodepointKernAdvance
+import java.awt.SystemColor.text
+import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.system.MemoryStack
 
-class Font(ttfFile: String) {
+
+
+class Font(ttfFile: String, val fontHeight: Float) {
     var useKerning = true
-    var fontHeight: Float
-        private set
-    val fontInfo: STBTTFontinfo
+    val fontInfo: STBTTFontinfo = STBTTFontinfo.create()
     lateinit var texture: Texture2d
         private set
 
@@ -28,18 +32,12 @@ class Font(ttfFile: String) {
     var descent: Int
     var lineGap: Int
 
-    private val ttf: ByteBuffer
+    private val ttf: ByteBuffer = readFileAsByteBuffer(ttfFile)
     private var bitmapWidth = 0
     private var bitmapHeight = 0
     private lateinit var cdata: STBTTPackedchar.Buffer
 
-    private val pCodePoint = memAllocInt(1)
-    private val pAdvancedWidth = memAllocInt(1)
-    private val pLeftSideBearing = memAllocInt(1)
-
     init {
-        ttf = readFileAsByteBuffer(ttfFile)
-        fontInfo = STBTTFontinfo.create()
         if (!stbtt_InitFont(fontInfo, ttf)) {
             throw IllegalStateException("Failed to initialize font!")
         }
@@ -60,10 +58,9 @@ class Font(ttfFile: String) {
         this.ascent = ascent
         this.descent = descent
         this.lineGap = lineGap
-        this.fontHeight = 24.0f
     }
 
-    fun buildBitmap(resourceFactory: ResourceFactory, width: Int, height: Int, pixelHeight: Float) {
+    fun buildBitmap(resourceFactory: ResourceFactory, width: Int, height: Int) {
         cdata = STBTTPackedchar.malloc(2 * 512)
 
         val startChar = 32
@@ -78,13 +75,13 @@ class Font(ttfFile: String) {
         cdata.limit(p + limit)
         cdata.position(p)
         stbtt_PackSetOversampling(pc, 1, 1)
-        stbtt_PackFontRange(pc, ttf, 0, pixelHeight, startChar, cdata)
+        stbtt_PackFontRange(pc, ttf, 0, fontHeight, startChar, cdata)
 
         p = 1 * numChars + startChar
         cdata.limit(p + limit)
         cdata.position(p)
         stbtt_PackSetOversampling(pc, 2, 2)
-        stbtt_PackFontRange(pc, ttf, 0, pixelHeight, startChar, cdata)
+        stbtt_PackFontRange(pc, ttf, 0, fontHeight, startChar, cdata)
 
         stbtt_PackEnd(pc)
 
@@ -94,7 +91,6 @@ class Font(ttfFile: String) {
                 .withFilter(TextureFilter.NEAREST)
                 .build()
 
-        fontHeight = pixelHeight
         bitmapWidth = width
         bitmapHeight = height
     }
@@ -106,26 +102,27 @@ class Font(ttfFile: String) {
     fun getStringWidth(text: String, from: Int, to: Int): Float {
         var width = 0
 
-        var i = from
-        while (i < to) {
-            i += getCodePoint(text, to, i, pCodePoint)
-            val cp = pCodePoint.get(0)
+        stackPush().use { stack ->
+            val pCodePoint = stack.mallocInt(1)
+            val pAdvancedWidth = stack.mallocInt(1)
+            val pLeftSideBearing = stack.mallocInt(1)
 
-            stbtt_GetCodepointHMetrics(fontInfo, cp, pAdvancedWidth, pLeftSideBearing)
-            width += pAdvancedWidth.get(0)
+            var i = from
+            while (i < to) {
+                i += getCodePoint(text, to, i, pCodePoint)
+                val cp = pCodePoint.get(0)
 
-            if (useKerning && i < to) {
-                getCodePoint(text, to, i, pCodePoint)
-                width += stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0))
+                stbtt_GetCodepointHMetrics(fontInfo, cp, pAdvancedWidth, pLeftSideBearing)
+                width += pAdvancedWidth.get(0)
+
+                if (useKerning && i < to) {
+                    getCodePoint(text, to, i, pCodePoint)
+                    width += stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0))
+                }
             }
         }
 
         return width * stbtt_ScaleForPixelHeight(fontInfo, fontHeight)
-    }
-
-    fun getCodePointWidth(codePoint: Int): Float {
-        stbtt_GetCodepointHMetrics(fontInfo, codePoint, pAdvancedWidth, pLeftSideBearing)
-        return pAdvancedWidth.get(0).toFloat()
     }
 
     fun getCodePoint(text: String, to: Int, i: Int, cpOut: IntBuffer): Int {

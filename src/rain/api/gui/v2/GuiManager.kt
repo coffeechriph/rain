@@ -33,8 +33,8 @@ private var stealInput = false
 // TODO: We want 1 material per panel instead.
 internal fun guiManagerInit(resFactory: ResourceFactory) {
     resourceFactory = resFactory
-    font = Font("./data/fonts/FreeSans.ttf")
-    font.buildBitmap(resourceFactory, 1024, 1024, 20.0f)
+    font = Font("./data/fonts/FreeSans.ttf", 20.0f)
+    font.buildBitmap(resourceFactory, 1024, 1024)
     textMaterial = resourceFactory.buildMaterial()
             .withName("guiTextMaterial")
             .withVertexShader("./data/shaders/text.vert.spv")
@@ -69,8 +69,18 @@ fun guiManagerCreatePanel(layout: Layout): Panel {
 
 fun guiManagerCreateTreeView(): TreeView {
     val t = TreeView(font)
+    t.z = panels.size.toFloat() + 1.0f
     panels.add(t)
     return t
+}
+
+fun guiManagerCreateWindow(layout: Layout, title: String): Window {
+    val w = Window(WindowLayout(layout), font)
+    w.closeButton = w.createButton("")
+    w.title = w.createLabel(title)
+    w.z = panels.size.toFloat() + 1.0f
+    panels.add(w)
+    return w
 }
 
 internal fun guiManagerHandleInput(input: Input) {
@@ -93,6 +103,12 @@ internal fun guiManagerHandleInput(input: Input) {
 
     lastActivePanel = null
     for (panel in panels) {
+        if (panel is Window) {
+            if (panel.closeButton.clicked) {
+                panel.visible = false
+            }
+        }
+
         panel.updateComponents()
 
         if (!panel.visible) {
@@ -244,7 +260,7 @@ internal fun guiManagerHandleGfx() {
     for (panel in panels) {
         if (panel.compose) {
             panel.composeGraphics(panel.z, uiMaterial, resourceFactory)
-            panel.composeText(panel.z, font, textMaterial, resourceFactory)
+            panel.composeText(panel.z, textMaterial, resourceFactory)
             panel.compose = false
         }
     }

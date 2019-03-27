@@ -83,7 +83,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         button.text.parentComponent = button
         button.text.parentPanel = this
         button.string = string
-        button.text.w = font.getStringWidth(string, 0, string.length)
         components.add(button)
         texts.add(button.text)
         compose = true
@@ -97,7 +96,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         slider.value = value
         slider.minValue = minValue
         slider.maxValue = maxValue
-        slider.text.w = font.getStringWidth(value.toString(), 0, value.toString().length)
         components.add(slider)
         texts.add(slider.text)
         compose = true
@@ -109,7 +107,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         checkbox.text.parentComponent = checkbox
         checkbox.text.parentPanel = this
         checkbox.string = string
-        checkbox.text.w = font.getStringWidth(string, 0, string.length)
         components.add(checkbox)
         texts.add(checkbox.text)
         compose = true
@@ -121,7 +118,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         textField.text.parentComponent = textField
         textField.text.parentPanel = this
         textField.string = string
-        textField.text.w = font.getStringWidth(string, 0, string.length)
         components.add(textField)
         texts.add(textField.text)
         compose = true
@@ -133,7 +129,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         label.text.parentComponent = label
         label.text.parentPanel = this
         label.string = string
-        label.text.w = font.getStringWidth(string, 0, string.length)
         components.add(label)
         texts.add(label.text)
         compose = true
@@ -145,7 +140,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         button.text.parentComponent = button
         button.text.parentPanel = this
         button.string = string
-        button.text.w = font.getStringWidth(string, 0, string.length)
         components.add(button)
         texts.add(button.text)
         compose = true
@@ -157,7 +151,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         scrollBar.text.parentComponent = scrollBar
         scrollBar.text.parentPanel = this
         scrollBar.string = string
-        scrollBar.text.w = font.getStringWidth(string, 0, string.length)
         components.add(scrollBar)
         texts.add(scrollBar.text)
         compose = true
@@ -169,7 +162,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         scrollBar.text.parentComponent = scrollBar
         scrollBar.text.parentPanel = this
         scrollBar.string = string
-        scrollBar.text.w = font.getStringWidth(string, 0, string.length)
         components.add(scrollBar)
         texts.add(scrollBar.text)
         compose = true
@@ -181,7 +173,6 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         image.text.parentComponent = image
         image.text.parentPanel = this
         image.string = string
-        image.text.w = font.getStringWidth(string, 0, string.length)
         image.imageTileIndexX = imageTileIndexX
         image.imageTileIndexY = imageTileIndexY
         components.add(image)
@@ -280,14 +271,13 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         }
     }
 
-    internal fun composeText(zOrder: Float, font: Font, textMaterial: Material, resourceFactory: ResourceFactory) {
+    internal fun composeText(zOrder: Float, textMaterial: Material, resourceFactory: ResourceFactory) {
         val vertices = ArrayList<Float>()
         for (t in texts) {
             if (!t.visible) {
                 continue
             }
 
-            t.w = font.getStringWidth(t.string, 0, t.string.length)
             var cx = if (t.parentComponent != null) { t.parentComponent!!.x } else { 0.0f }
             var cy = if (t.parentComponent != null) { t.parentComponent!!.y } else { 0.0f }
             var cw = if (t.parentComponent != null) { t.parentComponent!!.w } else { 0.0f }
