@@ -57,6 +57,11 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
         return tilemap
     }
 
+    fun removeTilemap(tilemap: Tilemap) {
+        tilemaps.remove(tilemap)
+        tilemap.destroy()
+    }
+
     fun addCamera(camera: Camera) {
         cameras.add(camera)
     }

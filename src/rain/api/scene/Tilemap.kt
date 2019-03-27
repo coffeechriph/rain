@@ -277,7 +277,7 @@ class Tilemap internal constructor(){
         }
     }
 
-    fun destroy() {
+    internal fun destroy() {
         removeRenderComponentFromRenderer(renderComponent)
     }
 }

@@ -100,7 +100,13 @@ class TextField internal constructor(parent: Panel):
         }
 
         if (input.keyState(Input.Key.KEY_BACKSPACE) == Input.InputState.PRESSED) {
-            if (internalString.isNotEmpty()) {
+            if (input.keyState(Input.Key.KEY_LEFT_SHIFT) == Input.InputState.DOWN) {
+                internalString = ""
+                parentPanel.compose = true
+                textEdited = true
+                cursorPos = 0
+            }
+            else if (internalString.isNotEmpty()) {
                 if (cursorPos < internalString.length) {
                     internalString = StringBuilder(internalString).deleteCharAt(cursorPos).toString()
                 } else {
