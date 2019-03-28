@@ -150,6 +150,19 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
         }
         tilemaps.clear()
 
+        for (system in entitySystems) {
+            system.clear()
+        }
+        entitySystems.clear()
+        cameras.clear()
+    }
+
+    internal fun destroy() {
+        for (tilemap in tilemaps) {
+            tilemap.destroy()
+        }
+        tilemaps.clear()
+
         entitySystems.clear()
         cameras.clear()
         spriteBatchers.clear()

@@ -247,7 +247,7 @@ class Tilemap internal constructor(){
             if (!::byteBuffer.isInitialized) {
                 byteBuffer = memAlloc(bufferSize)
             }
-            else if (byteBuffer.capacity() < bufferSize) {
+            else if (byteBuffer.capacity() != bufferSize) {
                 memFree(byteBuffer)
                 byteBuffer = memAlloc(bufferSize)
             }

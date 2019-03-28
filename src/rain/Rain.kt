@@ -94,7 +94,7 @@ open class Rain {
             }
             else {
                 stateManager.switchState = false
-                scene.clear()
+                scene.destroy()
                 guiManagerClear()
                 emitterManagerClear()
                 renderManagerClear()
@@ -123,7 +123,6 @@ open class Rain {
     }
 
     private fun updateLoop(deltaTime: Double) {
-        window.title = "FPS: " + timer.framesPerSecond
         vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
         window.windowDirty = false
 
