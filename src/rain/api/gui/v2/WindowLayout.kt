@@ -14,7 +14,7 @@ class WindowLayout(private val componentLayout: Layout): Layout() {
         titleLabel.h = 20.0f
         titleLabel.x = panelX + panelWidth/2 - titleLabel.w/2
         titleLabel.y = panelY + yOffset
-        titleLabel.text.textAlign = TextAlign.CENTER
+        titleLabel.text.textAlign = TextAlign.LEFT
         val subComponents = components.subList(2, components.size)
         componentLayout.apply(subComponents, panelX, panelY + yOffset*2 + closeButton.h, panelWidth, panelHeight, outlineWidth)
     }

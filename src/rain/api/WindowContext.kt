@@ -8,7 +8,7 @@ import org.lwjgl.system.MemoryUtil.memAllocInt
 import rain.assertion
 import rain.log
 
-class Window internal constructor() {
+class WindowContext internal constructor() {
     internal var windowPointer: Long = -1
     internal var windowDirty = false
 

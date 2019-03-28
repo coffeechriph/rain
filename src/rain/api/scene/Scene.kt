@@ -7,7 +7,7 @@ import org.joml.Random
 import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
-import rain.api.Window
+import rain.api.WindowContext
 import rain.api.entity.Entity
 import rain.api.entity.EntitySystem
 import rain.api.entity.ParticleEmitterEntity
@@ -17,7 +17,7 @@ import rain.api.manager.emitterManagerAddParticleEmitterEntity
 import rain.vulkan.VertexAttribute
 
 // TODO: The window should not be accessible from the scene ...
-class Scene(val resourceFactory: ResourceFactory, val window: Window) {
+class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowContext) {
     private lateinit var quadVertexBuffer: VertexBuffer
     private val entitySystems = ArrayList<EntitySystem<Entity>>()
     private val tilemaps = ArrayList<Tilemap>()
@@ -27,7 +27,7 @@ class Scene(val resourceFactory: ResourceFactory, val window: Window) {
         private set
     private var physicsContactListener = PhysicsContactListener()
 
-    var activeCamera = Camera(1000.0f, Vector2i(window.size.x, window.size.y))
+    var activeCamera = Camera(1000.0f, Vector2i(windowContext.size.x, windowContext.size.y))
 
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }

@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW
 import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
-import rain.api.Window
+import rain.api.WindowContext
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.v2.*
 import rain.api.manager.*
@@ -15,7 +15,7 @@ import rain.vulkan.VulkanRenderer
 import rain.vulkan.VulkanResourceFactory
 
 open class Rain {
-    protected val window = Window()
+    protected val window = WindowContext()
     private val vk = Vk()
     private val timer = Timer()
     private lateinit var api: Api

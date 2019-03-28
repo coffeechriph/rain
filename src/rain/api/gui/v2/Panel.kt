@@ -197,6 +197,22 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         return null
     }
 
+    internal open fun decoratePanel(depth: Float): FloatArray {
+        if (skin.panelStyle.background) {
+            val ow = skin.panelStyle.outlineWidth
+
+            val base = gfxCreateRect(x + ow, y + ow, depth, w - ow*2, h - ow*2, skin.panelStyle.backgroundColor)
+            if (ow > 0) {
+                val outline = gfxCreateRect(x, y, depth, w, h, skin.panelStyle.outlineColor)
+                return base + outline
+            }
+
+            return base
+        }
+
+        return floatArrayOf()
+    }
+
     internal fun updateComponents() {
         for (c in components) {
             if(c.handleState()) {
@@ -210,19 +226,17 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         layout.manage(this)
         val vertices = ArrayList<Float>()
 
-        if (skin.panelStyle.background) {
-            val ow = skin.panelStyle.outlineWidth
-            vertices.addAll(gfxCreateRect(x + ow, y + ow, zOrder + PANEL_DEPTH, w - ow*2, h - ow*2, skin.panelStyle.backgroundColor).toTypedArray())
-
-            if (ow > 0) {
-                vertices.addAll(gfxCreateRect(x, y, zOrder + PANEL_DEPTH, w, h, skin.panelStyle.outlineColor).toTypedArray())
-            }
+        val panelDeco = decoratePanel(zOrder + PANEL_DEPTH)
+        for (v in panelDeco) {
+            vertices.add(v)
         }
 
-        // TODO: These constant conversions between different types of collections are sloooow
         for (c in components) {
             if (c.visible) {
-                vertices.addAll(c.createGraphic(zOrder + COMPONENT_DEPTH, skin).toTypedArray())
+                val arr = c.createGraphic(zOrder + COMPONENT_DEPTH, skin)
+                for (v in arr) {
+                    vertices.add(v)
+                }
             }
         }
 
@@ -289,8 +303,10 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
                 cw = t.parentComponent!!.w
             }
 
-            // TODO: These constant conversions between different types of collections are sloooow
-            vertices.addAll(gfxCreateText(cx + t.x, cy + t.y, zOrder + TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color).toTypedArray())
+            val arr = gfxCreateText(cx + t.x, cy + t.y, zOrder + TEXT_DEPTH, cw, ch, t.textAlign, t.string, font, t.color)
+            for (v in arr) {
+                vertices.add(v)
+            }
         }
 
         val byteBuffer = memAlloc(vertices.size * 4)

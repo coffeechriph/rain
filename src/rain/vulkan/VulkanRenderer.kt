@@ -8,7 +8,7 @@ import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
-import rain.api.Window
+import rain.api.WindowContext
 import rain.api.components.GuiRenderComponent
 import rain.api.components.RenderComponent
 import rain.api.gfx.Renderer
@@ -19,7 +19,7 @@ import rain.log
 import java.nio.ByteBuffer
 import kotlin.collections.ArrayList
 
-internal class VulkanRenderer (private val vk: Vk, val window: Window) : Renderer {
+internal class VulkanRenderer (private val vk: Vk, val windowContext: WindowContext) : Renderer {
     private val pipelines: MutableList<Pipeline> = ArrayList()
     private val guiPipelines: MutableList<Pipeline> = ArrayList()
 
@@ -219,7 +219,7 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
             else {
                 val width = memAllocInt(1)
                 val height = memAllocInt(1)
-                glfwGetFramebufferSize(window.windowPointer, width, height)
+                glfwGetFramebufferSize(windowContext.windowPointer, width, height)
                 extent2D.width(width[0])
                         .height(height[0])
             }
@@ -429,8 +429,8 @@ internal class VulkanRenderer (private val vk: Vk, val window: Window) : Rendere
                 .clearValue(clearValue)
         val rect = VkRect2D.calloc()
         rect.extent()
-                .width(window.framebufferSize.x)
-                .height(window.framebufferSize.y)
+                .width(windowContext.framebufferSize.x)
+                .height(windowContext.framebufferSize.y)
         rect.offset()
                 .set(0, 0)
         val clearRect = VkClearRect.calloc(1)
