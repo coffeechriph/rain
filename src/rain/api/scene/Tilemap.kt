@@ -278,6 +278,8 @@ class Tilemap internal constructor(){
     }
 
     internal fun destroy() {
-        removeRenderComponentFromRenderer(renderComponent)
+        if (::renderComponent.isInitialized) {
+            removeRenderComponentFromRenderer(renderComponent)
+        }
     }
 }

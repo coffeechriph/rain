@@ -29,6 +29,8 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
 
     var activeCamera = Camera(1000.0f, Vector2i(windowContext.size.x, windowContext.size.y))
 
+    // TODO: Create a entity builder instead and auto-create systems
+    // based around entity settings
     fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
         //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
         lateinit var system: EntitySystem<T>
