@@ -17,8 +17,8 @@ package rain.api.gui.v2
         as none managed components may fill in the remaining area.
  */
 open class Layout {
-    var autoScrollWidth = 30.0f
-    var autoScrollHeight = 30.0f
+    var autoScrollWidth = 20.0f
+    var autoScrollHeight = 20.0f
     protected var vScrollBar: VScrollBar? = null
     protected var hScrollBar: HScrollBar? = null
 
