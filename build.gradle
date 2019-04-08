@@ -46,7 +46,7 @@ configurations {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    extraLibs "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     extraLibs group: "org.lwjgl", name: "lwjgl", version: "$lwjglVersion"
     extraLibs group: "org.lwjgl", name: "lwjgl-glfw", version: "$lwjglVersion"
     extraLibs group: "org.lwjgl", name: "lwjgl-opengl", version: "$lwjglVersion"
@@ -61,11 +61,11 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-vma:$lwjglVersion:$lwjglNatives"
 
     // TODO: Remove the gdx dependency!
-    compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-    compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-    compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+    extraLibs "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    extraLibs "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    extraLibs "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
 
-    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.10.0"
+    extraLibs "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.10.0"
 
     if (os.contains("macosx")) {
         runtimeOnly "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
