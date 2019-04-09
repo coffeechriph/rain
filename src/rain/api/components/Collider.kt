@@ -2,9 +2,10 @@ package rain.api.components
 
 import com.badlogic.gdx.physics.box2d.Body
 import org.joml.Vector2f
-import rain.api.entity.metersToPixels
-import rain.api.entity.pixelsToMeters
 import rain.assertion
+
+const val metersToPixels = 64.0f
+const val pixelsToMeters = 1.0f / 64.0f
 
 class Collider internal constructor(private val body: Body, internal val transform: Transform) {
     internal fun getBody(): Body {

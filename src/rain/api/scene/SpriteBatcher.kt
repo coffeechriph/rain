@@ -1,13 +1,12 @@
 package rain.api.scene
 
 import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
 import rain.api.gfx.Material
 import rain.api.gfx.ResourceFactory
 import rain.api.gfx.VertexBuffer
 import java.nio.ByteBuffer
 
-internal class SpriteBatcher(private val system: EntitySystem<Entity>, val material: Material, private val resourceFactory: ResourceFactory) {
+internal class SpriteBatcher(val material: Material, private val resourceFactory: ResourceFactory) {
     lateinit var vertexBuffer: VertexBuffer
     //private val sprites = ArrayList<Sprite>()
 

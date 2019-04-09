@@ -40,7 +40,7 @@ open class Entity {
         return moveManagerGetMoveComponent(id)
     }
 
-    open fun<T: Entity> init(scene: Scene, system: EntitySystem<T>){}
-    open fun<T: Entity> update(scene: Scene, input: Input, system: EntitySystem<T>){}
+    open fun init(scene: Scene){}
+    open fun update(scene: Scene, input: Input){}
     open fun onCollision(entity: Entity) {}
 }

@@ -9,17 +9,18 @@ import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
 import rain.api.WindowContext
 import rain.api.entity.Entity
-import rain.api.entity.EntitySystem
 import rain.api.entity.ParticleEmitterEntity
-import rain.api.entity.metersToPixels
 import rain.api.gfx.*
+import rain.api.manager.animatorManagerRemoveAnimatorByEntity
 import rain.api.manager.emitterManagerAddParticleEmitterEntity
+import rain.api.manager.moveManagerRemoveMoveComponent
+import rain.api.manager.renderManagerRemoveRenderComponentByEntity
 import rain.vulkan.VertexAttribute
 
 // TODO: The window should not be accessible from the scene ...
 class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowContext) {
     private lateinit var quadVertexBuffer: VertexBuffer
-    private val entitySystems = ArrayList<EntitySystem<Entity>>()
+    private val entities = ArrayList<Entity>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
     private val spriteBatchers = ArrayList<SpriteBatcher>()
@@ -29,27 +30,16 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
 
     var activeCamera = Camera(1000.0f, Vector2i(windowContext.size.x, windowContext.size.y))
 
-    // TODO: Create a entity builder instead and auto-create systems
-    // based around entity settings
-    fun<T: Entity> newSystem(material: Material?): EntitySystem<T> {
-        //val texelBuffer = if (texture2d != null) { resourceFactory.createTexelBuffer(256) } else { null }
-        lateinit var system: EntitySystem<T>
-        if (material != null) {
-            // TODO: We only have to copy the material if we use batching
-            val materialCopy = material.copy()
-            system = EntitySystem(this, materialCopy)
-            entitySystems.add(system as EntitySystem<Entity>)
+    fun<T: Entity> newEntity(entity: T): EntityBuilder<T> {
+        entities.add(entity)
+        return EntityBuilder(this, entity.getId(), entity)
+    }
 
-            if (material.useBatching()) {
-                spriteBatchers.add(SpriteBatcher(system, materialCopy, resourceFactory))
-            }
-        }
-        else {
-            system = EntitySystem(this, null)
-            entitySystems.add(system as EntitySystem<Entity>)
-        }
-
-        return system
+    fun removeEntity(entity: Entity) {
+        entities.remove(entity)
+        renderManagerRemoveRenderComponentByEntity(entity.getId())
+        moveManagerRemoveMoveComponent(entity.getId())
+        animatorManagerRemoveAnimatorByEntity(entity.getId())
     }
 
     fun createTilemap(material: Material, tileNumX: Int, tileNumY: Int, tileWidth: Float, tileHeight: Float): Tilemap {
@@ -81,11 +71,6 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
         return emitter
     }
 
-    // TODO: Remove sprite batchers as well when systems are deleted
-    fun removeEntitySystem(system: EntitySystem<*>) {
-        entitySystems.remove(system)
-    }
-
     internal fun init(resourceFactory: ResourceFactory) {
         val vertices = floatArrayOf(
                 -0.5f, -0.5f, 0.0f, 0.0f,
@@ -115,21 +100,8 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
         physicWorld.step(1.0f / 60.0f, 6, 2)
         physicWorld.clearForces()
 
-        for (batcher in spriteBatchers) {
-            //batcher.batch()
-            //batcher.update()
-        }
-
-        for (system in entitySystems) {
-            for (entity in system.getEntityList()) {
-                entity!!.update(this, input, system)
-            }
-
-            for (collider in system.getColliderList()) {
-                val b = collider!!.getBody()
-                collider.transform.x = b.position.x * metersToPixels
-                collider.transform.y = b.position.y * metersToPixels
-            }
+        for (entity in entities) {
+            entity.update(this, input)
         }
     }
 
@@ -138,12 +110,6 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
         for (tilemap in tilemaps) {
             tilemap.updateRenderComponent()
         }
-
-        /*for (batcher in spriteBatchers) {
-            if (batcher.hasSprites()) {
-                submitListSorted.add(Drawable(batcher.material, memAlloc(4), batcher.vertexBuffer, 0.0f))
-            }
-        }*/
     }
 
     fun clear() {
@@ -152,10 +118,10 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
         }
         tilemaps.clear()
 
-        for (system in entitySystems) {
-            system.clear()
+        for (entity in entities) {
+            renderManagerRemoveRenderComponentByEntity(entity.getId())
         }
-        entitySystems.clear()
+        entities.clear()
         cameras.clear()
     }
 
@@ -165,7 +131,7 @@ class Scene(val resourceFactory: ResourceFactory, val windowContext: WindowConte
         }
         tilemaps.clear()
 
-        entitySystems.clear()
+        entities.clear()
         cameras.clear()
         spriteBatchers.clear()
         physicWorld.dispose()
