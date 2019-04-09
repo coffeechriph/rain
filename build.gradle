@@ -71,7 +71,7 @@ dependencies {
         runtimeOnly "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
     }
 
-    configurations.compile.extendsFrom(configurations.extraLibs)
+    configurations.api.extendsFrom(configurations.extraLibs)
 }
 
 jar {

@@ -50,6 +50,9 @@ internal fun guiManagerInit(resFactory: ResourceFactory) {
 }
 
 internal fun guiManagerClear() {
+    for (panel in panels) {
+        panel.clear()
+    }
     panels.clear()
 }
 

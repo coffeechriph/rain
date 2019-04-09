@@ -55,8 +55,8 @@ internal fun moveManagerRemoveMoveComponent(id: Long) {
     if (transform != null) {
         val index = moveLookup.values.indexOf(transform)
         System.arraycopy(moveData, index + 1, moveData, index, moveData.size - index);
+        moveLookup.remove(id)
     }
-    moveLookup.remove(id)
 }
 
 internal fun moveManagerSimulate() {

@@ -5,6 +5,8 @@ import rain.api.components.GuiRenderComponent
 import rain.api.entity.Entity
 import rain.api.gfx.*
 import rain.api.manager.renderManagerAddGuiRenderComponent
+import rain.api.manager.renderManagerRemoveGuiRenderComponent
+import rain.api.manager.renderManagerRemoveRenderComponentByEntity
 import rain.vulkan.DataType
 import rain.vulkan.VertexAttribute
 
@@ -15,7 +17,7 @@ private val TEXT_DEPTH = 0.4f
 // TODO: Make it possible for panels to follow other panels relative to criterias
 // 1) Same Width, Height, X or Y. Panels that follow will also inherit the other panels Z
 // Panels that follow should never overlap!
-open class Panel internal constructor(var layout: Layout, var font: Font): Entity() {
+open class Panel internal constructor(var layout: Layout, var font: Font) {
     var x = 0.0f
         set(value) {
             if (field != value) {
@@ -185,6 +187,12 @@ open class Panel internal constructor(var layout: Layout, var font: Font): Entit
         texts.remove(component.text)
         components.remove(component)
         return this
+    }
+
+    // TODO: Make sure we destroy the vertex buffers as well
+    fun clear() {
+        renderManagerRemoveGuiRenderComponent(renderComponent)
+        renderManagerRemoveGuiRenderComponent(textRenderComponent)
     }
 
     fun findComponentAtPoint(x: Float, y: Float): Component? {

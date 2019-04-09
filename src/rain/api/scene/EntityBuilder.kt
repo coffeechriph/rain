@@ -11,7 +11,7 @@ import rain.api.manager.animatorManagerAddAnimatorComponent
 import rain.api.manager.moveManagerAddMoveComponent
 import rain.api.manager.renderManagerAddRenderComponent
 
-class EntityBuilder<T: Entity> internal constructor(private val scene: Scene, private var entityId: Long, private val entity: T) {
+class EntityBuilder<T: Entity> internal constructor(private val scene: Scene, private val entity: T) {
     private var animator: Animator? = null
     private var renderComponent = ArrayList<RenderComponent>()
     private var moveComponent: MoveComponent? = null
@@ -22,7 +22,7 @@ class EntityBuilder<T: Entity> internal constructor(private val scene: Scene, pr
     }
 
     fun attachMoveComponent(vx: Float, vy: Float): EntityBuilder<T> {
-        moveComponent = MoveComponent(0.0f, 0.0f, vx, vy, entityId)
+        moveComponent = MoveComponent(0.0f, 0.0f, vx, vy, entity.getId())
         return this
     }
 
@@ -34,15 +34,15 @@ class EntityBuilder<T: Entity> internal constructor(private val scene: Scene, pr
     fun build() {
         for (c in renderComponent) {
             c.transform = entity.transform
-            renderManagerAddRenderComponent(entityId, c)
+            renderManagerAddRenderComponent(entity.getId(), c)
         }
 
         if (moveComponent != null) {
-            moveManagerAddMoveComponent(entityId, entity.transform, moveComponent!!.vx, moveComponent!!.vy)
+            moveManagerAddMoveComponent(entity.getId(), entity.transform, moveComponent!!.vx, moveComponent!!.vy)
         }
 
         if (animator != null) {
-            animatorManagerAddAnimatorComponent(entityId, animator!!)
+            animatorManagerAddAnimatorComponent(entity.getId(), animator!!)
             for (c in renderComponent) {
                 c.textureTileOffset = animator!!.textureTileOffset
             }

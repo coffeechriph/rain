@@ -9,6 +9,7 @@ import rain.api.manager.animatorManagerGetAnimatorByEntity
 import rain.api.manager.moveManagerGetMoveComponent
 import rain.api.manager.renderManagerGetRenderComponentByEntity
 import rain.api.scene.Scene
+import rain.api.scene.SceneManager
 
 private var currentId: Long = 0
 private fun getNextUniqueId(): Long {
