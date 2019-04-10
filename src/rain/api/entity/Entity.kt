@@ -2,14 +2,11 @@ package rain.api.entity
 
 import rain.api.Input
 import rain.api.components.Animator
-import rain.api.components.MoveComponent
 import rain.api.components.RenderComponent
 import rain.api.components.Transform
 import rain.api.manager.animatorManagerGetAnimatorByEntity
-import rain.api.manager.moveManagerGetMoveComponent
 import rain.api.manager.renderManagerGetRenderComponentByEntity
 import rain.api.scene.Scene
-import rain.api.scene.SceneManager
 
 private var currentId: Long = 0
 private fun getNextUniqueId(): Long {
@@ -35,10 +32,6 @@ open class Entity {
 
     fun getAnimatorComponent(): List<Animator> {
         return animatorManagerGetAnimatorByEntity(id) ?: emptyList()
-    }
-
-    fun getMoveComponent(): MoveComponent? {
-        return moveManagerGetMoveComponent(id)
     }
 
     open fun init(scene: Scene){}

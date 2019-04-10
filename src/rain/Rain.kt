@@ -118,7 +118,6 @@ open class Rain {
             localInput = Input()
         }
 
-        moveManagerSimulate()
         emitterManagerSimulate()
         animatorManagerSimulate()
         sceneManager.update(localInput, vulkanRenderer)

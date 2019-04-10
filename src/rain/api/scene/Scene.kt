@@ -10,7 +10,6 @@ import rain.api.gfx.Renderer
 import rain.api.gfx.ResourceFactory
 import rain.api.manager.animatorManagerRemoveAnimatorByEntity
 import rain.api.manager.emitterManagerAddParticleEmitterEntity
-import rain.api.manager.moveManagerRemoveMoveComponent
 import rain.api.manager.renderManagerRemoveRenderComponentByEntity
 
 abstract class Scene internal constructor(val sceneManager: SceneManager, val resourceFactory: ResourceFactory) {
@@ -41,7 +40,6 @@ abstract class Scene internal constructor(val sceneManager: SceneManager, val re
     fun removeEntity(entity: Entity) {
         entities.remove(entity)
         renderManagerRemoveRenderComponentByEntity(entity.getId())
-        moveManagerRemoveMoveComponent(entity.getId())
         animatorManagerRemoveAnimatorByEntity(entity.getId())
     }
 
@@ -82,7 +80,6 @@ abstract class Scene internal constructor(val sceneManager: SceneManager, val re
 
         for (entity in entities) {
             renderManagerRemoveRenderComponentByEntity(entity.getId())
-            moveManagerRemoveMoveComponent(entity.getId())
         }
         entities.clear()
         cameras.clear()
