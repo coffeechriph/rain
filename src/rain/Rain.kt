@@ -70,7 +70,7 @@ open class Rain {
         var accumulator = 0.0
 
         while (window.pollEvents()) {
-            sceneManager.checkSceneSwitch()
+            sceneManager.manageScenes()
             timer.update()
 
             // Ensure we update the physics enough times even under low fps

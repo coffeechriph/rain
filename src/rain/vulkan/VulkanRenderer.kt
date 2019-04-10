@@ -194,8 +194,8 @@ internal class VulkanRenderer (private val vk: Vk, val windowContext: WindowCont
 
     fun destroy() {
         vkDeviceWaitIdle(logicalDevice.device)
-        vkDestroySwapchainKHR(logicalDevice.device, swapchain.swapchain, null)
         cleanUpResources()
+        vkDestroySwapchainKHR(logicalDevice.device, swapchain.swapchain, null)
     }
 
     private fun recreateRenderCommandBuffers() {

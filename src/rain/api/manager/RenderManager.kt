@@ -74,6 +74,8 @@ internal fun renderManagerRemoveRenderComponentByEntity(entityId: Long) {
 }
 
 internal fun renderManagerRemoveGuiRenderComponent(component: GuiRenderComponent) {
-    renderManagerGuiRenderComponents.remove(component)
-    removeGuiRenderComponentFromRenderer(component)
+    if (renderManagerGuiRenderComponents.contains(component)) {
+        renderManagerGuiRenderComponents.remove(component)
+        removeGuiRenderComponentFromRenderer(component)
+    }
 }
