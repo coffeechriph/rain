@@ -120,7 +120,7 @@ open class Rain {
 
         emitterManagerSimulate()
         animatorManagerSimulate()
-        sceneManager.update(localInput, vulkanRenderer)
+        sceneManager.update(window, localInput, vulkanRenderer)
         input.updateKeyState()
     }
 }

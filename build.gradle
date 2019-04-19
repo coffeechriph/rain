@@ -3,10 +3,13 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.20'
     id 'kotlinx-serialization' version '1.3.20'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
 }
 
 apply plugin: 'kotlin'
 apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+
 group '1'
 version '1.0'
 mainClassName = "rain.MainKt"
@@ -17,7 +20,7 @@ targetCompatibility= '11'
 ext {
     gdxVersion = '1.9.9'
     jomlVersion = "1.9.12"
-    lwjglVersion = "3.2.2-SNAPSHOT"
+    lwjglVersion = "3.2.1"
 }
 
 def os = System.getProperty("os.name").replace(' ', '').toLowerCase()
@@ -41,19 +44,22 @@ repositories {
     maven { url "https://kotlin.bintray.com/kotlinx" }
 }
 
-configurations {
-    extraLibs
+shadowJar {
+    baseName = "rain"
+    classifier = null
+    version = "1.0"
 }
 
 dependencies {
-    extraLibs "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    extraLibs group: "org.lwjgl", name: "lwjgl", version: "$lwjglVersion"
-    extraLibs group: "org.lwjgl", name: "lwjgl-glfw", version: "$lwjglVersion"
-    extraLibs group: "org.lwjgl", name: "lwjgl-opengl", version: "$lwjglVersion"
-    extraLibs group: "org.lwjgl", name: "lwjgl-stb", version: "$lwjglVersion"
-    extraLibs group: "org.lwjgl", name: "lwjgl-vma", version: "$lwjglVersion"
-    extraLibs group: "org.lwjgl", name: "lwjgl-vulkan", version: "$lwjglVersion"
-    extraLibs group: "org.joml", name: 'joml', version: "$jomlVersion"
+    implementation 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    api group: "org.lwjgl", name: "lwjgl", version: "$lwjglVersion"
+    api group: "org.lwjgl", name: "lwjgl-glfw", version: "$lwjglVersion"
+    api group: "org.lwjgl", name: "lwjgl-opengl", version: "$lwjglVersion"
+    api group: "org.lwjgl", name: "lwjgl-stb", version: "$lwjglVersion"
+    api group: "org.lwjgl", name: "lwjgl-vma", version: "$lwjglVersion"
+    api group: "org.lwjgl", name: "lwjgl-vulkan", version: "$lwjglVersion"
+    api group: "org.joml", name: 'joml', version: "$jomlVersion"
     runtimeOnly "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-opengl:$lwjglVersion:$lwjglNatives"
@@ -61,32 +67,20 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-vma:$lwjglVersion:$lwjglNatives"
 
     // TODO: Remove the gdx dependency!
-    extraLibs "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-    extraLibs "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-    extraLibs "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
 
-    extraLibs "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.10.0"
+    api "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.10.0"
 
     if (os.contains("macosx")) {
         runtimeOnly "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
-    }
-
-    configurations.api.extendsFrom(configurations.extraLibs)
-}
-
-jar {
-    from {
-        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.freeCompilerArgs = ['-Xno-param-assertions']
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
 }
 
 sourceSets {

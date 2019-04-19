@@ -22,6 +22,7 @@ class WindowContext internal constructor() {
         private set
     var framebufferSize: Vector2i = Vector2i(0,0)
         private set
+    internal var cameraProjectionSize = Vector2i(1,1)
 
     internal fun create(width: Int, height: Int, title: String, input: Input) {
         if(!glfwInit()) {
@@ -100,7 +101,9 @@ class WindowContext internal constructor() {
         }
 
         glfwSetCursorPosCallback(windowPointer) { _, xpos, ypos ->
-            input.mousePosition.set(xpos.toInt(), ypos.toInt())
+            val mx = (cameraProjectionSize.x.toFloat()/size.x.toFloat()) * xpos
+            val my = (cameraProjectionSize.y.toFloat()/size.y.toFloat()) * ypos
+            input.mousePosition.set(mx.toInt(), my.toInt())
         }
 
         glfwSetWindowSizeCallback(windowPointer) { _, _, _ ->

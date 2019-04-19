@@ -3,8 +3,10 @@ package rain.api.scene
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2D
 import com.badlogic.gdx.physics.box2d.World
+import org.joml.Vector2i
 import org.lwjgl.system.MemoryUtil.memAlloc
 import rain.api.Input
+import rain.api.WindowContext
 import rain.api.gfx.*
 import rain.api.gui.v2.guiManagerClear
 import rain.api.manager.emitterManagerClear
@@ -17,6 +19,7 @@ class SceneManager(val resourceFactory: ResourceFactory) {
     lateinit var physicWorld: World
         private set
     private var physicsContactListener = PhysicsContactListener()
+    var activeCamera = Camera(1000.0f, Vector2i(1280, 720))
 
     private val loadScenes = ArrayList<Scene>()
     private val activeScenes = ArrayList<Scene>()
@@ -55,12 +58,15 @@ class SceneManager(val resourceFactory: ResourceFactory) {
         physicWorld.setContactListener(physicsContactListener)
     }
 
-    internal fun update(input: Input, renderer: Renderer) {
+    internal fun update(window: WindowContext, input: Input, renderer: Renderer) {
+        window.cameraProjectionSize = activeCamera.resolution
+        renderer.setActiveCamera(activeCamera)
+
         physicWorld.step(1.0f / 60.0f, 6, 2)
         physicWorld.clearForces()
 
         for (scene in activeScenes) {
-            scene.doUpdate(input, renderer)
+            scene.doUpdate(input)
         }
     }
 

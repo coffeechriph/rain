@@ -16,12 +16,11 @@ abstract class Scene internal constructor(val sceneManager: SceneManager, val re
     private val entities = ArrayList<Entity>()
     private val tilemaps = ArrayList<Tilemap>()
     private val cameras = ArrayList<Camera>()
-    var activeCamera = Camera(1000.0f, Vector2i(1280, 720))
 
     open fun init(){}
     open fun update(input: Input){}
 
-    internal fun doUpdate(input: Input, renderer: Renderer) {
+    internal fun doUpdate(input: Input) {
         update(input)
         for (entity in entities) {
             entity.update(this, input)
@@ -29,7 +28,6 @@ abstract class Scene internal constructor(val sceneManager: SceneManager, val re
         for (tilemap in tilemaps) {
             tilemap.updateRenderComponent()
         }
-        renderer.setActiveCamera(activeCamera)
     }
 
     fun<T: Entity> newEntity(entity: T): EntityBuilder<T> {
