@@ -5,10 +5,13 @@ import rain.api.Api
 import rain.api.Input
 import rain.api.Timer
 import rain.api.WindowContext
+import rain.api.gfx.Renderer
 import rain.api.gfx.ResourceFactory
 import rain.api.gui.v2.*
 import rain.api.manager.*
 import rain.api.scene.SceneManager
+import rain.bgfx.BgfxRenderer
+import rain.bgfx.BgfxResourceFactory
 import rain.util.ShaderCompiler
 import rain.vulkan.Vk
 import rain.vulkan.VulkanRenderer
@@ -22,7 +25,7 @@ open class Rain {
     private val vk = Vk()
     private val timer = Timer()
     private lateinit var api: Api
-    private lateinit var vulkanRenderer: VulkanRenderer
+    private lateinit var renderer: Renderer
     private val input = Input()
 
     var showMouse = true
@@ -39,11 +42,11 @@ open class Rain {
     fun create(width: Int, height: Int, title: String, api: Api) {
         ShaderCompiler().findAndCompile()
         this.api = api
-        window.create(width, height, title, input)
+        window.create(api, width, height, title, input)
 
         when(api) {
             Api.VULKAN -> createVulkanApi()
-            Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
+            Api.BGFX -> createBgfxApi()
         }
 
         sceneManager = SceneManager(resourceFactory)
@@ -51,9 +54,15 @@ open class Rain {
 
     private fun createVulkanApi() {
         vk.create(window.windowPointer)
-        vulkanRenderer = VulkanRenderer(vk, window)
-        vulkanRenderer.create()
+        renderer = VulkanRenderer(vk, window)
+        renderer.create()
         resourceFactory = VulkanResourceFactory(vk)
+    }
+
+    private fun createBgfxApi() {
+        renderer = BgfxRenderer()
+        renderer.create()
+        resourceFactory = BgfxResourceFactory()
     }
 
     open fun init() {
@@ -88,11 +97,11 @@ open class Rain {
             }
 
             guiManagerHandleGfx()
-            vulkanRenderer.render()
+            renderer.render()
 
             when (api) {
                 Api.VULKAN -> (resourceFactory as VulkanResourceFactory).manageResources()
-                Api.OPENGL -> throw NotImplementedError("OpenGL API not implemented yet!")
+                Api.BGFX -> {}
             }
         }
 
@@ -101,13 +110,13 @@ open class Rain {
         emitterManagerClear()
         renderManagerClear()
         resourceFactory.clear()
-        vulkanRenderer.destroy()
+        renderer.destroy()
         window.destroy()
         endLog()
     }
 
     private fun updateLoop() {
-        vulkanRenderer.swapchainIsDirty = vulkanRenderer.swapchainIsDirty || window.windowDirty
+        renderer.update()
         window.windowDirty = false
 
         guiManagerHandleInput(input)
@@ -120,7 +129,7 @@ open class Rain {
 
         emitterManagerSimulate()
         animatorManagerSimulate()
-        sceneManager.update(window, localInput, vulkanRenderer)
+        sceneManager.update(window, localInput, renderer)
         input.updateKeyState()
     }
 }

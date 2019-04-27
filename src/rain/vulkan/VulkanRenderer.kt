@@ -192,10 +192,14 @@ internal class VulkanRenderer (private val vk: Vk, val windowContext: WindowCont
         setupCommandBuffer = setupCommandPool.createCommandBuffer(logicalDevice.device, 1)[0]
     }
 
-    fun destroy() {
+    override fun destroy() {
         vkDeviceWaitIdle(logicalDevice.device)
         cleanUpResources()
         vkDestroySwapchainKHR(logicalDevice.device, swapchain.swapchain, null)
+    }
+
+    override fun update() {
+        swapchainIsDirty = swapchainIsDirty || windowContext.windowDirty
     }
 
     private fun recreateRenderCommandBuffers() {

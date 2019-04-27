@@ -8,4 +8,6 @@ internal interface Renderer {
     fun render()
     fun setActiveCamera(camera: Camera)
     fun getDepthRange(): Vector2f
+    fun destroy()
+    fun update()
 }

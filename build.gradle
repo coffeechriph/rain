@@ -59,12 +59,16 @@ dependencies {
     api group: "org.lwjgl", name: "lwjgl-stb", version: "$lwjglVersion"
     api group: "org.lwjgl", name: "lwjgl-vma", version: "$lwjglVersion"
     api group: "org.lwjgl", name: "lwjgl-vulkan", version: "$lwjglVersion"
+    api "org.lwjgl:lwjgl-bgfx:$lwjglVersion"
+    api "org.lwjgl:lwjgl-nuklear:$lwjglVersion"
     api group: "org.joml", name: 'joml', version: "$jomlVersion"
     runtimeOnly "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-opengl:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-vma:$lwjglVersion:$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-bgfx:$lwjglVersion:$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-nuklear:$lwjglVersion:$lwjglNatives"
 
     // TODO: Remove the gdx dependency!
     api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
